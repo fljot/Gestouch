@@ -1,0 +1,61 @@
+h2. Gestouch: NUI gestures detection framework for mouse, touch and multitouch AS3 development.
+
+Gestouch is a very basic framework that helps you to detect gestures when you develop NUI (Natural User Interface).
+Last versions of Flash Player and AIR have built-in touch and multitouch support, but the gestures support is quite poor: only small set of gestures are supported, they depend on OS, they are not customizable, only one can be processed at the same time and, finally, you are forced to use either raw TouchEvents, or gestures (@see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/ui/Multitouch.html#inputMode).
+
+This framework is aimed to simplify the process of detecting raw TouchEvents and processing them into a specific gesture(s). There are several built-in common gestures, but you are welcome write your own.
+
+Features:
+
+* Doesn't require any additional software (uses runtimes build-in touch support);
+* Doesn't break your DisplayList architecture (doesn't require any wrappers, so could be easily used for Flex development);
+* Basically allows you to write multi-user interfaces;
+* Extendable. You can write your own application-specific gestures;
+* Open-source and easy to use.
+
+
+h3. Getting Started
+
+* "Introduction video":http://www.youtube.com/watch?v=NjkmB8rfQjY
+* "Disclaimer and Architecture Overview":http://github.com/fljot/Gestouch/wiki/Overview
+* "Usage":http://github.com/fljot/Gestouch/wiki/Usage
+
+
+h3. Code
+
+* "Gestouch Framework":http://github.com/fljot/Gestouch
+* "Gestouch Examples":http://github.com/fljot/GestouchExamples
+
+
+h3. Roadmap, TODOs
+
+* Simulator (for testing multitouch gestures without special devices)
+* Chained gestures concept / behaviors.
+* 3-fingers (3D) gestures (two fingers still, one moving)
+
+
+h3. Contribution, Donations
+
+Contribute, share. Found it useful, nothing to add? Hire me for some project.
+
+
+h3. News:
+
+* "Follow me on Twitter":http://twitter.com/fljot for latest updates
+
+
+h3. Other Resources
+
+* "GestureWorks":http://www.gestureworks.com
+* "TUIO":http://www.tuio.org
+
+* "Google: Flash + Multitouch":http://www.google.com/search?q=flash+multitouch
+
+
+h2. License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
