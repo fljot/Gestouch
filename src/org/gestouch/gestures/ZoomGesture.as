@@ -37,7 +37,7 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		public static function add(target:InteractiveObject, settings:Object = null):ZoomGesture
+		public static function add(target:InteractiveObject = null, settings:Object = null):ZoomGesture
 		{
 			return new ZoomGesture(target, settings);
 		}

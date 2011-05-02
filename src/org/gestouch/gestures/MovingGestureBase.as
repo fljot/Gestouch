@@ -30,7 +30,7 @@ package org.gestouch.gestures
 		protected var _canMoveVertically:Boolean = true;
 		
 		
-		public function MovingGestureBase(target:InteractiveObject, settings:Object = null)
+		public function MovingGestureBase(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 			

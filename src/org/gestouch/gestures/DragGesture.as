@@ -25,7 +25,7 @@ package org.gestouch.gestures
 	 */
 	public class DragGesture extends MovingGestureBase
 	{
-		public function DragGesture(target:InteractiveObject, settings:Object = null)
+		public function DragGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}

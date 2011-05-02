@@ -70,7 +70,7 @@ package org.gestouch.gestures
 		protected var _lastCentralPoint:Point;
 		
 		
-		public function DoubleTapGesture(target:InteractiveObject, settings:Object = null)
+		public function DoubleTapGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}

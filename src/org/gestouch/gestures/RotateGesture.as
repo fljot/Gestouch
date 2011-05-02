@@ -37,7 +37,7 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		public static function add(target:InteractiveObject, settings:Object = null):RotateGesture
+		public static function add(target:InteractiveObject = null, settings:Object = null):RotateGesture
 		{
 			return new RotateGesture(target, settings);
 		}

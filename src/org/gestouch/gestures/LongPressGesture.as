@@ -33,7 +33,7 @@ package org.gestouch.gestures
 		protected var _thresholdTimer:Timer;
 		
 		
-		public function LongPressGesture(target:InteractiveObject, settings:Object = null)
+		public function LongPressGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}

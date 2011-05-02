@@ -41,7 +41,7 @@ package org.gestouch.gestures
 		protected var _lastLocalCentralPoint:Point;
 		
 		
-		public function Gesture(target:InteractiveObject, settings:Object = null)
+		public function Gesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			// Check if gesture reflects it's class properly
 			reflect();

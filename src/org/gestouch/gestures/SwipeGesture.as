@@ -35,7 +35,7 @@ package org.gestouch.gestures
 		protected var _startTime:uint;
 		
 		
-		public function SwipeGesture(target:InteractiveObject, settings:Object = null)
+		public function SwipeGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}
