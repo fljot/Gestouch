@@ -133,7 +133,7 @@ package org.gestouch.gestures
 			
 			if (held)
 			{
-				_adjustCentralPoint();
+				_updateCentralPoint();
 				_reset();
 				_dispatch(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, true, false, GesturePhase.END, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 			}
@@ -177,7 +177,7 @@ package org.gestouch.gestures
 
 		protected function _onThresholdTimerComplete(event:TimerEvent):void
 		{
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			_dispatch(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 		}
 	}

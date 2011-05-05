@@ -97,7 +97,7 @@ package org.gestouch.gestures
 				_lastVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
 				_lastVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
 				
-				_adjustCentralPoint();
+				_updateCentralPoint();
 				
 				_dispatch(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 			}
@@ -112,7 +112,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			
 			_currVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
 			_currVector.y = _trackingPoints[1].y - _trackingPoints[0].y;

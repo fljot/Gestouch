@@ -1,13 +1,15 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.DragGestureEvent;
+
+	import flash.display.DisplayObjectContainer;
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.events.TouchEvent;
+	import flash.geom.Point;
 
 
 
@@ -95,7 +97,7 @@ package org.gestouch.gestures
 			
 			if (_trackingPointsCount > 1)
 			{
-				_adjustCentralPoint();
+				_updateCentralPoint();
 				_centralPoint.lastMove.x = _centralPoint.lastMove.y = 0;
 			}
 		}
@@ -109,7 +111,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			 
 			if (!_slopPassed)
 			{
@@ -117,8 +119,27 @@ package org.gestouch.gestures
 				
 				if (_slopPassed)
 				{
-					_centralPoint.lastMove.x = _centralPoint.lastMove.y = 0;
-					_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
+					var slopVector:Point = slop > 0 ? null : new Point();
+					if (!slopVector)
+					{
+						if (_canMoveHorizontally && _canMoveVertically)
+						{
+							slopVector = _centralPoint.moveOffset.clone();
+							slopVector.normalize(slop);
+							slopVector.x = Math.round(slopVector.x);
+							slopVector.y = Math.round(slopVector.y);
+						}
+						else if (_canMoveVertically)
+						{
+							slopVector = new Point(0, _centralPoint.moveOffset.y >= slop ? slop : -slop);
+						}
+						else if (_canMoveHorizontally)
+						{
+							slopVector = new Point(_centralPoint.moveOffset.x >= slop ? slop : -slop, 0);		
+						}
+					}
+					_centralPoint.lastMove = _centralPoint.moveOffset.subtract(slopVector);
+					_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, 0, _centralPoint.lastMove.x, _centralPoint.lastMove.y));
 				}
 			}
 			
@@ -134,8 +155,7 @@ package org.gestouch.gestures
 			var ending:Boolean = (_trackingPointsCount == minTouchPointsCount);
 			_forgetPoint(touchPoint);
 			
-			_adjustCentralPoint();
-			_centralPoint.lastMove.x = _centralPoint.lastMove.y = 0;
+			_updateCentralPoint();
 			
 			if (ending)
 			{

@@ -434,6 +434,20 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 				_firstTouchPoint = touchPoint;
 				_centralPoint = touchPoint.clone() as TouchPoint;
 			}
+			else if (_trackingPointsCount == minTouchPointsCount)
+			{
+				_updateCentralPoint();
+				_centralPoint.touchBeginPos.x = _centralPoint.x;
+				_centralPoint.touchBeginPos.y = _centralPoint.y;
+				_centralPoint.moveOffset.x = 0;
+				_centralPoint.moveOffset.y = 0;
+				_centralPoint.lastMove.x = 0;
+				_centralPoint.lastMove.y = 0;
+			}
+			else if (_trackingPointsCount > minTouchPointsCount)
+			{
+				_adjustCentralPoint();
+			}
 		}
 		
 		
@@ -451,11 +465,13 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			delete _trackingPointsMap[touchPoint.id];
 			_trackingPoints.splice(_trackingPoints.indexOf(touchPoint), 1);
 			_trackingPointsCount--;
+			
+			_adjustCentralPoint();
 		}
 		
 		
 		/**
-		 * Adjusts (recalculates) _centralPoint and all it's properties
+		 * Updates _centralPoint and all it's properties
 		 * (such as positions, offsets, velocity, etc...).
 		 * Also updates _lastLocalCentralPoint (used for dispatching events).
 		 * 
@@ -463,7 +479,7 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 		 * @see #_lastLocalCentralPoint
 		 * @see #trackingPoints
 		 */
-		protected function _adjustCentralPoint():void
+		protected function _updateCentralPoint():void
 		{
 			var x:Number = 0;
 			var y:Number = 0;
@@ -494,6 +510,21 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			_centralPoint.moveOffset.y = y - _centralPoint.touchBeginPos.y;
 			
 			_lastLocalCentralPoint = target.globalToLocal(_centralPoint);
+		}
+
+
+		protected function _adjustCentralPoint():void
+		{
+			var oldCentralPoint:TouchPoint = _centralPoint.clone() as TouchPoint;
+			_updateCentralPoint();
+			var centralPointChange:Point = _centralPoint.subtract(oldCentralPoint);
+			_centralPoint.touchBeginPos = _centralPoint.touchBeginPos.add(centralPointChange);
+			// fix moveOffset according to fixed touchBeginPos
+			_centralPoint.moveOffset.x = _centralPoint.x - _centralPoint.touchBeginPos.x;
+			_centralPoint.moveOffset.y = _centralPoint.y - _centralPoint.touchBeginPos.y;
+			// restore original lastMove
+			_centralPoint.lastMove.x = oldCentralPoint.lastMove.x;
+			_centralPoint.lastMove.y = oldCentralPoint.lastMove.y;
 		}
 		
 		

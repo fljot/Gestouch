@@ -113,7 +113,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			 
 			if (!_slopPassed)
 			{

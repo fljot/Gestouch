@@ -147,7 +147,7 @@ package org.gestouch.gestures
 					_thresholdTimer.reset();
 					_thresholdTimer.delay = timeThreshold;
 					_thresholdTimer.start();
-					_adjustCentralPoint();
+					_updateCentralPoint();
 				}
 				
 				_minTouchPointsCountReached = true;
@@ -155,7 +155,7 @@ package org.gestouch.gestures
 				if (moveThreshold > 0)
 				{ 
 					// calculate central point for future moveThreshold comparsion
-					_adjustCentralPoint();
+					_updateCentralPoint();
 					// save points for later comparsion with moveThreshold
 					_prevCentralPoint = _lastCentralPoint;
 					_lastCentralPoint = _centralPoint.clone();
