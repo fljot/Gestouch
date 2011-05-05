@@ -1,12 +1,13 @@
 package org.gestouch.core
 {
+	import flash.events.IEventDispatcher;
 	import flash.display.InteractiveObject;
 	import flash.events.TouchEvent;
 
 	/**
 	 * @author Pavel fljot
 	 */
-	public interface IGesture
+	public interface IGesture extends IEventDispatcher
 	{
 		function get target():InteractiveObject;
 		function get trackingPoints():Vector.<TouchPoint>;

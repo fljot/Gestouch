@@ -1,5 +1,7 @@
 package org.gestouch.gestures
 {
+	import org.gestouch.events.GestureTrackingEvent;
+	import flash.events.EventDispatcher;
 	import flash.errors.IllegalOperationError;
 	import flash.display.InteractiveObject;
 	import flash.events.GestureEvent;
@@ -11,15 +13,17 @@ package org.gestouch.gestures
 	import org.gestouch.core.IGesture;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
-
-
+	
+	
+	[Event(name="gestureTrackingBegin", type="org.gestouch.events.GestureTrackingEvent")]
+	[Event(name="gestureTrackingEnd", type="org.gestouch.events.GestureTrackingEvent")]
 	/**
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points
 	 * in order detect specific gesture motion and form gesture event on target.
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class Gesture implements IGesture
+	public class Gesture extends EventDispatcher implements IGesture
 	{
 		/**
 		 * Threshold for screen distance they must move to count as valid input 
@@ -448,6 +452,14 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			{
 				_adjustCentralPoint();
 			}
+			
+			if (_trackingPointsCount == minTouchPointsCount)
+			{
+				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_BEGIN))
+				{
+					dispatchEvent(new GestureTrackingEvent(GestureTrackingEvent.GESTURE_TRACKING_BEGIN));
+				}
+			}
 		}
 		
 		
@@ -467,6 +479,14 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			_trackingPointsCount--;
 			
 			_adjustCentralPoint();
+			
+			if (_trackingPointsCount == minTouchPointsCount + 1)
+			{
+				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_END))
+				{
+					dispatchEvent(new GestureTrackingEvent(GestureTrackingEvent.GESTURE_TRACKING_END));
+				}
+			}
 		}
 		
 		

@@ -85,7 +85,7 @@ package org.gestouch.core
 			_stage.addEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler);
 			_stage.addEventListener(TouchEvent.TOUCH_BEGIN, stage_touchBeginHandler);
 			_stage.addEventListener(TouchEvent.TOUCH_MOVE, stage_touchMoveHandler);
-			_stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler);
+			_stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, true);
 		}
 		
 		
