@@ -142,8 +142,7 @@ package org.gestouch.gestures
 					_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, 0, _centralPoint.lastMove.x, _centralPoint.lastMove.y));
 				}
 			}
-			
-			if (_slopPassed)
+			else
 			{
 				_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, 0, _centralPoint.lastMove.x, _centralPoint.lastMove.y));
 			}
