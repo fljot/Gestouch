@@ -5,10 +5,8 @@ package org.gestouch.gestures
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.DragGestureEvent;
 
-	import flash.display.DisplayObjectContainer;
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
 	import flash.geom.Point;
 
 
@@ -64,24 +62,6 @@ package org.gestouch.gestures
 		override public function reflect():Class
 		{
 			return DragGesture;
-		}
-		
-		
-		override public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
 		}
 		
 		

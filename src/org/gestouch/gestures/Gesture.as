@@ -1,18 +1,19 @@
 package org.gestouch.gestures
 {
-	import org.gestouch.events.GestureTrackingEvent;
-	import flash.events.EventDispatcher;
-	import flash.errors.IllegalOperationError;
-	import flash.display.InteractiveObject;
-	import flash.events.GestureEvent;
-	import flash.events.TouchEvent;
-	import flash.geom.Point;
-	import flash.system.Capabilities;
-
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGesture;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
+	import org.gestouch.events.GestureTrackingEvent;
+
+	import flash.display.DisplayObjectContainer;
+	import flash.display.InteractiveObject;
+	import flash.errors.IllegalOperationError;
+	import flash.events.EventDispatcher;
+	import flash.events.GestureEvent;
+	import flash.events.TouchEvent;
+	import flash.geom.Point;
+	import flash.system.Capabilities;
 	
 	
 	[Event(name="gestureTrackingBegin", type="org.gestouch.events.GestureTrackingEvent")]
@@ -218,23 +219,32 @@ package org.gestouch.gestures
 		}
 		
 		
-		[Abstract]
 		/**
 		 * Used by GesturesManager to check wether this gesture is interested in
 		 * tracking this touch point upon this event (of type TouchEvent.TOUCH_BEGIN).
 		 * 
-		 * <p>Most of the gestures check, if event.target is target or target contains event.target</p>
+		 * <p>Most of the gestures check, if event.target is target or target contains event.target.</p>
 		 * 
 		 * <p>No need to use it directly.</p>
-		 * 
-		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
 		 * 
 		 * @see org.gestouch.core.GesturesManager
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/events/TouchEvent.html
 		 */
 		public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
 		{
-			throw Error("shouldTrackPoint() is abstract method and must be overridden.");
+			// No need to track more points than we need
+			if (_trackingPointsCount == maxTouchPointsCount)
+			{
+				return false;
+			}
+			//By default gesture is interested only in those touchpoints on top of target
+			var touchTarget:InteractiveObject = event.target as InteractiveObject;
+			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
+			{
+				return false;
+			}
+			
+			return true;
 		}
 		
 		

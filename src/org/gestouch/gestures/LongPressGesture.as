@@ -1,15 +1,14 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TimerEvent;
-	import flash.events.TouchEvent;
-	import flash.utils.Timer;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.LongPressGestureEvent;
+
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 
 
 
@@ -70,25 +69,6 @@ package org.gestouch.gestures
 		override public function reflect():Class
 		{
 			return LongPressGesture;
-		}
-		
-		
-		
-		override public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
 		}
 		
 		
