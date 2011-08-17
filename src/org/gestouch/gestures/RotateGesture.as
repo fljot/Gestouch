@@ -108,10 +108,6 @@ package org.gestouch.gestures
 			var a1:Number = Math.atan2(_lastVector.y, _lastVector.x);
 			var a2:Number = Math.atan2(_currVector.y, _currVector.x);
 			var angle:Number = a2 - a1;
-			if (angle < 0)
-			{
-				angle += GestureUtils.PI_DOUBLE;
-			}
 			angle *= GestureUtils.RADIANS_TO_DEGREES; 
 			
 			_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, angle));
