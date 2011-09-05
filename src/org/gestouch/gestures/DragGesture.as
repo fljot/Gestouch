@@ -10,8 +10,6 @@ package org.gestouch.gestures
 	import flash.geom.Point;
 
 
-
-
 	/**
 	 * Tracks the drag. Event works nice with minTouchPointsCount = 1 and maxTouchPoaintsCount > 1.
 	 * 
@@ -131,7 +129,7 @@ package org.gestouch.gestures
 		
 		override public function onTouchEnd(touchPoint:TouchPoint):void
 		{
-			var ending:Boolean = (_trackingPointsCount == minTouchPointsCount);
+			var ending:Boolean = (_slopPassed && _trackingPointsCount == minTouchPointsCount);
 			_forgetPoint(touchPoint);
 			
 			_updateCentralPoint();
