@@ -170,17 +170,9 @@ package org.gestouch.gestures
 				{
 					// double tap combo recognized
 					
-					if (moveThreshold > 0)
-					{						
-						if (_lastCentralPoint.subtract(_prevCentralPoint).length < moveThreshold)
-						{
-							_reset();
-							_dispatch(new DoubleTapGestureEvent(DoubleTapGestureEvent.GESTURE_DOUBLE_TAP, true, false, GesturePhase.ALL, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
-						}
-					}
-					else
+					if ((moveThreshold > 0 && _lastCentralPoint.subtract(_prevCentralPoint).length < moveThreshold)
+						|| isNaN(moveThreshold) || moveThreshold <= 0)
 					{
-						// no moveThreshold defined
 						_reset();
 						_dispatch(new DoubleTapGestureEvent(DoubleTapGestureEvent.GESTURE_DOUBLE_TAP, true, false, GesturePhase.ALL, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 					}
