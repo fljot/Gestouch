@@ -109,10 +109,10 @@ package org.gestouch.gestures
 				scaleY = _currVector.y / _lastVector.y;
 			}
 			
-			_dispatch(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, scaleX, scaleY));
-			
 			_lastVector.x = _currVector.x;
 			_lastVector.y = _currVector.y;
+			
+			_dispatch(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, scaleX, scaleY));
 		}
 		
 		

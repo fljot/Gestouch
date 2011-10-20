@@ -392,14 +392,26 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 		
 		
 		/**
-		 * Dispatches gesture event from the name of target.
+		 * Dispatches gesture event on gesture and on target.
 		 * 
-		 * @param event GestureEvent to be dispatched from target
+		 * <p>Why dispatching event on gesture? Because it make sense to dispatch event from
+		 * detector object (gesture) and we can add [Event] metatag for better autocompletion.</p>
+		 * 
+		 * <p>Why dispatching event on target? Becase it supposed to be like this in
+		 * comparsion to native way, and it also make sense as similar to mouse and touch events.</p>
+		 * 
+		 * @param event GestureEvent to be dispatched
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/events/GestureEvent.html
 		 */
 		protected function _dispatch(event:GestureEvent):void
 		{
+			if (hasEventListener(event.type))
+			{
+				dispatchEvent(event);
+			}
+			
+			// event is almost always bubbles, so no point for optimization
 			target.dispatchEvent(event);
 		}
 

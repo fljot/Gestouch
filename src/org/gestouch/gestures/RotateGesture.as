@@ -110,10 +110,10 @@ package org.gestouch.gestures
 			var angle:Number = a2 - a1;
 			angle *= GestureUtils.RADIANS_TO_DEGREES; 
 			
-			_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, angle));
-			
 			_lastVector.x = _currVector.x;
 			_lastVector.y = _currVector.y;
+			
+			_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, angle));
 		}
 		
 		
