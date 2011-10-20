@@ -1,8 +1,7 @@
 package org.gestouch.core
 {
-	import com.inreflected.utils.pooling.ObjectPool;
-
 	import org.gestouch.events.MouseTouchEvent;
+	import org.gestouch.utils.ObjectPool;
 
 	import flash.display.InteractiveObject;
 	import flash.display.Stage;
