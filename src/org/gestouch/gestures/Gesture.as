@@ -131,23 +131,15 @@ package org.gestouch.gestures
 		}
 		public function set target(value:InteractiveObject):void
 		{
-			if (_target == value) return;
+			if (target == value) return;
 			
 			GesturesManager.gestouch_internal::updateGestureTarget(this, target, value);
 			
 			// if GesturesManager hasn't thrown any error we can safely continue
 			
-			if (target)
-			{
-				_uninstallTarget(target);
-			}
-			
+			_uninstallTarget(target);
 			_target = value;
-			
-			if (target)
-			{
-				_installTarget(target);
-			}
+			_installTarget(target);
 		}
 		
 		

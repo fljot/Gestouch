@@ -167,8 +167,8 @@ package org.gestouch.core
 		
 		
 		public function updateGestureTarget(gesture:IGesture, oldTarget:InteractiveObject, newTarget:InteractiveObject):void
-		{
-			if (!_initialized)
+		{			
+			if (!_initialized && newTarget)
 			{
 				var stage:Stage = newTarget.stage; 
 				if (stage)
@@ -187,12 +187,13 @@ package org.gestouch.core
 			{
 				gesturesOfTypeByTarget = _gestureMapsByType[gesture.reflect()] = new Dictionary();
 			}
-			if (gesturesOfTypeByTarget[newTarget])
+			else if (gesturesOfTypeByTarget[newTarget])
 			{
 				throw new IllegalOperationError("You cannot add two gestures of the same type to one target (it makes no sence).");
 			}
 			if (oldTarget)
 			{
+				oldTarget.addEventListener(Event.ADDED_TO_STAGE, target_addedToStageHandler);
 				delete gesturesOfTypeByTarget[oldTarget];
 			}
 			if (newTarget)
