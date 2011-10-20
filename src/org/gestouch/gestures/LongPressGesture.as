@@ -11,7 +11,7 @@ package org.gestouch.gestures
 	import flash.utils.Timer;
 
 
-
+	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
 	/**
 	 * 
 	 * 

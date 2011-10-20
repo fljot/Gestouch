@@ -10,7 +10,7 @@ package org.gestouch.gestures
 	import flash.geom.Point;
 
 
-
+	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
 	/**
 	 * @author Pavel fljot
 	 */

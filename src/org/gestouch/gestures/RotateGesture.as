@@ -11,7 +11,7 @@ package org.gestouch.gestures
 	import flash.geom.Point;
 
 
-
+	[Event(name="gestureRotate", type="org.gestouch.events.RotateGestureEvent")]
 	/**
 	 * @author Pavel fljot
 	 */

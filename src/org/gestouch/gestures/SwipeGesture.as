@@ -13,6 +13,7 @@ package org.gestouch.gestures
 	import flash.utils.getTimer;
 
 
+	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
 	/**
 	 * SwipeGesture detects <i>swipe</i> motion (also known as <i>flick</i> or <i>flig</i>).
 	 * 

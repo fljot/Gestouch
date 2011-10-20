@@ -10,6 +10,7 @@ package org.gestouch.gestures
 	import flash.geom.Point;
 
 
+	[Event(name="gestureDrag", type="org.gestouch.events.DragGestureEvent")]
 	/**
 	 * Tracks the drag. Event works nice with minTouchPointsCount = 1 and maxTouchPoaintsCount > 1.
 	 * 

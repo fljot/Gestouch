@@ -12,8 +12,7 @@ package org.gestouch.gestures
 	import flash.utils.Timer;
 
 
-
-
+	[Event(name="gestureDoubleTap", type="org.gestouch.events.DoubleTapGestureEvent")]
 	/**
 	 * DoubleTapGesture tracks quick double-tap (double-click).
 	 * 
