@@ -1,18 +1,17 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
-	import flash.geom.Point;
 	import org.gestouch.GestureUtils;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.RotateGestureEvent;
 
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.geom.Point;
 
 
+	[Event(name="gestureRotate", type="org.gestouch.events.RotateGestureEvent")]
 	/**
 	 * @author Pavel fljot
 	 */
@@ -37,7 +36,7 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		public static function add(target:InteractiveObject, settings:Object = null):RotateGesture
+		public static function add(target:InteractiveObject = null, settings:Object = null):RotateGesture
 		{
 			return new RotateGesture(target, settings);
 		}
@@ -70,25 +69,6 @@ package org.gestouch.gestures
 			return RotateGesture;
 		}
 		
-			
-		override public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			//FIXME?
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
-		}
-		
 		
 		override public function onTouchBegin(touchPoint:TouchPoint):void
 		{
@@ -105,7 +85,7 @@ package org.gestouch.gestures
 				_lastVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
 				_lastVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
 				
-				_adjustCentralPoint();
+				_updateCentralPoint();
 				
 				_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 			}
@@ -120,7 +100,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			
 			_currVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
 			_currVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
@@ -128,16 +108,12 @@ package org.gestouch.gestures
 			var a1:Number = Math.atan2(_lastVector.y, _lastVector.x);
 			var a2:Number = Math.atan2(_currVector.y, _currVector.x);
 			var angle:Number = a2 - a1;
-			if (angle < 0)
-			{
-				angle += GestureUtils.PI_DOUBLE;
-			}
 			angle *= GestureUtils.RADIANS_TO_DEGREES; 
-			
-			_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, angle));
 			
 			_lastVector.x = _currVector.x;
 			_lastVector.y = _currVector.y;
+			
+			_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, angle));
 		}
 		
 		

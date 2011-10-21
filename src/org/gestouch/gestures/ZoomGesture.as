@@ -1,17 +1,16 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
-	import flash.geom.Point;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.ZoomGestureEvent;
 
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.geom.Point;
 
 
+	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
 	/**
 	 * @author Pavel fljot
 	 */
@@ -37,7 +36,7 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		public static function add(target:InteractiveObject, settings:Object = null):ZoomGesture
+		public static function add(target:InteractiveObject = null, settings:Object = null):ZoomGesture
 		{
 			return new ZoomGesture(target, settings);
 		}
@@ -62,25 +61,6 @@ package org.gestouch.gestures
 			return ZoomGesture;
 		}
 		
-			
-		override public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			//FIXME?
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
-		}
-		
 		
 		override public function onTouchBegin(touchPoint:TouchPoint):void
 		{
@@ -97,7 +77,7 @@ package org.gestouch.gestures
 				_lastVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
 				_lastVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
 				
-				_adjustCentralPoint();
+				_updateCentralPoint();
 				
 				_dispatch(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 			}
@@ -112,7 +92,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			
 			_currVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
 			_currVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
@@ -129,10 +109,10 @@ package org.gestouch.gestures
 				scaleY = _currVector.y / _lastVector.y;
 			}
 			
-			_dispatch(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, scaleX, scaleY));
-			
 			_lastVector.x = _currVector.x;
 			_lastVector.y = _currVector.y;
+			
+			_dispatch(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, scaleX, scaleY));
 		}
 		
 		

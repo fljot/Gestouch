@@ -1,25 +1,30 @@
 package org.gestouch.gestures
 {
-	import flash.errors.IllegalOperationError;
-	import flash.display.InteractiveObject;
-	import flash.events.GestureEvent;
-	import flash.events.TouchEvent;
-	import flash.geom.Point;
-	import flash.system.Capabilities;
-
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGesture;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
+	import org.gestouch.events.GestureTrackingEvent;
 
-
+	import flash.display.DisplayObjectContainer;
+	import flash.display.InteractiveObject;
+	import flash.errors.IllegalOperationError;
+	import flash.events.EventDispatcher;
+	import flash.events.GestureEvent;
+	import flash.events.TouchEvent;
+	import flash.geom.Point;
+	import flash.system.Capabilities;
+	
+	
+	[Event(name="gestureTrackingBegin", type="org.gestouch.events.GestureTrackingEvent")]
+	[Event(name="gestureTrackingEnd", type="org.gestouch.events.GestureTrackingEvent")]
 	/**
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points
 	 * in order detect specific gesture motion and form gesture event on target.
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class Gesture implements IGesture
+	public class Gesture extends EventDispatcher implements IGesture
 	{
 		/**
 		 * Threshold for screen distance they must move to count as valid input 
@@ -41,7 +46,7 @@ package org.gestouch.gestures
 		protected var _lastLocalCentralPoint:Point;
 		
 		
-		public function Gesture(target:InteractiveObject, settings:Object = null)
+		public function Gesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			// Check if gesture reflects it's class properly
 			reflect();
@@ -126,23 +131,15 @@ package org.gestouch.gestures
 		}
 		public function set target(value:InteractiveObject):void
 		{
-			if (_target == value) return;
+			if (target == value) return;
 			
 			GesturesManager.gestouch_internal::updateGestureTarget(this, target, value);
 			
 			// if GesturesManager hasn't thrown any error we can safely continue
 			
-			if (target)
-			{
-				_uninstallTarget(target);
-			}
-			
+			_uninstallTarget(target);
 			_target = value;
-			
-			if (target)
-			{
-				_installTarget(target);
-			}
+			_installTarget(target);
 		}
 		
 		
@@ -214,23 +211,32 @@ package org.gestouch.gestures
 		}
 		
 		
-		[Abstract]
 		/**
 		 * Used by GesturesManager to check wether this gesture is interested in
 		 * tracking this touch point upon this event (of type TouchEvent.TOUCH_BEGIN).
 		 * 
-		 * <p>Most of the gestures check, if event.target is target or target contains event.target</p>
+		 * <p>Most of the gestures check, if event.target is target or target contains event.target.</p>
 		 * 
 		 * <p>No need to use it directly.</p>
-		 * 
-		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
 		 * 
 		 * @see org.gestouch.core.GesturesManager
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/events/TouchEvent.html
 		 */
 		public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
 		{
-			throw Error("shouldTrackPoint() is abstract method and must be overridden.");
+			// No need to track more points than we need
+			if (_trackingPointsCount == maxTouchPointsCount)
+			{
+				return false;
+			}
+			//By default gesture is interested only in those touchpoints on top of target
+			var touchTarget:InteractiveObject = event.target as InteractiveObject;
+			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
+			{
+				return false;
+			}
+			
+			return true;
 		}
 		
 		
@@ -386,14 +392,26 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 		
 		
 		/**
-		 * Dispatches gesture event from the name of target.
+		 * Dispatches gesture event on gesture and on target.
 		 * 
-		 * @param event GestureEvent to be dispatched from target
+		 * <p>Why dispatching event on gesture? Because it make sense to dispatch event from
+		 * detector object (gesture) and we can add [Event] metatag for better autocompletion.</p>
+		 * 
+		 * <p>Why dispatching event on target? Becase it supposed to be like this in
+		 * comparsion to native way, and it also make sense as similar to mouse and touch events.</p>
+		 * 
+		 * @param event GestureEvent to be dispatched
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/events/GestureEvent.html
 		 */
 		protected function _dispatch(event:GestureEvent):void
 		{
+			if (hasEventListener(event.type))
+			{
+				dispatchEvent(event);
+			}
+			
+			// event is almost always bubbles, so no point for optimization
 			target.dispatchEvent(event);
 		}
 
@@ -434,6 +452,28 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 				_firstTouchPoint = touchPoint;
 				_centralPoint = touchPoint.clone() as TouchPoint;
 			}
+			else if (_trackingPointsCount == minTouchPointsCount)
+			{
+				_updateCentralPoint();
+				_centralPoint.touchBeginPos.x = _centralPoint.x;
+				_centralPoint.touchBeginPos.y = _centralPoint.y;
+				_centralPoint.moveOffset.x = 0;
+				_centralPoint.moveOffset.y = 0;
+				_centralPoint.lastMove.x = 0;
+				_centralPoint.lastMove.y = 0;
+			}
+			else if (_trackingPointsCount > minTouchPointsCount)
+			{
+				_adjustCentralPoint();
+			}
+			
+			if (_trackingPointsCount == minTouchPointsCount)
+			{
+				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_BEGIN))
+				{
+					dispatchEvent(new GestureTrackingEvent(GestureTrackingEvent.GESTURE_TRACKING_BEGIN));
+				}
+			}
 		}
 		
 		
@@ -451,11 +491,21 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			delete _trackingPointsMap[touchPoint.id];
 			_trackingPoints.splice(_trackingPoints.indexOf(touchPoint), 1);
 			_trackingPointsCount--;
+			
+			_adjustCentralPoint();
+			
+			if (_trackingPointsCount == minTouchPointsCount + 1)
+			{
+				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_END))
+				{
+					dispatchEvent(new GestureTrackingEvent(GestureTrackingEvent.GESTURE_TRACKING_END));
+				}
+			}
 		}
 		
 		
 		/**
-		 * Adjusts (recalculates) _centralPoint and all it's properties
+		 * Updates _centralPoint and all it's properties
 		 * (such as positions, offsets, velocity, etc...).
 		 * Also updates _lastLocalCentralPoint (used for dispatching events).
 		 * 
@@ -463,7 +513,7 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 		 * @see #_lastLocalCentralPoint
 		 * @see #trackingPoints
 		 */
-		protected function _adjustCentralPoint():void
+		protected function _updateCentralPoint():void
 		{
 			var x:Number = 0;
 			var y:Number = 0;
@@ -494,6 +544,21 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			_centralPoint.moveOffset.y = y - _centralPoint.touchBeginPos.y;
 			
 			_lastLocalCentralPoint = target.globalToLocal(_centralPoint);
+		}
+
+
+		protected function _adjustCentralPoint():void
+		{
+			var oldCentralPoint:TouchPoint = _centralPoint.clone() as TouchPoint;
+			_updateCentralPoint();
+			var centralPointChange:Point = _centralPoint.subtract(oldCentralPoint);
+			_centralPoint.touchBeginPos = _centralPoint.touchBeginPos.add(centralPointChange);
+			// fix moveOffset according to fixed touchBeginPos
+			_centralPoint.moveOffset.x = _centralPoint.x - _centralPoint.touchBeginPos.x;
+			_centralPoint.moveOffset.y = _centralPoint.y - _centralPoint.touchBeginPos.y;
+			// restore original lastMove
+			_centralPoint.lastMove.x = oldCentralPoint.lastMove.x;
+			_centralPoint.lastMove.y = oldCentralPoint.lastMove.y;
 		}
 		
 		

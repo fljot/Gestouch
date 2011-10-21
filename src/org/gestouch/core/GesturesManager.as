@@ -1,8 +1,7 @@
 package org.gestouch.core
 {
-	import com.inreflected.utils.pooling.ObjectPool;
-
 	import org.gestouch.events.MouseTouchEvent;
+	import org.gestouch.utils.ObjectPool;
 
 	import flash.display.InteractiveObject;
 	import flash.display.Stage;
@@ -85,7 +84,7 @@ package org.gestouch.core
 			_stage.addEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler);
 			_stage.addEventListener(TouchEvent.TOUCH_BEGIN, stage_touchBeginHandler);
 			_stage.addEventListener(TouchEvent.TOUCH_MOVE, stage_touchMoveHandler);
-			_stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler);
+			_stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, true);
 		}
 		
 		
@@ -168,8 +167,8 @@ package org.gestouch.core
 		
 		
 		public function updateGestureTarget(gesture:IGesture, oldTarget:InteractiveObject, newTarget:InteractiveObject):void
-		{
-			if (!_initialized)
+		{			
+			if (!_initialized && newTarget)
 			{
 				var stage:Stage = newTarget.stage; 
 				if (stage)
@@ -188,12 +187,13 @@ package org.gestouch.core
 			{
 				gesturesOfTypeByTarget = _gestureMapsByType[gesture.reflect()] = new Dictionary();
 			}
-			if (gesturesOfTypeByTarget[newTarget])
+			else if (gesturesOfTypeByTarget[newTarget])
 			{
 				throw new IllegalOperationError("You cannot add two gestures of the same type to one target (it makes no sence).");
 			}
 			if (oldTarget)
 			{
+				oldTarget.addEventListener(Event.ADDED_TO_STAGE, target_addedToStageHandler);
 				delete gesturesOfTypeByTarget[oldTarget];
 			}
 			if (newTarget)

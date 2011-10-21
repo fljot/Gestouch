@@ -1,17 +1,16 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.DragGestureEvent;
 
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.geom.Point;
 
 
-
+	[Event(name="gestureDrag", type="org.gestouch.events.DragGestureEvent")]
 	/**
 	 * Tracks the drag. Event works nice with minTouchPointsCount = 1 and maxTouchPoaintsCount > 1.
 	 * 
@@ -25,7 +24,7 @@ package org.gestouch.gestures
 	 */
 	public class DragGesture extends MovingGestureBase
 	{
-		public function DragGesture(target:InteractiveObject, settings:Object = null)
+		public function DragGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}
@@ -65,24 +64,6 @@ package org.gestouch.gestures
 		}
 		
 		
-		override public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
-		}
-		
-		
 		override public function onTouchBegin(touchPoint:TouchPoint):void
 		{
 			// No need to track more points than we need
@@ -95,7 +76,7 @@ package org.gestouch.gestures
 			
 			if (_trackingPointsCount > 1)
 			{
-				_adjustCentralPoint();
+				_updateCentralPoint();
 				_centralPoint.lastMove.x = _centralPoint.lastMove.y = 0;
 			}
 		}
@@ -109,7 +90,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			 
 			if (!_slopPassed)
 			{
@@ -117,12 +98,30 @@ package org.gestouch.gestures
 				
 				if (_slopPassed)
 				{
-					_centralPoint.lastMove.x = _centralPoint.lastMove.y = 0;
-					_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
+					var slopVector:Point = slop > 0 ? null : new Point();
+					if (!slopVector)
+					{
+						if (_canMoveHorizontally && _canMoveVertically)
+						{
+							slopVector = _centralPoint.moveOffset.clone();
+							slopVector.normalize(slop);
+							slopVector.x = Math.round(slopVector.x);
+							slopVector.y = Math.round(slopVector.y);
+						}
+						else if (_canMoveVertically)
+						{
+							slopVector = new Point(0, _centralPoint.moveOffset.y >= slop ? slop : -slop);
+						}
+						else if (_canMoveHorizontally)
+						{
+							slopVector = new Point(_centralPoint.moveOffset.x >= slop ? slop : -slop, 0);		
+						}
+					}
+					_centralPoint.lastMove = _centralPoint.moveOffset.subtract(slopVector);
+					_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, 0, _centralPoint.lastMove.x, _centralPoint.lastMove.y));
 				}
 			}
-			
-			if (_slopPassed)
+			else
 			{
 				_dispatch(new DragGestureEvent(DragGestureEvent.GESTURE_DRAG, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, 0, _centralPoint.lastMove.x, _centralPoint.lastMove.y));
 			}
@@ -131,11 +130,10 @@ package org.gestouch.gestures
 		
 		override public function onTouchEnd(touchPoint:TouchPoint):void
 		{
-			var ending:Boolean = (_trackingPointsCount == minTouchPointsCount);
+			var ending:Boolean = (_slopPassed && _trackingPointsCount == minTouchPointsCount);
 			_forgetPoint(touchPoint);
 			
-			_adjustCentralPoint();
-			_centralPoint.lastMove.x = _centralPoint.lastMove.y = 0;
+			_updateCentralPoint();
 			
 			if (ending)
 			{

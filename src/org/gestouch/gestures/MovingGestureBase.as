@@ -30,7 +30,7 @@ package org.gestouch.gestures
 		protected var _canMoveVertically:Boolean = true;
 		
 		
-		public function MovingGestureBase(target:InteractiveObject, settings:Object = null)
+		public function MovingGestureBase(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 			
@@ -131,6 +131,11 @@ package org.gestouch.gestures
 		protected function _checkSlop(moveDelta:Point):Boolean
 		{
 			var slopPassed:Boolean = false;
+			if (!(slop > 0))
+			{
+				// return true immideately if slop is 0 or NaN
+				return true;
+			}
 			
 			if (_canMoveHorizontally && _canMoveVertically)
 			{

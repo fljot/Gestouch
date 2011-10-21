@@ -1,4 +1,4 @@
-package com.inreflected.utils.pooling
+package org.gestouch.utils
 {
 	import flash.utils.getQualifiedClassName;
 	

@@ -1,20 +1,18 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TimerEvent;
-	import flash.events.TouchEvent;
-	import flash.geom.Point;
-	import flash.utils.Timer;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.TouchPoint;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.DoubleTapGestureEvent;
 
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.events.TimerEvent;
+	import flash.geom.Point;
+	import flash.utils.Timer;
 
 
-
+	[Event(name="gestureDoubleTap", type="org.gestouch.events.DoubleTapGestureEvent")]
 	/**
 	 * DoubleTapGesture tracks quick double-tap (double-click).
 	 * 
@@ -70,7 +68,7 @@ package org.gestouch.gestures
 		protected var _lastCentralPoint:Point;
 		
 		
-		public function DoubleTapGesture(target:InteractiveObject, settings:Object = null)
+		public function DoubleTapGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}
@@ -110,24 +108,6 @@ package org.gestouch.gestures
 		}
 		
 		
-		override public function shouldTrackPoint(event:TouchEvent, touchPoint:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
-		}
-		
-		
 		override public function onTouchBegin(touchPoint:TouchPoint):void
 		{
 			// No need to track more points than we need
@@ -147,7 +127,7 @@ package org.gestouch.gestures
 					_thresholdTimer.reset();
 					_thresholdTimer.delay = timeThreshold;
 					_thresholdTimer.start();
-					_adjustCentralPoint();
+					_updateCentralPoint();
 				}
 				
 				_minTouchPointsCountReached = true;
@@ -155,7 +135,7 @@ package org.gestouch.gestures
 				if (moveThreshold > 0)
 				{ 
 					// calculate central point for future moveThreshold comparsion
-					_adjustCentralPoint();
+					_updateCentralPoint();
 					// save points for later comparsion with moveThreshold
 					_prevCentralPoint = _lastCentralPoint;
 					_lastCentralPoint = _centralPoint.clone();
@@ -190,17 +170,9 @@ package org.gestouch.gestures
 				{
 					// double tap combo recognized
 					
-					if (moveThreshold > 0)
-					{						
-						if (_lastCentralPoint.subtract(_prevCentralPoint).length < moveThreshold)
-						{
-							_reset();
-							_dispatch(new DoubleTapGestureEvent(DoubleTapGestureEvent.GESTURE_DOUBLE_TAP, true, false, GesturePhase.ALL, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
-						}
-					}
-					else
+					if ((moveThreshold > 0 && _lastCentralPoint.subtract(_prevCentralPoint).length < moveThreshold)
+						|| isNaN(moveThreshold) || moveThreshold <= 0)
 					{
-						// no moveThreshold defined
 						_reset();
 						_dispatch(new DoubleTapGestureEvent(DoubleTapGestureEvent.GESTURE_DOUBLE_TAP, true, false, GesturePhase.ALL, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
 					}

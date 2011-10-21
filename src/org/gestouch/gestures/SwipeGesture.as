@@ -1,12 +1,5 @@
 package org.gestouch.gestures
 {
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
-	import flash.geom.Point;
-	import flash.utils.getTimer;
-
 	import org.gestouch.Direction;
 	import org.gestouch.GestureUtils;
 	import org.gestouch.core.GesturesManager;
@@ -14,7 +7,13 @@ package org.gestouch.gestures
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.SwipeGestureEvent;
 
+	import flash.display.InteractiveObject;
+	import flash.events.GesturePhase;
+	import flash.geom.Point;
+	import flash.utils.getTimer;
 
+
+	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
 	/**
 	 * SwipeGesture detects <i>swipe</i> motion (also known as <i>flick</i> or <i>flig</i>).
 	 * 
@@ -35,7 +34,7 @@ package org.gestouch.gestures
 		protected var _startTime:uint;
 		
 		
-		public function SwipeGesture(target:InteractiveObject, settings:Object = null)
+		public function SwipeGesture(target:InteractiveObject = null, settings:Object = null)
 		{
 			super(target, settings);
 		}
@@ -74,24 +73,6 @@ package org.gestouch.gestures
 			return SwipeGesture;
 		}
 		
-			
-		override public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			// this particular gesture is interested only in those touchpoints on top of target
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
-		}
-		
 		
 		override public function onTouchBegin(touchPoint:TouchPoint):void
 		{
@@ -113,7 +94,7 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_adjustCentralPoint();
+			_updateCentralPoint();
 			 
 			if (!_slopPassed)
 			{
