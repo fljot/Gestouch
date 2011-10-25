@@ -494,7 +494,7 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 			
 			_adjustCentralPoint();
 			
-			if (_trackingPointsCount == minTouchPointsCount + 1)
+			if (_trackingPointsCount == minTouchPointsCount - 1)
 			{
 				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_END))
 				{
