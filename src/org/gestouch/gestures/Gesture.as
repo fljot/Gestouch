@@ -143,6 +143,28 @@ package org.gestouch.gestures
 		}
 		
 		
+		/** @private */
+		private var _enabled:Boolean = true;
+		
+		/**
+		 * @default true
+		 */
+		public function get enabled():Boolean
+		{
+			return _enabled;
+		}
+		public function set enabled(value:Boolean):void
+		{
+			if (_enabled == value) return;
+			
+			_enabled = value;
+			if (!_enabled && trackingPointsCount > 0)
+			{
+				cancel();
+			}
+		}
+		
+		
 		/**
 		 * Storage for the trackingPoints property.
 		 */

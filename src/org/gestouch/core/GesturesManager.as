@@ -285,7 +285,7 @@ package org.gestouch.core
 			
 			for each (var gesture:IGesture in _gestures)
 			{
-				if (gesture.target && gesture.shouldTrackPoint(event, tp))
+				if (gesture.enabled && gesture.target && gesture.shouldTrackPoint(event, tp))
 				{
 					gesture.onTouchBegin(tp);
 				}

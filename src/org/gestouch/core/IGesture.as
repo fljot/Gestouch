@@ -12,6 +12,8 @@ package org.gestouch.core
 		function get target():InteractiveObject;
 		function get trackingPoints():Vector.<TouchPoint>;
 		function get trackingPointsCount():uint;
+		function get enabled():Boolean;
+		function set enabled(value:Boolean):void;
 		
 		function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean;
 		function isTracking(touchPointID:uint):Boolean;
