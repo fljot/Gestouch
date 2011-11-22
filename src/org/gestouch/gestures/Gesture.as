@@ -393,9 +393,8 @@ package org.gestouch.gestures
 				x += touch.x;
 				y += touch.y;
 			}
-			// faster then Math.round(x / _touchesCount)
-			_centralPoint.x = x > 0 ? (x / _touchesCount + 0.5) >> 0 : (x / _touchesCount - 0.5) >> 0;
-			_centralPoint.y = y > 0 ? (y / _touchesCount + 0.5) >> 0 : (y / _touchesCount - 0.5) >> 0;
+			_centralPoint.x = x / _touchesCount;
+			_centralPoint.y = y / _touchesCount;
 		}
 		
 		
