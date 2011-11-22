@@ -46,6 +46,10 @@ h3. News:
 
 h3. Other Resources
 
+* "Apple WWDC 2011: Making the Most of Multi-Touch on iOS":https://developer.apple.com/videos/wwdc/2011/?id=118
+* "Apple WWDC 2010: Simplifying Touch Event Handling with Gesture Recognizers":https://developer.apple.com/videos/wwdc/2010/?id=120
+* "Apple WWDC 2010: Advanced Gesture Recognition":https://developer.apple.com/videos/wwdc/2010/?id=121
+
 * "GestureWorks":http://www.gestureworks.com
 * "TUIO":http://www.tuio.org
 

@@ -1,180 +1,184 @@
 package org.gestouch.gestures
 {
-	import org.gestouch.Direction;
-	import org.gestouch.GestureUtils;
-	import org.gestouch.core.GesturesManager;
-	import org.gestouch.core.TouchPoint;
-	import org.gestouch.core.gestouch_internal;
+	import org.gestouch.core.GestureState;
+	import org.gestouch.core.Touch;
 	import org.gestouch.events.SwipeGestureEvent;
 
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
+	import flash.events.TouchEvent;
 	import flash.geom.Point;
-	import flash.utils.getTimer;
-
+	import flash.system.Capabilities;
 
 	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
 	/**
-	 * SwipeGesture detects <i>swipe</i> motion (also known as <i>flick</i> or <i>flig</i>).
-	 * 
-	 * <p>I couldn't find any certain definition of <i>Swipe</i> except for it's defined as <i>quick</i>.
-	 * So I've implemented detection via two threshold velocities — one is in the direction of the movement,
-	 * and second is the "side"-one (orthogonal). They form a velocity rectangle, where you have to move
-	 * with a velocity greater then velocityThreshold value and less then sideVelocityThreshold.</p>
+	 * TODO:
+	 * -check native behavior on iDevice
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class SwipeGesture extends MovingGestureBase
+	public class SwipeGesture extends Gesture
 	{
-		public var moveThreshold:Number = Gesture.DEFAULT_SLOP;
-		public var minTimeThreshold:uint = 50;
-		public var velocityThreshold:Number = 7 * GestureUtils.IPS_TO_PPMS;
-		public var sideVelocityThreshold:Number = 2 * GestureUtils.IPS_TO_PPMS;
+		public var numTouchesRequired:uint = 1;
+		public var velocityThreshold:Number = 0.1;
+		public var minVelocity:Number = 1.5;
+		public var minDistance:Number = Capabilities.screenDPI * 0.5;
 		
-		protected var _startTime:uint;
+		public var direction:uint = SwipeGestureDirection.ORTHOGONAL;
+		
+		protected var _offset:Point = new Point();
+		protected var _startTime:int;
+		protected var _noDirection:Boolean;
 		
 		
-		public function SwipeGesture(target:InteractiveObject = null, settings:Object = null)
+		public function SwipeGesture(target:InteractiveObject = null)
 		{
-			super(target, settings);
+			super(target);
 		}
 		
 		
 		
 		
-		//--------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
 		//
-		//  Static methods
+		// Public methods
 		//
-		//--------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
 		
-		public static function add(target:InteractiveObject, settings:Object = null):SwipeGesture
-		{
-			return new SwipeGesture(target, settings);
-		}
-		
-		
-		public static function remove(target:InteractiveObject):SwipeGesture
-		{
-			return GesturesManager.gestouch_internal::removeGestureByTarget(SwipeGesture, target) as SwipeGesture;
-		}
-		
-		
-		
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Public methods
-		//
-		//--------------------------------------------------------------------------		
-			
 		override public function reflect():Class
 		{
 			return SwipeGesture;
 		}
 		
-		
-		override public function onTouchBegin(touchPoint:TouchPoint):void
-		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return;
-			}
 			
-			_trackPoint(touchPoint);
+		override public function reset():void
+		{
+			_startTime = 0;
+			_offset.x = 0;
+			_offset.y = 0;
+
+			super.reset();
 		}
 		
 		
-		override public function onTouchMove(touchPoint:TouchPoint):void
+		
+		
+		// --------------------------------------------------------------------------
+		//
+		// Protected methods
+		//
+		// --------------------------------------------------------------------------
+				
+		override protected function onTouchBegin(touch:Touch, event:TouchEvent):void
 		{
-			// do calculations only when we track enought points
-			if (_trackingPointsCount < minTouchPointsCount)
+			if (touchesCount > numTouchesRequired)
 			{
+				setState(GestureState.FAILED);
 				return;
 			}
 			
-			_updateCentralPoint();
-			 
-			if (!_slopPassed)
+			if (touchesCount == numTouchesRequired)
 			{
-				_slopPassed = _checkSlop(_centralPoint.moveOffset);
+				updateLocation();
+				_startTime = touch.time;
+				
+				// cache direction condition for performance
+				_noDirection = (SwipeGestureDirection.ORTHOGONAL & direction) == 0;
+			}
+		}
+		
+		
+		override protected function onTouchMove(touch:Touch, event:TouchEvent):void
+		{
+			if (touchesCount < numTouchesRequired)
+				return;
+			
+			updateCentralPoint();
+			
+			_offset.x = _centralPoint.x - _location.x;
+			_offset.y = _centralPoint.y - _location.y;
+			var offsetLength:Number = _offset.length;
+			var timeDelta:int = touch.time - _startTime;			
+			var vel:Number = offsetLength / timeDelta;
+			var absVel:Number = vel > 0 ? vel : -vel;//faster Math.abs()
+//			trace(_offset, _offset.length, ".....velocity:", vel);
+			
+			if (offsetLength > Gesture.DEFAULT_SLOP && absVel < velocityThreshold)
+			{
+				setState(GestureState.FAILED);
+				return;
 			}
 			
-			if (_slopPassed)
+			var velX:Number = _offset.x / timeDelta;
+			var velY:Number = _offset.y / timeDelta;
+			
+			
+			if (_noDirection)
 			{
-				var velocity:Point = _centralPoint.velocity;
-				
-				var foo:Number = _centralPoint.moveOffset.length;//FIXME!
-				var swipeDetected:Boolean = false;
-				
-				if (getTimer() - _startTime > minTimeThreshold && foo > 10)
+				if (absVel >= minVelocity || (minDistance != minDistance || offsetLength >= minDistance))
 				{
-					var lastMoveX:Number = 0;
-					var lastMoveY:Number = 0;
-					
-					if (_canMoveHorizontally && _canMoveVertically)
-					{
-						lastMoveX = _centralPoint.lastMove.x;
-						lastMoveY = _centralPoint.lastMove.y;
-						
-						if (direction == Direction.STRAIGHT_AXES)
-						{
-							// go to logic below: if (!swipeDetected && _canMove*)..
-						}
-						else if (direction == Direction.OCTO)
-						{
-							swipeDetected = velocity.length >= velocityThreshold;
-							
-							if (Math.abs(velocity.y) < sideVelocityThreshold)
-							{
-								// horizontal swipe
-								lastMoveY = 0;
-							}
-							else if (Math.abs(velocity.x) < sideVelocityThreshold)
-							{
-								// vertical swipe
-								lastMoveX = 0;
-							}
-						}
-						else
-						{
-							// free direction swipe
-							swipeDetected = velocity.length >= velocityThreshold;
-						}
-					}
-					
-					if (!swipeDetected && _canMoveHorizontally)
-					{
-						swipeDetected = Math.abs(velocity.x) >= velocityThreshold &&
-							Math.abs(velocity.y) < sideVelocityThreshold;
-						
-						lastMoveX = _centralPoint.lastMove.x;
-						lastMoveY = 0;
-					}
-					if (!swipeDetected && _canMoveVertically)
-					{
-						swipeDetected = Math.abs(velocity.y) >= velocityThreshold &&
-							Math.abs(velocity.x) < sideVelocityThreshold;
-						
-						lastMoveX = 0;
-						lastMoveY = _centralPoint.lastMove.y;
-					}
-					
-					if (swipeDetected)
-					{
-						_reset();
-//						trace("swipe detected:", lastMoveX, lastMoveY);
-						_dispatch(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, true, false, GesturePhase.ALL, target.mouseX, target.mouseY, 1, 1, 0, lastMoveX, lastMoveY));
-					}
+					setState(GestureState.RECOGNIZED, new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 				}
 			}
-		}
+			else
+			{
+				//faster Math.abs()
+				var absVelX:Number = velX > 0 ? velX : -velX;
+				var absVelY:Number = velY > 0 ? velY : -velY;
+				var absOffsetX:Number = _offset.x > 0 ? _offset.x : -_offset.x;
+				var absOffsetY:Number = _offset.y > 0 ? _offset.y : -_offset.y;
+				
+				if (absVelX > absVelY)
+				{
+					if ((SwipeGestureDirection.HORIZONTAL & direction) == 0)
+					{
+						// horizontal velocity is greater then vertical, but we're not interested in any horizontal direction
+						setState(GestureState.FAILED);
+					}
+					else if (velX < 0 && (direction & SwipeGestureDirection.LEFT) == 0)
+					{
+						setState(GestureState.FAILED);
+					}
+					else if (velX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0)
+					{
+						setState(GestureState.FAILED);						
+					}
+					else if (absVelX >= minVelocity || (minDistance != minDistance || absOffsetX >= minDistance))
+					{
+						setState(GestureState.RECOGNIZED, new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, 0));
+					}
+				}
+				else if (absVelY > absVelX)
+				{
+					if ((SwipeGestureDirection.VERTICAL & direction) == 0)
+					{
+						// horizontal velocity is greater then vertical, but we're not interested in any horizontal direction
+						setState(GestureState.FAILED);
+					}
+					else if (velY < 0 && (direction & SwipeGestureDirection.UP) == 0)
+					{
+						setState(GestureState.FAILED);
+					}
+					else if (velY > 0 && (direction & SwipeGestureDirection.DOWN) == 0)
+					{
+						setState(GestureState.FAILED);						
+					}
+					else if (absVelY >= minVelocity || (minDistance != minDistance || absOffsetY >= minDistance))
+					{
+						setState(GestureState.RECOGNIZED, new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, 0, _offset.y));
+					}
+				}
+				else
+				{
+					setState(GestureState.FAILED);
+				}
+			}
+		}		
 		
 		
-		override public function onTouchEnd(touchPoint:TouchPoint):void
+		override protected function onTouchEnd(touch:Touch, event:TouchEvent):void
 		{
-			_forgetPoint(touchPoint);
+			setState(GestureState.FAILED);
 		}
 	}
 }

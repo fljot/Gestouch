@@ -1,4 +1,4 @@
-package org.gestouch
+package org.gestouch.utils
 {
 	import flash.system.Capabilities;
 	/**

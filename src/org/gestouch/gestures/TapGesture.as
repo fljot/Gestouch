@@ -2,7 +2,7 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.LongPressGestureEvent;
+	import org.gestouch.events.TapGestureEvent;
 
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
@@ -12,29 +12,26 @@ package org.gestouch.gestures
 
 
 	/**
-	 * TODO: -location
-	 * - check on iOS (Obj-C) what happens when numTouchesRequired=2, two finger down, then quickly release one.
+	 * TODO: check failing conditions (iDevice)
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class LongPressGesture extends Gesture
+	public class TapGesture extends Gesture
 	{
 		public var numTouchesRequired:uint = 1;
-		/**
-		 * The minimum time interval in millisecond fingers must press on the target for the gesture to be recognized.
-		 * 
-         * @default 500
-         */
-        public var minPressDuration:uint = 500;
+		public var numTapsRequired:uint = 1;
 		public var slop:Number = Gesture.DEFAULT_SLOP;
+		public var maxTapDelay:uint = 400;
+		public var maxTapDuration:uint = 1500;
 		
 		protected var _timer:Timer;
 		protected var _touchBeginX:Array = [];
 		protected var _touchBeginY:Array = [];
 		protected var _numTouchesRequiredReached:Boolean;
+		protected var _tapCounter:uint = 0;
 		
 		
-		public function LongPressGesture(target:InteractiveObject = null)
+		public function TapGesture(target:InteractiveObject = null)
 		{
 			super(target);
 		}
@@ -55,13 +52,25 @@ package org.gestouch.gestures
 		
 			
 		override public function reset():void
-		{
-			super.reset();
-			
+		{			
 			_touchBeginX.length = 0;
 			_touchBeginY.length = 0;
 			_numTouchesRequiredReached = false;
+			_tapCounter = 0;
 			_timer.reset();
+
+			super.reset();
+		}
+		
+			
+		override public function canPreventGesture(preventedGesture:Gesture):Boolean
+		{
+			if (preventedGesture is TapGesture &&
+				(preventedGesture as TapGesture).numTapsRequired > this.numTapsRequired)
+			{
+				return false;
+			}
+			return true;
 		}
 		
 		
@@ -77,7 +86,7 @@ package org.gestouch.gestures
 		{
 			super.preinit();
 			
-			_timer = new Timer(minPressDuration, 1);
+			_timer = new Timer(maxTapDelay, 1);
 			_timer.addEventListener(TimerEvent.TIMER_COMPLETE, timer_timerCompleteHandler);
 		}
 		
@@ -86,40 +95,32 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
-				{
-					ignoreTouch(touch, event);
-				}
-				else
-				{
-					setState(GestureState.FAILED);
-				}
+				// We put more fingers then required at the same time,
+				// so treat that as failed
+				setState(GestureState.FAILED);
 				return;
 			}
 			
 			_touchBeginX[touch.id] = touch.x;
 			_touchBeginY[touch.id] = touch.y;
 			
+			if (touchesCount == 1)
+			{
+				_timer.reset();
+				_timer.delay = maxTapDuration;
+				_timer.start();
+			}
+			
 			if (touchesCount == numTouchesRequired)
 			{
-				_numTouchesRequiredReached = true;
-				_timer.reset();
-				_timer.delay = minPressDuration;
-				if (minPressDuration > 0)
-				{
-					_timer.start();
-				}
-				else
-				{
-					timer_timerCompleteHandler();
-				}
+				_numTouchesRequiredReached = true;				
 			}
 		}
 		
 		
 		override protected function onTouchMove(touch:Touch, event:TouchEvent):void
 		{
-			if (state == GestureState.POSSIBLE && slop > 0)
+			if (slop >= 0)
 			{
 				// Fail if touch overcome slop distance
 				var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
@@ -127,35 +128,36 @@ package org.gestouch.gestures
 				if (Math.sqrt(dx*dx + dy*dy) > slop)
 				{
 					setState(GestureState.FAILED);
-					return;
 				}
-			}
-			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
-			{
-				updateLocation();
-				setState(GestureState.CHANGED, new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y));
 			}
 		}
 		
 		
 		override protected function onTouchEnd(touch:Touch, event:TouchEvent):void
 		{
-			//TODO: check proper condition (behavior) on iOS native
-			if (_numTouchesRequiredReached)
+			if (!_numTouchesRequiredReached)
 			{
-				if (((GestureState.BEGAN | GestureState.CHANGED) & state) > 0)
+				//TODO: check this condition on iDevice
+				setState(GestureState.FAILED);
+			}
+			else if (touchesCount == 0)
+			{
+				// reset flag for the next "full press" cycle
+				_numTouchesRequiredReached = false;
+				
+				_tapCounter++;
+				_timer.reset();
+				
+				if (_tapCounter == numTapsRequired)
 				{
 					updateLocation();
-					setState(GestureState.ENDED, new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.END, _localLocation.x, _localLocation.y));
+					setState(GestureState.RECOGNIZED, new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y));
 				}
 				else
 				{
-					setState(GestureState.FAILED);
+					_timer.delay = maxTapDelay;
+					_timer.start();
 				}
-			}
-			else
-			{
-				setState(GestureState.FAILED);
 			}
 		}
 		
@@ -168,12 +170,11 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		protected function timer_timerCompleteHandler(event:TimerEvent = null):void
+		protected function timer_timerCompleteHandler(event:TimerEvent):void
 		{
 			if (state == GestureState.POSSIBLE)
 			{
-				updateLocation();
-				setState(GestureState.BEGAN, new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y));
+				setState(GestureState.FAILED);
 			}
 		}
 	}

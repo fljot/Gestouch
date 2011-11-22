@@ -1,139 +1,179 @@
 package org.gestouch.gestures
 {
-	import org.gestouch.GestureUtils;
-	import org.gestouch.core.GesturesManager;
-	import org.gestouch.core.TouchPoint;
-	import org.gestouch.core.gestouch_internal;
+	import org.gestouch.core.GestureState;
+	import org.gestouch.core.Touch;
 	import org.gestouch.events.RotateGestureEvent;
+	import org.gestouch.utils.GestureUtils;
 
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
+	import flash.events.TouchEvent;
 	import flash.geom.Point;
-
 
 	[Event(name="gestureRotate", type="org.gestouch.events.RotateGestureEvent")]
 	/**
+	 * TODO:
+	 * -location
+	 * -check native behavior on iDevice
+	 * 
 	 * @author Pavel fljot
 	 */
 	public class RotateGesture extends Gesture
-	{		
+	{
+		public var slop:Number = Gesture.DEFAULT_SLOP >> 1;
 		
-		protected var _currVector:Point = new Point();
-		protected var _lastVector:Point = new Point();
+		protected var _touchBeginX:Array = [];
+		protected var _touchBeginY:Array = [];
+		protected var _rotationVector:Point = new Point();
+		protected var _firstTouch:Touch;
+		protected var _secondTouch:Touch;
 		
 		
-		public function RotateGesture(target:InteractiveObject, settings:Object = null)
+		public function RotateGesture(target:InteractiveObject = null)
 		{
-			super(target, settings);
+			super(target);
 		}
 		
 		
 		
 		
-		//--------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
 		//
-		//  Static methods
+		// Public methods
 		//
-		//--------------------------------------------------------------------------
-		
-		public static function add(target:InteractiveObject = null, settings:Object = null):RotateGesture
-		{
-			return new RotateGesture(target, settings);
-		}
-		
-		
-		public static function remove(target:InteractiveObject):RotateGesture
-		{
-			return GesturesManager.gestouch_internal::removeGestureByTarget(RotateGesture, target) as RotateGesture;
-		}
-		
-		
-		
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Public methods
-		//
-		//--------------------------------------------------------------------------
-		
-		override public function onCancel():void
-		{
-			super.onCancel();
-			
-			
-		}
-		
+		// --------------------------------------------------------------------------
 		
 		override public function reflect():Class
 		{
 			return RotateGesture;
 		}
 		
+			
+		override public function reset():void
+		{			
+			_touchBeginX.length = 0;
+			_touchBeginY.length = 0;
+
+			super.reset();
+		}
 		
-		override public function onTouchBegin(touchPoint:TouchPoint):void
+		
+		
+		
+		// --------------------------------------------------------------------------
+		//
+		// Protected methods
+		//
+		// --------------------------------------------------------------------------
+		
+		override protected function onTouchBegin(touch:Touch, event:TouchEvent):void
 		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
+			if (touchesCount > 2)
 			{
+				//TODO
+				ignoreTouch(touch, event);
 				return;
 			}
 			
-			_trackPoint(touchPoint);
-			
-			if (_trackingPointsCount == minTouchPointsCount)
+			if (touchesCount == 1)
 			{
-				_lastVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
-				_lastVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
+				_firstTouch = touch;
+			}
+			else
+			{
+				_secondTouch = touch;
 				
-				_updateCentralPoint();
+				_touchBeginX[_firstTouch.id] = _firstTouch.x;
+				_touchBeginY[_firstTouch.id] = _firstTouch.y;
+				_touchBeginX[_secondTouch.id] = _secondTouch.x;
+				_touchBeginY[_secondTouch.id] = _secondTouch.y;
 				
-				_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
+				_rotationVector.x = _secondTouch.x - _firstTouch.x;
+				_rotationVector.y = _secondTouch.y - _firstTouch.y;
 			}
 		}
 		
 		
-		override public function onTouchMove(touchPoint:TouchPoint):void
+		override protected function onTouchMove(touch:Touch, event:TouchEvent):void
 		{
-			// do calculations only when we track enough points
-			if (_trackingPointsCount < minTouchPointsCount)
+			if (touch.id == _firstTouch.id)
 			{
-				return;
+				_firstTouch = touch;
 			}
-			
-			_updateCentralPoint();
-			
-			_currVector.x = _trackingPoints[1].x - _trackingPoints[0].x;
-			_currVector.y = _trackingPoints[1].y - _trackingPoints[0].y;
-			
-			var a1:Number = Math.atan2(_lastVector.y, _lastVector.x);
-			var a2:Number = Math.atan2(_currVector.y, _currVector.x);
-			var angle:Number = a2 - a1;
-			angle *= GestureUtils.RADIANS_TO_DEGREES; 
-			
-			_lastVector.x = _currVector.x;
-			_lastVector.y = _currVector.y;
-			
-			_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.UPDATE, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y, 1, 1, angle));
-		}
-		
-		
-		override public function onTouchEnd(touchPoint:TouchPoint):void
-		{
-			var ending:Boolean = (_trackingPointsCount == minTouchPointsCount);
-			_forgetPoint(touchPoint);
-			
-			if (ending)
+			else
 			{
-				_dispatch(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, true, false, GesturePhase.END, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
+				_secondTouch = touch;
+			}
+			
+			if (touchesCount == 2)
+			{
+				var currRotationVector:Point = new Point(_secondTouch.x - _firstTouch.x, _secondTouch.y - _firstTouch.y);
+				var recognized:Boolean;
+				
+				if (state == GestureState.POSSIBLE)
+				{
+					// we start once any finger moved enough
+					var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
+					var dy:Number = Number(_touchBeginY[touch.id]) - touch.y;
+					if (Math.sqrt(dx*dx + dy*dy) > slop || slop != slop)//faster isNaN(slop)
+					{
+						recognized = true;
+						_rotationVector.x = _secondTouch.x - _firstTouch.x;
+						_rotationVector.y = _secondTouch.y - _firstTouch.y;
+					}
+				}
+				else
+				{
+					recognized = true;
+				}
+				
+				if (recognized)
+				{
+					updateLocation();
+					
+					var rotation:Number = Math.atan2(currRotationVector.y, currRotationVector.x) - Math.atan2(_rotationVector.y, _rotationVector.x);
+					rotation *= GestureUtils.RADIANS_TO_DEGREES;
+					_rotationVector.x = currRotationVector.x;
+					_rotationVector.y = currRotationVector.y;
+					
+					if (state == GestureState.POSSIBLE)
+					{
+						setState(GestureState.BEGAN, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, rotation));
+					}
+					else
+					{
+						setState(GestureState.CHANGED, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, rotation));
+					}
+				}
 			}
 		}
 		
 		
-		override protected function _preinit():void
+		override protected function onTouchEnd(touch:Touch, event:TouchEvent):void
 		{
-			super._preinit();
-			
-			minTouchPointsCount = 2;
+			if (touchesCount == 0)
+			{
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+				{
+					setState(GestureState.ENDED, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 0));
+				}
+				else if (state == GestureState.POSSIBLE)
+				{
+					setState(GestureState.FAILED);
+				}
+			}
+			else// == 1
+			{
+				if (touch.id == _firstTouch.id)
+				{
+					_firstTouch = _secondTouch;
+				}
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+				{
+					updateLocation();
+					setState(GestureState.CHANGED, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, 0));
+				}
+			}
 		}
 	}
 }
