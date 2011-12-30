@@ -150,7 +150,7 @@ package org.gestouch.gestures
 					offsetY = _location.y - prevLocationY;
 					// Unfortunately we create several new point instances here,
 					// but thats not a big deal since this code executed only once per recognition session
-					var offset:Point = new Point(_location.x - prevLocationX, _location.y - prevLocationY);
+					var offset:Point = new Point(offsetX, offsetY);
 					if (offset.length > slop)
 					{
 						var slopVector:Point = offset.clone();
