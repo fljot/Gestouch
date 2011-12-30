@@ -138,11 +138,17 @@ package org.gestouch.gestures
 					
 					if (state == GestureState.POSSIBLE)
 					{
-						setState(GestureState.BEGAN, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, rotation));
+						if (setState(GestureState.BEGAN) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
+						{
+							dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, rotation));
+						}
 					}
 					else
 					{
-						setState(GestureState.CHANGED, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, rotation));
+						if (setState(GestureState.CHANGED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
+						{
+							dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, rotation));
+						}
 					}
 				}
 			}
@@ -155,7 +161,10 @@ package org.gestouch.gestures
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
-					setState(GestureState.ENDED, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 0));
+					if (setState(GestureState.ENDED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
+					{
+						dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 0));
+					}
 				}
 				else if (state == GestureState.POSSIBLE)
 				{
@@ -171,7 +180,10 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					setState(GestureState.CHANGED, new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, 0));
+					if (setState(GestureState.CHANGED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
+					{
+						dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, 0));
+					}
 				}
 			}
 		}

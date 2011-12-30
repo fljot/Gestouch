@@ -148,11 +148,17 @@ package org.gestouch.gestures
 					
 					if (state == GestureState.POSSIBLE)
 					{
-						setState(GestureState.BEGAN, new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, scaleX, scaleY));
+						if (setState(GestureState.BEGAN) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
+						{
+							dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, scaleX, scaleY));
+						}
 					}
 					else
 					{
-						setState(GestureState.CHANGED, new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, scaleX, scaleY));
+						if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
+						{
+							dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, scaleX, scaleY));
+						}
 					}
 				}
 			}
@@ -165,7 +171,10 @@ package org.gestouch.gestures
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
-					setState(GestureState.ENDED, new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 1, 1));
+					if (setState(GestureState.ENDED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
+					{
+						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 1, 1));
+					}
 				}
 				else if (state == GestureState.POSSIBLE)
 				{
@@ -181,7 +190,10 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					setState(GestureState.CHANGED, new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, 1, 1));
+					if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
+					{
+						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, 1, 1));
+					}
 				}
 			}
 		}

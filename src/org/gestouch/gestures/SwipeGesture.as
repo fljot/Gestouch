@@ -117,7 +117,10 @@ package org.gestouch.gestures
 			{
 				if (absVel >= minVelocity || (minDistance != minDistance || offsetLength >= minDistance))
 				{
-					setState(GestureState.RECOGNIZED, new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
+					if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
+					{
+						dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
+					}
 				}
 			}
 			else
@@ -145,7 +148,10 @@ package org.gestouch.gestures
 					}
 					else if (absVelX >= minVelocity || (minDistance != minDistance || absOffsetX >= minDistance))
 					{
-						setState(GestureState.RECOGNIZED, new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, 0));
+						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
+						{
+							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, 0));
+						}
 					}
 				}
 				else if (absVelY > absVelX)
@@ -165,7 +171,10 @@ package org.gestouch.gestures
 					}
 					else if (absVelY >= minVelocity || (minDistance != minDistance || absOffsetY >= minDistance))
 					{
-						setState(GestureState.RECOGNIZED, new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, 0, _offset.y));
+						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
+						{
+							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, 0, _offset.y));
+						}
 					}
 				}
 				else

@@ -158,7 +158,10 @@ package org.gestouch.gestures
 						offset = offset.subtract(slopVector);
 					}
 					
-					setState(GestureState.BEGAN, new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, offset.x, offset.y));
+					if (setState(GestureState.BEGAN) && hasEventListener(PanGestureEvent.GESTURE_PAN))
+					{
+						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, offset.x, offset.y));
+					}
 				}
 			}
 			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
@@ -169,7 +172,10 @@ package org.gestouch.gestures
 				offsetX = _location.x - prevLocationX;
 				offsetY = _location.y - prevLocationY;
 				
-				setState(GestureState.CHANGED, new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, offsetX, offsetY));
+				if (setState(GestureState.CHANGED) && hasEventListener(PanGestureEvent.GESTURE_PAN))
+				{
+					dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, offsetX, offsetY));
+				}
 			}
 		}
 		
@@ -184,7 +190,10 @@ package org.gestouch.gestures
 				}
 				else
 				{
-					setState(GestureState.ENDED, new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 0, 0));
+					if (setState(GestureState.ENDED) && hasEventListener(PanGestureEvent.GESTURE_PAN))
+					{
+						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 0, 0));
+					}
 				}
 			}
 			else

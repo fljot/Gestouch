@@ -133,7 +133,10 @@ package org.gestouch.gestures
 			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 			{
 				updateLocation();
-				setState(GestureState.CHANGED, new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y));
+				if (setState(GestureState.CHANGED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+				{
+					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y));
+				}
 			}
 		}
 		
@@ -146,7 +149,10 @@ package org.gestouch.gestures
 				if (((GestureState.BEGAN | GestureState.CHANGED) & state) > 0)
 				{
 					updateLocation();
-					setState(GestureState.ENDED, new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.END, _localLocation.x, _localLocation.y));
+					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+					{
+						dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.END, _localLocation.x, _localLocation.y));
+					} 
 				}
 				else
 				{
@@ -173,7 +179,10 @@ package org.gestouch.gestures
 			if (state == GestureState.POSSIBLE)
 			{
 				updateLocation();
-				setState(GestureState.BEGAN, new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y));
+				if (setState(GestureState.BEGAN) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+				{
+					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y));
+				}
 			}
 		}
 	}

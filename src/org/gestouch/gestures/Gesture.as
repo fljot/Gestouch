@@ -156,17 +156,6 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		override public function dispatchEvent(event:Event):Boolean
-		{
-			if (hasEventListener(event.type))
-			{
-				return super.dispatchEvent(event);
-			}
-			
-			return true;
-		}
-		
-		
 		[Abstract]
 		/**
 		 * Reflects gesture class (for better perfomance).
@@ -327,15 +316,11 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected function setState(newState:uint, event:GestureEvent = null):void
+		protected function setState(newState:uint):Boolean
 		{
-			if (_state == newState)
+			if (_state == newState && _state == GestureState.CHANGED)
 			{
-				if (_state == GestureState.CHANGED && event)
-				{
-					dispatchEvent(event);
-				}
-				return;
+				return true;
 			}
 			
 			//TODO: is state sequence validation needed? e.g.:
@@ -349,7 +334,7 @@ package org.gestouch.gestures
 				if (delegate && !delegate.gestureShouldBegin(this))
 				{
 					setState(GestureState.FAILED);
-					return;
+					return false;
 				}
 			}
 				
@@ -363,16 +348,17 @@ package org.gestouch.gestures
 			
 			//TODO: what if RTE happens in event handlers?
 			
-			dispatchEvent(new GestureStateEvent(GestureStateEvent.STATE_CHANGE, _state, oldState));
-			if (event)
+			if (hasEventListener(GestureStateEvent.STATE_CHANGE))
 			{
-				dispatchEvent(event);
+				dispatchEvent(new GestureStateEvent(GestureStateEvent.STATE_CHANGE, _state, oldState));
 			}
 			
 			if (_state == GestureState.BEGAN || _state == GestureState.RECOGNIZED)
 			{
 				_gesturesManager.onGestureRecognized(this);
 			}
+			
+			return true;
 		}
 		
 		
