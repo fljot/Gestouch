@@ -182,25 +182,26 @@ package org.gestouch.core
 			
 			if (Multitouch.supportsTouchEvents)
 			{
-				stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler);
+				stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
 			}
 			else
 			{
-				stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
+				stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
 			}
 		}
 		
 		
 		protected function installStageListeners():void
 		{
+			//TODO: maximum priority to prevent event hijacking? 			
 			if (Multitouch.supportsTouchEvents)
 			{
-				_stage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler);
+				_stage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true);
 				_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler, true);
 			}
 			else
 			{
-				_stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+				_stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
 				_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true);
 			}
 		}
@@ -210,12 +211,12 @@ package org.gestouch.core
 		{
 			if (Multitouch.supportsTouchEvents)
 			{
-				_stage.removeEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler);
+				_stage.removeEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true);
 				_stage.removeEventListener(TouchEvent.TOUCH_END, touchEndHandler, true);
 			}
 			else
 			{
-				_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+				_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
 				_stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true);
 			}
 		}
