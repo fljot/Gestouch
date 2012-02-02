@@ -53,6 +53,12 @@ package org.gestouch.events
 		}
 		
 		
+		override public function get eventPhase():uint
+		{
+			return _mouseEvent.eventPhase;
+		}
+		
+		
 		override public function get stageX():Number
 		{
 			return _mouseEvent.stageX;

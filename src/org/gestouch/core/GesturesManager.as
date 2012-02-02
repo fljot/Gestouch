@@ -1,5 +1,6 @@
 package org.gestouch.core
 {
+	import flash.events.EventPhase;
 	import org.gestouch.events.MouseTouchEvent;
 	import org.gestouch.gestures.Gesture;
 
@@ -198,11 +199,13 @@ package org.gestouch.core
 			{
 				_stage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true);
 				_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler, true);
+				_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler);//to catch event out of stage
 			}
 			else
 			{
 				_stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
 				_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true);
+				_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);//to catch event out of stage
 			}
 		}
 		
@@ -376,6 +379,10 @@ package org.gestouch.core
 		
 		protected function touchEndHandler(event:TouchEvent):void
 		{
+			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
+				return;
+			
+			
 			if (_dirtyGesturesLength > 0)
 			{
 				resetDirtyGestures();

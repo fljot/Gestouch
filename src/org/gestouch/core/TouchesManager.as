@@ -1,5 +1,6 @@
 package org.gestouch.core
 {
+	import flash.events.EventPhase;
 	import flash.display.InteractiveObject;
 	import flash.display.Stage;
 	import flash.events.MouseEvent;
@@ -74,12 +75,16 @@ package org.gestouch.core
 				stage.addEventListener(TouchEvent.TOUCH_BEGIN, stage_touchBeginHandler, true, int.MAX_VALUE);
 				stage.addEventListener(TouchEvent.TOUCH_MOVE, stage_touchMoveHandler, true, int.MAX_VALUE);
 				stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, true, int.MAX_VALUE);
+				// if mouse/finger leaves the stage we will get only AT_TARGET phase
+				stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, false, int.MAX_VALUE);
 			}
 			else
 			{
 				stage.addEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler, true, int.MAX_VALUE);
 				stage.addEventListener(MouseEvent.MOUSE_MOVE, stage_mouseMoveHandler, true, int.MAX_VALUE);
 				stage.addEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler, true, int.MAX_VALUE);
+				// if mouse/finger leaves the stage we will get only AT_TARGET phase
+				stage.addEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler, false, int.MAX_VALUE);
 			}
 		}
 		
@@ -187,6 +192,9 @@ package org.gestouch.core
 		
 		protected function stage_mouseUpHandler(event:MouseEvent):void
 		{
+			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
+				return;
+			
 			var touch:Touch = _touchesMap[0] as Touch;
 			if (!touch)
 			{
