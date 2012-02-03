@@ -7,7 +7,6 @@ package org.gestouch.gestures
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
 	import flash.events.TimerEvent;
-	import flash.events.TouchEvent;
 	import flash.utils.Timer;
 
 
@@ -82,13 +81,13 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onTouchBegin(touch:Touch, event:TouchEvent):void
+		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > numTouchesRequired)
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
-					ignoreTouch(touch, event);
+					ignoreTouch(touch);
 				}
 				else
 				{
@@ -117,7 +116,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onTouchMove(touch:Touch, event:TouchEvent):void
+		override protected function onTouchMove(touch:Touch):void
 		{
 			if (state == GestureState.POSSIBLE && slop > 0)
 			{
@@ -141,7 +140,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onTouchEnd(touch:Touch, event:TouchEvent):void
+		override protected function onTouchEnd(touch:Touch):void
 		{
 			//TODO: check proper condition (behavior) on iOS native
 			if (_numTouchesRequiredReached)

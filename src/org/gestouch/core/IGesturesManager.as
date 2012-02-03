@@ -6,6 +6,9 @@ package org.gestouch.core
 	 */
 	public interface IGesturesManager
 	{
+		function addInputAdapter(inputAdapter:IInputAdapter):void;
+		function removeInputAdapter(inputAdapter:IInputAdapter):void;
+		
 		function addGesture(gesture:Gesture):void;
 		
 		function removeGesture(gesture:Gesture):void;

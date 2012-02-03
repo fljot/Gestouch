@@ -1,18 +1,13 @@
 package org.gestouch.core
 {
-	import flash.events.EventPhase;
-	import org.gestouch.events.MouseTouchEvent;
 	import org.gestouch.gestures.Gesture;
 
-	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.InteractiveObject;
-	import flash.display.Stage;
+	import flash.display.Shape;
 	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.events.TouchEvent;
-	import flash.ui.Multitouch;
 	import flash.utils.Dictionary;
+
 	/**
 	 * @author Pavel fljot
 	 */
@@ -22,7 +17,8 @@ package org.gestouch.core
 		private static var _allowInstantiation:Boolean;
 		
 		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
-		protected var _stage:Stage;
+		protected const _frameTickerShape:Shape = new Shape();
+		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
 		protected var _gestures:Vector.<Gesture> = new Vector.<Gesture>();
 		protected var _gesturesForTouchMap:Array = [];
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
@@ -37,6 +33,12 @@ package org.gestouch.core
 			{
 				throw new Error("Do not instantiate GesturesManager directly.");
 			}
+		}
+		
+		
+		public function get inputAdapters():Vector.<IInputAdapter>
+		{
+			return _inputAdapters.concat();
 		}
 		
 		
@@ -65,7 +67,7 @@ package org.gestouch.core
 			 
 			return _instance;
 		}
-		
+			
 		
 				
 		
@@ -88,15 +90,6 @@ package org.gestouch.core
 			targetGestures.push(gesture);
 			
 			_gestures.push(gesture);
-			
-			if (!_stage && gesture.target.stage)
-			{
-				installStage(gesture.target.stage);
-			}
-			else
-			{
-				gesture.target.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
-			}
 		}
 		
 		
@@ -115,7 +108,6 @@ package org.gestouch.core
 			if (targetGestures.length == 0)
 			{
 				delete _gesturesForTargetMap[target];
-				gesture.target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
 			}
 			
 			var index:int = _gestures.indexOf(gesture);
@@ -134,7 +126,7 @@ package org.gestouch.core
 			{
 				_dirtyGestures.push(gesture);
 				_dirtyGesturesLength++;
-				_stage.addEventListener(Event.ENTER_FRAME, stage_enterFrameHandler);
+				_frameTickerShape.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 			}
 		}
 		
@@ -168,6 +160,38 @@ package org.gestouch.core
 		}
 		
 		
+		public function addInputAdapter(inputAdapter:IInputAdapter):void
+		{
+			if (!inputAdapter)
+			{
+				throw new Error("Input adapter must be non null.");
+			}
+			
+			if (_inputAdapters.indexOf(inputAdapter) > -1)
+				return;//TODO: throw Error or ignore?
+			
+			_inputAdapters.push(inputAdapter);
+			inputAdapter.touchesManager = _touchesManager;
+			inputAdapter.gesturesManager = this;
+		}
+		
+		
+		public function removeInputAdapter(inputAdapter:IInputAdapter):void
+		{
+			if (!inputAdapter)
+			{
+				throw new Error("Input adapter must be non null.");
+			}
+			var index:int = _inputAdapters.indexOf(inputAdapter);
+			if (index == -1)
+			{
+				throw new Error("This input manager is not registered.");
+			}
+			
+			_inputAdapters.splice(index, 1);
+		}
+		
+		
 		
 		
 		//--------------------------------------------------------------------------
@@ -175,55 +199,6 @@ package org.gestouch.core
 		//  Private methods
 		//
 		//--------------------------------------------------------------------------
-		
-		protected function installStage(stage:Stage):void
-		{
-			_touchesManager.init(stage);
-			_stage = stage;
-			
-			if (Multitouch.supportsTouchEvents)
-			{
-				stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
-			}
-			else
-			{
-				stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
-			}
-		}
-		
-		
-		protected function installStageListeners():void
-		{
-			//TODO: maximum priority to prevent event hijacking? 			
-			if (Multitouch.supportsTouchEvents)
-			{
-				_stage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true);
-				_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler, true);
-				_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler);//to catch event out of stage
-			}
-			else
-			{
-				_stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
-				_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true);
-				_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);//to catch event out of stage
-			}
-		}
-		
-		
-		protected function uninstallStageListeners():void
-		{
-			if (Multitouch.supportsTouchEvents)
-			{
-				_stage.removeEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true);
-				_stage.removeEventListener(TouchEvent.TOUCH_END, touchEndHandler, true);
-			}
-			else
-			{
-				_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
-				_stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true);
-			}
-		}
-		
 		
 		protected function resetDirtyGestures():void
 		{
@@ -234,45 +209,17 @@ package org.gestouch.core
 			_dirtyGestures.length = 0;
 			_dirtyGesturesLength = 0;
 			_dirtyGesturesMap = new Dictionary(true);
-			_stage.removeEventListener(Event.ENTER_FRAME, stage_enterFrameHandler);
+			_frameTickerShape.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		}
 		
 		
-		
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Event handlers
-		//
-		//--------------------------------------------------------------------------
-		
-		protected function gestureTarget_addedToStageHandler(event:Event):void
-		{
-			var target:DisplayObject = event.target as DisplayObject;
-			target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
-			if (!_stage)
-			{
-				installStage(target.stage);
-			}
-			
-			var depth:uint = 1;//NB! not using 0-based for sorting function
-			var targetParent:DisplayObjectContainer = target.parent;
-			while (targetParent)
-			{
-				depth++;
-				targetParent = targetParent.parent;
-			}
-		}
-		
-		
-		protected function touchBeginHandler(event:TouchEvent):void
+		gestouch_internal function onTouchBegin(touch:Touch):void
 		{
 			if (_dirtyGesturesLength > 0)
 			{
 				resetDirtyGestures();
 			}
 			
-			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
 			var gesture:Gesture;
 			var i:uint;
 			
@@ -323,32 +270,22 @@ package org.gestouch.core
 				// Check for state because previous (i+1) gesture may already abort current (i) one
 				if (gesture.state != GestureState.FAILED)
 				{
-					gesture.gestouch_internal::touchBeginHandler(touch, event);
+					gesture.gestouch_internal::touchBeginHandler(touch);
 				}
 				else
 				{
 					gesturesForTouch.splice(i, 1);
 				}
 			}
-			
-			installStageListeners();
 		}
 		
 		
-		protected function mouseDownHandler(event:MouseEvent):void
-		{
-			touchBeginHandler(MouseTouchEvent.createMouseTouchEvent(event));
-		}
-		
-		
-		protected function touchMoveHandler(event:TouchEvent):void
+		gestouch_internal function onTouchMove(touch:Touch):void
 		{
 			if (_dirtyGesturesLength > 0)
 			{
 				resetDirtyGestures();
 			}
-			
-			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
 			
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
 			var gesture:Gesture;
@@ -359,7 +296,7 @@ package org.gestouch.core
 				
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
 				{
-					gesture.gestouch_internal::touchMoveHandler(touch, event);
+					gesture.gestouch_internal::touchMoveHandler(touch);
 				}
 				else
 				{
@@ -370,25 +307,12 @@ package org.gestouch.core
 		}
 		
 		
-		protected function mouseMoveHandler(event:MouseEvent):void
+		gestouch_internal function onTouchEnd(touch:Touch):void
 		{
-			//TODO: copy code from touchMoveHandler: save 1 function call?
-			touchMoveHandler(MouseTouchEvent.createMouseTouchEvent(event));
-		}
-		
-		
-		protected function touchEndHandler(event:TouchEvent):void
-		{
-			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
-				return;
-			
-			
 			if (_dirtyGesturesLength > 0)
 			{
 				resetDirtyGestures();
 			}
-			
-			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
 			
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
 			var gesture:Gesture;
@@ -396,30 +320,30 @@ package org.gestouch.core
 			while (i-- > 0)
 			{
 				gesture = gesturesForTouch[i] as Gesture;
-				
-				// TODO: handle cancelled touch:
-				// if (event.hasOwnProperty("isTouchPointCanceled") && event["isTouchPointCanceled"] && ...
 									
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
 				{					
-					gesture.gestouch_internal::touchEndHandler(touch, event);
+					gesture.gestouch_internal::touchEndHandler(touch);
 				}
 			}
-			
-			if (_touchesManager.activeTouchesCount == 0)
-			{
-				uninstallStageListeners();
-			}
 		}
 		
 		
-		protected function mouseUpHandler(event:MouseEvent):void
+		gestouch_internal function onTouchCancel(touch:Touch):void
 		{
-			touchEndHandler(MouseTouchEvent.createMouseTouchEvent(event));
+			//TODO
 		}
 		
 		
-		private function stage_enterFrameHandler(event:Event):void
+		
+		
+		//--------------------------------------------------------------------------
+		//
+		//  Event handlers
+		//
+		//--------------------------------------------------------------------------		
+		
+		private function enterFrameHandler(event:Event):void
 		{
 			resetDirtyGestures();
 		}

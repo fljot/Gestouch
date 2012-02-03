@@ -1,6 +1,5 @@
 package org.gestouch.core
 {
-	import flash.display.Stage;
 	/**
 	 * @author Pavel fljot
 	 */
@@ -8,7 +7,10 @@ package org.gestouch.core
 	{
 		function get activeTouchesCount():uint;
 		
-		function init(stage:Stage):void;
+		function createTouch():Touch;
+		function addTouch(touch:Touch):Touch;
+		function removeTouch(touch:Touch):Touch;
 		function getTouch(touchPointID:int):Touch;
+		function hasTouch(touchPointID:int):Boolean;
 	}
 }

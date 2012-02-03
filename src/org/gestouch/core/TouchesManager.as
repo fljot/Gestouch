@@ -1,13 +1,7 @@
 package org.gestouch.core
 {
-	import flash.events.EventPhase;
-	import flash.display.InteractiveObject;
-	import flash.display.Stage;
-	import flash.events.MouseEvent;
-	import flash.events.TouchEvent;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
-	import flash.utils.getTimer;
 	/**
 	 * @author Pavel fljot
 	 */
@@ -16,7 +10,6 @@ package org.gestouch.core
 		private static var _instance:ITouchesManager;
 		private static var _allowInstantiation:Boolean;
 		
-		protected var _stage:Stage;
 		protected var _touchesMap:Object = {};
 		
 		{
@@ -67,25 +60,44 @@ package org.gestouch.core
 		}
 		
 		
-		public function init(stage:Stage):void
+		public function createTouch():Touch
 		{
-			_stage = stage;
-			if (Multitouch.supportsTouchEvents)
+			//TODO: pool
+			return new Touch();
+		}
+		
+		
+		public function addTouch(touch:Touch):Touch
+		{
+			if (_touchesMap.hasOwnProperty(touch.id))
 			{
-				stage.addEventListener(TouchEvent.TOUCH_BEGIN, stage_touchBeginHandler, true, int.MAX_VALUE);
-				stage.addEventListener(TouchEvent.TOUCH_MOVE, stage_touchMoveHandler, true, int.MAX_VALUE);
-				stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, true, int.MAX_VALUE);
-				// if mouse/finger leaves the stage we will get only AT_TARGET phase
-				stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, false, int.MAX_VALUE);
+				throw new Error("Touch with id " + touch.id + " is already registered.");
 			}
-			else
+			
+			_touchesMap[touch.id] = touch;
+			_activeTouchesCount++;
+			
+			return touch;
+		}
+		
+		
+		public function removeTouch(touch:Touch):Touch
+		{
+			if (!_touchesMap.hasOwnProperty(touch.id))
 			{
-				stage.addEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler, true, int.MAX_VALUE);
-				stage.addEventListener(MouseEvent.MOUSE_MOVE, stage_mouseMoveHandler, true, int.MAX_VALUE);
-				stage.addEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler, true, int.MAX_VALUE);
-				// if mouse/finger leaves the stage we will get only AT_TARGET phase
-				stage.addEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler, false, int.MAX_VALUE);
+				throw new Error("Touch with id " + touch.id + " is not registered.");
 			}
+			
+			delete _touchesMap[touch.id];
+			_activeTouchesCount--;
+			
+			return touch;
+		}
+		
+		
+		public function hasTouch(touchPointID:int):Boolean
+		{
+			 return _touchesMap.hasOwnProperty(touchPointID);
 		}
 		
 		
@@ -93,120 +105,6 @@ package org.gestouch.core
 		{
 			var touch:Touch = _touchesMap[touchPointID] as Touch;
 			return touch ? touch.clone() : null;
-		}		
-		
-		
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Event handlers
-		//
-		//--------------------------------------------------------------------------
-		
-		protected function stage_touchBeginHandler(event:TouchEvent):void
-		{
-			var touch:Touch = new Touch(event.touchPointID);
-			_touchesMap[event.touchPointID] = touch;
-			
-			touch.target = event.target as InteractiveObject;
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.sizeX = event.sizeX;
-			touch.sizeY = event.sizeY;
-			touch.pressure = event.pressure;
-			touch.time = getTimer();//TODO: conditional compilation + event.timestamp
-			
-			_activeTouchesCount++;
-		}
-		
-		
-		protected function stage_mouseDownHandler(event:MouseEvent):void
-		{
-			var touch:Touch = new Touch(0);
-			_touchesMap[0] = touch;
-			
-			touch.target = event.target as InteractiveObject;
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.sizeX = NaN;
-			touch.sizeY = NaN;
-			touch.pressure = NaN;
-			touch.time = getTimer();//TODO: conditional compilation + event.timestamp
-			
-			_activeTouchesCount++;
-		}
-		
-		
-		protected function stage_touchMoveHandler(event:TouchEvent):void
-		{
-			var touch:Touch = _touchesMap[event.touchPointID] as Touch;
-			if (!touch)
-			{
-				// some fake event?
-				return;
-			}
-			
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.sizeX = event.sizeX;
-			touch.sizeY = event.sizeY;
-			touch.pressure = event.pressure;
-			touch.time = getTimer();//TODO: conditional compilation + event.timestamp
-		}
-		
-		
-		protected function stage_mouseMoveHandler(event:MouseEvent):void
-		{
-			var touch:Touch = _touchesMap[0] as Touch;
-			if (!touch)
-			{
-				// some fake event?
-				return;
-			}
-			
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.time = getTimer();//TODO: conditional compilation + event.timestamp
-		}
-		
-		
-		protected function stage_touchEndHandler(event:TouchEvent):void
-		{
-			var touch:Touch = _touchesMap[event.touchPointID] as Touch;
-			if (!touch)
-			{
-				// some fake event?
-				return;
-			}
-			
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.sizeX = event.sizeX;
-			touch.sizeY = event.sizeY;
-			touch.pressure = event.pressure;
-			touch.time = getTimer();//TODO: conditional compilation + event.timestamp
-			
-			_activeTouchesCount--;
-		}
-		
-		
-		protected function stage_mouseUpHandler(event:MouseEvent):void
-		{
-			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
-				return;
-			
-			var touch:Touch = _touchesMap[0] as Touch;
-			if (!touch)
-			{
-				// some fake event?
-				return;
-			}
-			
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.time = getTimer();//TODO: conditional compilation + event.timestamp
-			
-			_activeTouchesCount--;
 		}
 	}
 }

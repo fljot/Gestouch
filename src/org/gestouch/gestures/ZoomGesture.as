@@ -6,7 +6,6 @@ package org.gestouch.gestures
 
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
 	import flash.geom.Point;
 
 	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
@@ -66,12 +65,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
-		override protected function onTouchBegin(touch:Touch, event:TouchEvent):void
+		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > 2)
 			{
 				//TODO
-				ignoreTouch(touch, event);
+				ignoreTouch(touch);
 				return;
 			}
 			
@@ -94,7 +93,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onTouchMove(touch:Touch, event:TouchEvent):void
+		override protected function onTouchMove(touch:Touch):void
 		{
 			if (touch.id == _firstTouch.id)
 			{
@@ -165,7 +164,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onTouchEnd(touch:Touch, event:TouchEvent):void
+		override protected function onTouchEnd(touch:Touch):void
 		{
 			if (touchesCount == 0)
 			{

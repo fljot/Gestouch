@@ -6,7 +6,6 @@ package org.gestouch.gestures
 
 	import flash.display.InteractiveObject;
 	import flash.events.GesturePhase;
-	import flash.events.TouchEvent;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
 
@@ -69,7 +68,7 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 				
-		override protected function onTouchBegin(touch:Touch, event:TouchEvent):void
+		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > numTouchesRequired)
 			{
@@ -88,7 +87,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onTouchMove(touch:Touch, event:TouchEvent):void
+		override protected function onTouchMove(touch:Touch):void
 		{
 			if (touchesCount < numTouchesRequired)
 				return;
@@ -185,7 +184,7 @@ package org.gestouch.gestures
 		}		
 		
 		
-		override protected function onTouchEnd(touch:Touch, event:TouchEvent):void
+		override protected function onTouchEnd(touch:Touch):void
 		{
 			setState(GestureState.FAILED);
 		}

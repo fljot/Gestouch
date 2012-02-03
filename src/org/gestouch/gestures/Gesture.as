@@ -273,7 +273,7 @@ package org.gestouch.gestures
 		/**
 		 * TODO: clarify usage. For now it's supported to call this method in onTouchBegin with return.
 		 */
-		protected function ignoreTouch(touch:Touch, event:TouchEvent):void
+		protected function ignoreTouch(touch:Touch):void
 		{
 			if (_touchesMap.hasOwnProperty(touch.id))
 			{
@@ -285,33 +285,27 @@ package org.gestouch.gestures
 		
 		[Abstract]
 		/**
-		 * Internal method, used by GesturesManager.
-		 * 
 		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
 		 */
-		protected function onTouchBegin(touch:Touch, event:TouchEvent):void
+		protected function onTouchBegin(touch:Touch):void
 		{
 		}
 		
 		
 		[Abstract]
 		/**
-		 * Internal method, used by GesturesManager.
-		 * 
 		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
 		 */
-		protected function onTouchMove(touch:Touch, event:TouchEvent):void
+		protected function onTouchMove(touch:Touch):void
 		{
 		}
 		
 		
 		[Abstract]
 		/**
-		 * Internal method, used by GesturesManager.
-		 * 
 		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
 		 */
-		protected function onTouchEnd(touch:Touch, event:TouchEvent):void
+		protected function onTouchEnd(touch:Touch):void
 		{
 		}
 		
@@ -401,28 +395,28 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		gestouch_internal function touchBeginHandler(touch:Touch, event:TouchEvent):void
+		gestouch_internal function touchBeginHandler(touch:Touch):void
 		{
 			_touchesMap[touch.id] = touch;
 			_touchesCount++;
 			
-			onTouchBegin(touch, event);
+			onTouchBegin(touch);
 		}
 		
 		
-		gestouch_internal function touchMoveHandler(touch:Touch, event:TouchEvent):void
+		gestouch_internal function touchMoveHandler(touch:Touch):void
 		{
 			_touchesMap[touch.id] = touch;
-			onTouchMove(touch, event);
+			onTouchMove(touch);
 		}
 		
 		
-		gestouch_internal function touchEndHandler(touch:Touch, event:TouchEvent):void
+		gestouch_internal function touchEndHandler(touch:Touch):void
 		{
 			delete _touchesMap[touch.id];
 			_touchesCount--;
 			
-			onTouchEnd(touch, event);
+			onTouchEnd(touch);
 		}
 	}
 }
