@@ -1,11 +1,16 @@
 package org.gestouch.core
 {
 	import org.gestouch.gestures.Gesture;
+	import org.gestouch.input.MouseInputAdapter;
+	import org.gestouch.input.TouchInputAdapter;
 
+	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.InteractiveObject;
 	import flash.display.Shape;
+	import flash.display.Stage;
 	import flash.events.Event;
+	import flash.ui.Multitouch;
 	import flash.utils.Dictionary;
 
 	/**
@@ -13,12 +18,14 @@ package org.gestouch.core
 	 */
 	public class GesturesManager implements IGesturesManager
 	{
+		public static var initDefaultInputAdapter:Boolean = true;
 		private static var _instance:IGesturesManager;
 		private static var _allowInstantiation:Boolean;
 		
 		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
 		protected const _frameTickerShape:Shape = new Shape();
 		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
+		protected var _stage:Stage;
 		protected var _gestures:Vector.<Gesture> = new Vector.<Gesture>();
 		protected var _gesturesForTouchMap:Array = [];
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
@@ -89,7 +96,19 @@ package org.gestouch.core
 			}
 			targetGestures.push(gesture);
 			
-			_gestures.push(gesture);
+			_gestures.push(gesture);	
+			
+			if (GesturesManager.initDefaultInputAdapter)
+			{
+				if (!_stage && gesture.target.stage)
+				{
+					installStage(gesture.target.stage);
+				}
+				else
+				{
+					gesture.target.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+				}
+			}
 		}
 		
 		
@@ -108,6 +127,7 @@ package org.gestouch.core
 			if (targetGestures.length == 0)
 			{
 				delete _gesturesForTargetMap[target];
+				target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
 			}
 			
 			var index:int = _gestures.indexOf(gesture);
@@ -199,6 +219,21 @@ package org.gestouch.core
 		//  Private methods
 		//
 		//--------------------------------------------------------------------------
+		
+		protected function installStage(stage:Stage):void
+		{
+			_stage = stage;
+			
+			if (Multitouch.supportsTouchEvents)
+			{
+				addInputAdapter(new TouchInputAdapter(stage));
+			}
+			else
+			{
+				addInputAdapter(new MouseInputAdapter(stage));
+			}
+		}
+		
 		
 		protected function resetDirtyGestures():void
 		{
@@ -342,6 +377,17 @@ package org.gestouch.core
 		//  Event handlers
 		//
 		//--------------------------------------------------------------------------		
+		
+		protected function gestureTarget_addedToStageHandler(event:Event):void
+		{
+			var target:DisplayObject = event.target as DisplayObject;
+			target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+			if (!_stage && GesturesManager.initDefaultInputAdapter)
+			{
+				installStage(target.stage);
+			}
+		}
+		
 		
 		private function enterFrameHandler(event:Event):void
 		{
