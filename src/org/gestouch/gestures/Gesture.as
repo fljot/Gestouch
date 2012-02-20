@@ -248,8 +248,8 @@ package org.gestouch.gestures
 		protected function installTarget(target:InteractiveObject):void
 		{
 			if (target)
-			{				
-				_gesturesManager.addGesture(this);
+			{
+				_gesturesManager.gestouch_internal::addGesture(this);
 			}
 		}
 		
@@ -265,7 +265,7 @@ package org.gestouch.gestures
 		{
 			if (target)
 			{
-				_gesturesManager.removeGesture(this);
+				_gesturesManager.gestouch_internal::removeGesture(this);
 			}
 		}
 		
@@ -337,7 +337,7 @@ package org.gestouch.gestures
 			
 			if (((GestureState.CANCELLED | GestureState.RECOGNIZED | GestureState.ENDED | GestureState.FAILED) & _state) > 0)
 			{
-				_gesturesManager.scheduleGestureStateReset(this);
+				_gesturesManager.gestouch_internal::scheduleGestureStateReset(this);
 			}
 			
 			//TODO: what if RTE happens in event handlers?
@@ -349,7 +349,7 @@ package org.gestouch.gestures
 			
 			if (_state == GestureState.BEGAN || _state == GestureState.RECOGNIZED)
 			{
-				_gesturesManager.onGestureRecognized(this);
+				_gesturesManager.gestouch_internal::onGestureRecognized(this);
 			}
 			
 			return true;

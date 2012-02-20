@@ -76,108 +76,6 @@ package org.gestouch.core
 		}
 			
 		
-				
-		
-		public function addGesture(gesture:Gesture):void
-		{
-			if (!gesture)
-			{
-				throw new ArgumentError("Argument 'gesture' must be not null.");
-			}
-			if (_gestures.indexOf(gesture) > -1)
-			{
-				throw new Error("This gesture is already registered.. something wrong.");
-			}
-			
-			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[gesture.target] as Vector.<Gesture>;
-			if (!targetGestures)
-			{
-				targetGestures = _gesturesForTargetMap[gesture.target] = new Vector.<Gesture>();
-			}
-			targetGestures.push(gesture);
-			
-			_gestures.push(gesture);	
-			
-			if (GesturesManager.initDefaultInputAdapter)
-			{
-				if (!_stage && gesture.target.stage)
-				{
-					installStage(gesture.target.stage);
-				}
-				else
-				{
-					gesture.target.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
-				}
-			}
-		}
-		
-		
-		public function removeGesture(gesture:Gesture):void
-		{
-			if (!gesture)
-			{
-				throw new ArgumentError("Argument 'gesture' must be not null.");
-			}
-			
-			
-			var target:InteractiveObject = gesture.target;
-			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
-			targetGestures.splice(targetGestures.indexOf(gesture), 1);
-			
-			if (targetGestures.length == 0)
-			{
-				delete _gesturesForTargetMap[target];
-				target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
-			}
-			
-			var index:int = _gestures.indexOf(gesture);
-			if (index > -1)
-			{
-				_gestures.splice(index, 1);
-			}
-			
-			//TODO: decide about gesture state and _dirtyGestures
-		}
-		
-		
-		public function scheduleGestureStateReset(gesture:Gesture):void
-		{
-			if (!_dirtyGesturesMap[gesture])
-			{
-				_dirtyGestures.push(gesture);
-				_dirtyGesturesLength++;
-				_frameTickerShape.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
-			}
-		}
-		
-		
-		public function onGestureRecognized(gesture:Gesture):void
-		{
-			for each (var otherGesture:Gesture in _gestures)
-			{
-				// conditions for otherGesture "own properties"
-				if (otherGesture != gesture &&
-					otherGesture.enabled &&
-					otherGesture.state == GestureState.POSSIBLE)
-				{
-					// conditions for otherGesture target
-					if (otherGesture.target == gesture.target ||
-						(gesture.target is DisplayObjectContainer && (gesture.target as DisplayObjectContainer).contains(otherGesture.target)) ||
-						(otherGesture.target is DisplayObjectContainer && (otherGesture.target as DisplayObjectContainer).contains(gesture.target))						
-						)
-					{
-						// conditions for gestures relations
-						if (gesture.canPreventGesture(otherGesture) &&
-							otherGesture.canBePreventedByGesture(gesture) &&
-							(!gesture.delegate || !gesture.delegate.gesturesShouldRecognizeSimultaneously(gesture, otherGesture)) &&
-							(!otherGesture.delegate || !otherGesture.delegate.gesturesShouldRecognizeSimultaneously(otherGesture, gesture)))
-						{
-							otherGesture.gestouch_internal::setState_internal(GestureState.FAILED);
-						}
-					}					
-				}
-			}
-		}
 		
 		
 		public function addInputAdapter(inputAdapter:IInputAdapter):void
@@ -245,6 +143,108 @@ package org.gestouch.core
 			_dirtyGesturesLength = 0;
 			_dirtyGesturesMap = new Dictionary(true);
 			_frameTickerShape.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
+		}
+		
+		
+		gestouch_internal function addGesture(gesture:Gesture):void
+		{
+			if (!gesture)
+			{
+				throw new ArgumentError("Argument 'gesture' must be not null.");
+			}
+			if (_gestures.indexOf(gesture) > -1)
+			{
+				throw new Error("This gesture is already registered.. something wrong.");
+			}
+			
+			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[gesture.target] as Vector.<Gesture>;
+			if (!targetGestures)
+			{
+				targetGestures = _gesturesForTargetMap[gesture.target] = new Vector.<Gesture>();
+			}
+			targetGestures.push(gesture);
+			
+			_gestures.push(gesture);	
+			
+			if (GesturesManager.initDefaultInputAdapter)
+			{
+				if (!_stage && gesture.target.stage)
+				{
+					installStage(gesture.target.stage);
+				}
+				else
+				{
+					gesture.target.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+				}
+			}
+		}
+		
+		
+		gestouch_internal function removeGesture(gesture:Gesture):void
+		{
+			if (!gesture)
+			{
+				throw new ArgumentError("Argument 'gesture' must be not null.");
+			}
+			
+			
+			var target:InteractiveObject = gesture.target;
+			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
+			targetGestures.splice(targetGestures.indexOf(gesture), 1);
+			
+			if (targetGestures.length == 0)
+			{
+				delete _gesturesForTargetMap[target];
+				target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+			}
+			
+			var index:int = _gestures.indexOf(gesture);
+			if (index > -1)
+			{
+				_gestures.splice(index, 1);
+			}
+			
+			//TODO: decide about gesture state and _dirtyGestures
+		}
+		
+		
+		gestouch_internal function scheduleGestureStateReset(gesture:Gesture):void
+		{
+			if (!_dirtyGesturesMap[gesture])
+			{
+				_dirtyGestures.push(gesture);
+				_dirtyGesturesLength++;
+				_frameTickerShape.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+			}
+		}
+		
+		
+		gestouch_internal function onGestureRecognized(gesture:Gesture):void
+		{
+			for each (var otherGesture:Gesture in _gestures)
+			{
+				// conditions for otherGesture "own properties"
+				if (otherGesture != gesture &&
+					otherGesture.enabled &&
+					otherGesture.state == GestureState.POSSIBLE)
+				{
+					// conditions for otherGesture target
+					if (otherGesture.target == gesture.target ||
+						(gesture.target is DisplayObjectContainer && (gesture.target as DisplayObjectContainer).contains(otherGesture.target)) ||
+						(otherGesture.target is DisplayObjectContainer && (otherGesture.target as DisplayObjectContainer).contains(gesture.target))						
+						)
+					{
+						// conditions for gestures relations
+						if (gesture.canPreventGesture(otherGesture) &&
+							otherGesture.canBePreventedByGesture(gesture) &&
+							(!gesture.delegate || !gesture.delegate.gesturesShouldRecognizeSimultaneously(gesture, otherGesture)) &&
+							(!otherGesture.delegate || !otherGesture.delegate.gesturesShouldRecognizeSimultaneously(otherGesture, gesture)))
+						{
+							otherGesture.gestouch_internal::setState_internal(GestureState.FAILED);
+						}
+					}					
+				}
+			}
 		}
 		
 		
