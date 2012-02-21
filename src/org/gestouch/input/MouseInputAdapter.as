@@ -85,7 +85,7 @@ package org.gestouch.input
 			var touch:Touch = _touchesManager.getTouch(PRIMARY_TOUCH_POINT_ID);
 			touch.x = event.stageX;
 			touch.y = event.stageY;
-			//TODO: time update vs begin time
+			touch.time = getTimer();
 			
 			_gesturesManager.gestouch_internal::onTouchMove(touch);
 		}
@@ -106,7 +106,7 @@ package org.gestouch.input
 			var touch:Touch = _touchesManager.getTouch(PRIMARY_TOUCH_POINT_ID);
 			touch.x = event.stageX;
 			touch.y = event.stageY;
-			//TODO: time update vs begin time
+			touch.time = getTimer();
 			
 			_gesturesManager.gestouch_internal::onTouchEnd(touch);
 			

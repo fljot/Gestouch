@@ -105,7 +105,15 @@ package org.gestouch.input
 			touch.sizeX = event.sizeX;
 			touch.sizeY = event.sizeY;
 			touch.pressure = event.pressure;
-			//TODO: time update vs begin time
+			//TODO: conditional compilation?
+			if (event.hasOwnProperty("timestamp"))
+			{
+				touch.time = event["timestamp"];
+			}
+			else
+			{
+				touch.time = getTimer();
+			}
 			
 			_gesturesManager.gestouch_internal::onTouchMove(touch);
 		}
@@ -128,7 +136,15 @@ package org.gestouch.input
 			touch.sizeX = event.sizeX;
 			touch.sizeY = event.sizeY;
 			touch.pressure = event.pressure;
-			//TODO: time update vs begin time
+			//TODO: conditional compilation?
+			if (event.hasOwnProperty("timestamp"))
+			{
+				touch.time = event["timestamp"];
+			}
+			else
+			{
+				touch.time = getTimer();
+			}
 			
 			_gesturesManager.gestouch_internal::onTouchEnd(touch);
 			
