@@ -102,7 +102,12 @@ package org.gestouch.gestures
 			var absVel:Number = vel > 0 ? vel : -vel;//faster Math.abs()
 //			trace(_offset, _offset.length, ".....velocity:", vel);
 			
-			if (offsetLength > Gesture.DEFAULT_SLOP && absVel < velocityThreshold)
+			if (offsetLength < Gesture.DEFAULT_SLOP)
+			{
+				// no need in processing - we're in the very beginning of movement
+				return;
+			}
+			else if (absVel < velocityThreshold)
 			{
 				setState(GestureState.FAILED);
 				return;
