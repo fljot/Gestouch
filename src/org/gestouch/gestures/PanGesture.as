@@ -19,6 +19,10 @@ package org.gestouch.gestures
 	public class PanGesture extends Gesture
 	{
 		public var slop:Number = Gesture.DEFAULT_SLOP;
+		/**
+		 * Used for initial slop overcome calculations only.
+		 */
+		public var direction:uint = PanGestureDirection.NO_DIRECTION;
 		
 		protected var _touchBeginX:Array = [];
 		protected var _touchBeginY:Array = [];
@@ -137,8 +141,8 @@ package org.gestouch.gestures
 			if (state == GestureState.POSSIBLE)
 			{
 				// Check if finger moved enough for gesture to be recognized
-				var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
-				var dy:Number = Number(_touchBeginY[touch.id]) - touch.y;
+				var dx:Number = (direction == PanGestureDirection.VERTICAL) ? 0 : Number(_touchBeginX[touch.id]) - touch.x;
+				var dy:Number = (direction == PanGestureDirection.HORIZONTAL) ? 0 : Number(_touchBeginY[touch.id]) - touch.y;
 				if (Math.sqrt(dx*dx + dy*dy) > slop || slop != slop)//faster isNaN(slop)
 				{
 					prevLocationX = _location.x;
