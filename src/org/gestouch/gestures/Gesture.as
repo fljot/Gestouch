@@ -11,23 +11,18 @@ package org.gestouch.gestures
 	import org.gestouch.events.GestureStateEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.GestureEvent;
-	import flash.events.TouchEvent;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
 	
 	
-//	[Event(name="gestureTrackingBegin", type="org.gestouch.events.GestureTrackingEvent")]
-//	[Event(name="gestureTrackingEnd", type="org.gestouch.events.GestureTrackingEvent")]
 	[Event(name="stateChange", type="org.gestouch.events.GestureStateEvent")]
 	/**
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points
 	 * in order detect specific gesture motion and form gesture event on target.
 	 * 
-	 * TODO: locationOfTouchPoint(touchPointID):Point
-	 * - ignoreTouch(touch:Touch, event:TouchEvent) ?
+	 * TODO:
+	 * - 
 	 * 
 	 * @author Pavel fljot
 	 */
