@@ -12,6 +12,6 @@ package org.gestouch.core
 	public interface IGesturesManager
 	{
 		function addInputAdapter(inputAdapter:IInputAdapter):void;
-		function removeInputAdapter(inputAdapter:IInputAdapter):void;
+		function removeInputAdapter(inputAdapter:IInputAdapter, dispose:Boolean = true):void;
 	}
 }

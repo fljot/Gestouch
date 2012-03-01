@@ -35,8 +35,19 @@ package org.gestouch.input
 			}
 			
 			_stage = stage;
+		}
+		
 			
-			stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
+		override public function init():void
+		{
+			_stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
+		}
+		
+			
+		override public function dispose():void
+		{
+			_stage.removeEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
+			uninstallStageListeners();
 		}
 		
 		

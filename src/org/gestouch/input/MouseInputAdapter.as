@@ -35,6 +35,19 @@ package org.gestouch.input
 		}
 		
 		
+		override public function init():void
+		{
+			_stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
+		}
+		
+			
+		override public function dispose():void
+		{
+			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
+			uninstallStageListeners();
+		}
+		
+		
 		protected function installStageListeners():void
 		{
 			// Maximum priority to prevent event hijacking

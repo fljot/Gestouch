@@ -91,10 +91,11 @@ package org.gestouch.core
 			_inputAdapters.push(inputAdapter);
 			inputAdapter.touchesManager = _touchesManager;
 			inputAdapter.gesturesManager = this;
+			inputAdapter.init();
 		}
 		
 		
-		public function removeInputAdapter(inputAdapter:IInputAdapter):void
+		public function removeInputAdapter(inputAdapter:IInputAdapter, dispose:Boolean = true):void
 		{
 			if (!inputAdapter)
 			{
@@ -107,6 +108,10 @@ package org.gestouch.core
 			}
 			
 			_inputAdapters.splice(index, 1);
+			if (dispose)
+			{
+				inputAdapter.dispose();
+			}
 		}
 		
 		

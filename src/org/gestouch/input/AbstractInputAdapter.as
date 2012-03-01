@@ -33,5 +33,19 @@ package org.gestouch.input
 		{
 			_gesturesManager = value;
 		}
+		
+		
+		[Abstract]
+		public function init():void
+		{
+			throw new Error("This is abstract method.");
+		}
+		
+		
+		[Abstract]
+		public function dispose():void
+		{
+			throw new Error("This is abstract method.");
+		}
 	}
 }
