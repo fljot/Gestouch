@@ -21,8 +21,6 @@ package org.gestouch.gestures
 		public var slop:Number = Gesture.DEFAULT_SLOP >> 1;
 		public var lockAspectRatio:Boolean = true;
 		
-		protected var _touchBeginX:Array = [];
-		protected var _touchBeginY:Array = [];
 		protected var _scaleVector:Point = new Point();
 		protected var _firstTouch:Touch;
 		protected var _secondTouch:Touch;
@@ -45,15 +43,6 @@ package org.gestouch.gestures
 		override public function reflect():Class
 		{
 			return ZoomGesture;
-		}
-		
-			
-		override public function reset():void
-		{			
-			_touchBeginX.length = 0;
-			_touchBeginY.length = 0;
-
-			super.reset();
 		}
 		
 		
@@ -82,13 +71,7 @@ package org.gestouch.gestures
 			{
 				_secondTouch = touch;
 				
-				_touchBeginX[_firstTouch.id] = _firstTouch.x;
-				_touchBeginY[_firstTouch.id] = _firstTouch.y;
-				_touchBeginX[_secondTouch.id] = _secondTouch.x;
-				_touchBeginY[_secondTouch.id] = _secondTouch.y;
-				
-				_scaleVector.x = _secondTouch.x - _firstTouch.x;
-				_scaleVector.y = _secondTouch.y - _firstTouch.y;
+				_scaleVector = _secondTouch.location.subtract(_firstTouch.location);
 			}
 		}
 		
@@ -106,19 +89,14 @@ package org.gestouch.gestures
 			
 			if (touchesCount == 2)
 			{
-				var currScaleVector:Point = new Point(_secondTouch.x - _firstTouch.x, _secondTouch.y - _firstTouch.y);
 				var recognized:Boolean;
 				
 				if (state == GestureState.POSSIBLE)
 				{
 					// Check if finger moved enough for gesture to be recognized
-					var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
-					var dy:Number = Number(_touchBeginY[touch.id]) - touch.y;
-					if (Math.sqrt(dx*dx + dy*dy) > slop || slop != slop)//faster isNaN(slop)
+					if (touch.locationOffset.length > slop || slop != slop)//faster isNaN(slop)
 					{
 						recognized = true;
-						_scaleVector.x = _secondTouch.x - _firstTouch.x;
-						_scaleVector.y = _secondTouch.y - _firstTouch.y;
 					}
 				}
 				else
@@ -128,8 +106,7 @@ package org.gestouch.gestures
 				
 				if (recognized)
 				{
-					updateLocation();
-					
+					var currScaleVector:Point = _secondTouch.location.subtract(_firstTouch.location);
 					var scaleX:Number;
 					var scaleY:Number;
 					if (lockAspectRatio)
@@ -144,6 +121,8 @@ package org.gestouch.gestures
 					
 					_scaleVector.x = currScaleVector.x;
 					_scaleVector.y = currScaleVector.y;
+					
+					updateLocation();
 					
 					if (state == GestureState.POSSIBLE)
 					{

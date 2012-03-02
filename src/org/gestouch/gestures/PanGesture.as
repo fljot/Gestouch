@@ -24,9 +24,6 @@ package org.gestouch.gestures
 		 */
 		public var direction:uint = PanGestureDirection.NO_DIRECTION;
 		
-		protected var _touchBeginX:Array = [];
-		protected var _touchBeginY:Array = [];
-		
 		
 		public function PanGesture(target:InteractiveObject = null)
 		{
@@ -91,15 +88,6 @@ package org.gestouch.gestures
 			return PanGesture;
 		}
 		
-			
-		override public function reset():void
-		{			
-			_touchBeginX.length = 0;
-			_touchBeginY.length = 0;
-
-			super.reset();
-		}
-		
 		
 		
 		
@@ -117,9 +105,6 @@ package org.gestouch.gestures
 				ignoreTouch(touch);
 				return;
 			}
-			
-			_touchBeginX[touch.id] = touch.x;
-			_touchBeginY[touch.id] = touch.y;
 			
 			if (touchesCount >= minNumTouchesRequired)
 			{
@@ -141,9 +126,17 @@ package org.gestouch.gestures
 			if (state == GestureState.POSSIBLE)
 			{
 				// Check if finger moved enough for gesture to be recognized
-				var dx:Number = (direction == PanGestureDirection.VERTICAL) ? 0 : Number(_touchBeginX[touch.id]) - touch.x;
-				var dy:Number = (direction == PanGestureDirection.HORIZONTAL) ? 0 : Number(_touchBeginY[touch.id]) - touch.y;
-				if (Math.sqrt(dx*dx + dy*dy) > slop || slop != slop)//faster isNaN(slop)
+				var locationOffset:Point = touch.locationOffset;
+				if (direction == PanGestureDirection.VERTICAL)
+				{
+					locationOffset.x = 0;
+				}
+				else if (direction == PanGestureDirection.HORIZONTAL)
+				{
+					locationOffset.y = 0;
+				}
+				
+				if (locationOffset.length > slop || slop != slop)//faster isNaN(slop)
 				{
 					prevLocationX = _location.x;
 					prevLocationY = _location.y;

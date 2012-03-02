@@ -24,8 +24,6 @@ package org.gestouch.gestures
 		public var maxTapDuration:uint = 1500;
 		
 		protected var _timer:Timer;
-		protected var _touchBeginX:Array = [];
-		protected var _touchBeginY:Array = [];
 		protected var _numTouchesRequiredReached:Boolean;
 		protected var _tapCounter:uint = 0;
 		
@@ -51,9 +49,7 @@ package org.gestouch.gestures
 		
 			
 		override public function reset():void
-		{			
-			_touchBeginX.length = 0;
-			_touchBeginY.length = 0;
+		{
 			_numTouchesRequiredReached = false;
 			_tapCounter = 0;
 			_timer.reset();
@@ -100,9 +96,6 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_touchBeginX[touch.id] = touch.x;
-			_touchBeginY[touch.id] = touch.y;
-			
 			if (touchesCount == 1)
 			{
 				_timer.reset();
@@ -119,15 +112,9 @@ package org.gestouch.gestures
 		
 		override protected function onTouchMove(touch:Touch):void
 		{
-			if (slop >= 0)
+			if (slop >= 0 && touch.locationOffset.length > slop)
 			{
-				// Fail if touch overcome slop distance
-				var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
-				var dy:Number = Number(_touchBeginY[touch.id]) - touch.y;
-				if (Math.sqrt(dx*dx + dy*dy) > slop)
-				{
-					setState(GestureState.FAILED);
-				}
+				setState(GestureState.FAILED);
 			}
 		}
 		

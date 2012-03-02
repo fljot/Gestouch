@@ -21,8 +21,6 @@ package org.gestouch.gestures
 	{
 		public var slop:Number = Gesture.DEFAULT_SLOP >> 1;
 		
-		protected var _touchBeginX:Array = [];
-		protected var _touchBeginY:Array = [];
 		protected var _rotationVector:Point = new Point();
 		protected var _firstTouch:Touch;
 		protected var _secondTouch:Touch;
@@ -45,15 +43,6 @@ package org.gestouch.gestures
 		override public function reflect():Class
 		{
 			return RotateGesture;
-		}
-		
-			
-		override public function reset():void
-		{			
-			_touchBeginX.length = 0;
-			_touchBeginY.length = 0;
-
-			super.reset();
 		}
 		
 		
@@ -82,13 +71,7 @@ package org.gestouch.gestures
 			{
 				_secondTouch = touch;
 				
-				_touchBeginX[_firstTouch.id] = _firstTouch.x;
-				_touchBeginY[_firstTouch.id] = _firstTouch.y;
-				_touchBeginX[_secondTouch.id] = _secondTouch.x;
-				_touchBeginY[_secondTouch.id] = _secondTouch.y;
-				
-				_rotationVector.x = _secondTouch.x - _firstTouch.x;
-				_rotationVector.y = _secondTouch.y - _firstTouch.y;
+				_rotationVector = _secondTouch.location.subtract(_firstTouch.location);
 			}
 		}
 		
@@ -106,19 +89,14 @@ package org.gestouch.gestures
 			
 			if (touchesCount == 2)
 			{
-				var currRotationVector:Point = new Point(_secondTouch.x - _firstTouch.x, _secondTouch.y - _firstTouch.y);
 				var recognized:Boolean;
 				
 				if (state == GestureState.POSSIBLE)
 				{
 					// we start once any finger moved enough
-					var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
-					var dy:Number = Number(_touchBeginY[touch.id]) - touch.y;
-					if (Math.sqrt(dx*dx + dy*dy) > slop || slop != slop)//faster isNaN(slop)
+					if (touch.locationOffset.length > slop || slop != slop)//faster isNaN(slop)
 					{
 						recognized = true;
-						_rotationVector.x = _secondTouch.x - _firstTouch.x;
-						_rotationVector.y = _secondTouch.y - _firstTouch.y;
 					}
 				}
 				else
@@ -128,12 +106,13 @@ package org.gestouch.gestures
 				
 				if (recognized)
 				{
-					updateLocation();
-					
+					var currRotationVector:Point = _secondTouch.location.subtract(_firstTouch.location);
 					var rotation:Number = Math.atan2(currRotationVector.y, currRotationVector.x) - Math.atan2(_rotationVector.y, _rotationVector.x);
 					rotation *= GestureUtils.RADIANS_TO_DEGREES;
 					_rotationVector.x = currRotationVector.x;
 					_rotationVector.y = currRotationVector.y;
+					
+					updateLocation();
 					
 					if (state == GestureState.POSSIBLE)
 					{

@@ -359,14 +359,14 @@ package org.gestouch.gestures
 		
 		protected function updateCentralPoint():void
 		{
-			var touch:Touch;
+			var touchLocation:Point;
 			var x:Number = 0;
 			var y:Number = 0;
 			for (var touchID:String in _touchesMap)
 			{
-				touch = _touchesMap[int(touchID)] as Touch;
-				x += touch.x;
-				y += touch.y;
+				touchLocation = (_touchesMap[int(touchID)] as Touch).location; 
+				x += touchLocation.x;
+				y += touchLocation.y;
 			}
 			_centralPoint.x = x / _touchesCount;
 			_centralPoint.y = y / _touchesCount;

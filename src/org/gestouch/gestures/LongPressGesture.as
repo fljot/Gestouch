@@ -28,8 +28,6 @@ package org.gestouch.gestures
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
 		protected var _timer:Timer;
-		protected var _touchBeginX:Array = [];
-		protected var _touchBeginY:Array = [];
 		protected var _numTouchesRequiredReached:Boolean;
 		
 		
@@ -57,8 +55,6 @@ package org.gestouch.gestures
 		{
 			super.reset();
 			
-			_touchBeginX.length = 0;
-			_touchBeginY.length = 0;
 			_numTouchesRequiredReached = false;
 			_timer.reset();
 		}
@@ -96,9 +92,6 @@ package org.gestouch.gestures
 				return;
 			}
 			
-			_touchBeginX[touch.id] = touch.x;
-			_touchBeginY[touch.id] = touch.y;
-			
 			if (touchesCount == numTouchesRequired)
 			{
 				_numTouchesRequiredReached = true;
@@ -120,10 +113,7 @@ package org.gestouch.gestures
 		{
 			if (state == GestureState.POSSIBLE && slop > 0)
 			{
-				// Fail if touch overcome slop distance
-				var dx:Number = Number(_touchBeginX[touch.id]) - touch.x;
-				var dy:Number = Number(_touchBeginY[touch.id]) - touch.y;
-				if (Math.sqrt(dx*dx + dy*dy) > slop)
+				if (touch.locationOffset.length > slop)
 				{
 					setState(GestureState.FAILED);
 					return;

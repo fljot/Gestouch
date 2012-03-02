@@ -1,6 +1,7 @@
 package org.gestouch.core
 {
 	import flash.display.InteractiveObject;
+	import flash.geom.Point;
 
 
 	/**
@@ -20,18 +21,11 @@ package org.gestouch.core
 		 */
 		public var target:InteractiveObject;
 		
-		public var x:Number;
-		public var y:Number;
 		public var sizeX:Number;
 		public var sizeY:Number;
 		public var pressure:Number;
-		public var time:uint;
 		
-//		public var touchBeginPos:Point;
-//		public var touchBeginTime:uint;
-//		public var moveOffset:Point;
 //		public var lastMove:Point;
-//		public var velocity:Point;
 		
 		
 		public function Touch(id:uint = 0)
@@ -40,16 +34,76 @@ package org.gestouch.core
 		}
 		
 		
+		protected var _location:Point;
+		public function get location():Point
+		{
+			return _location.clone();
+		}
+		gestouch_internal function setLocation(value:Point):void
+		{
+			_location = value;
+			_beginLocation = _location.clone();
+		}
+		gestouch_internal function updateLocation(x:Number, y:Number):void
+		{
+			if (_location)
+			{
+				_location.x = x;
+				_location.y = y;
+			}
+			else
+			{
+				gestouch_internal::setLocation(new Point(x, y));
+			}
+		}
+		
+		
+		protected var _beginLocation:Point;
+		public function get beginLocation():Point
+		{
+			return _beginLocation.clone();
+		}
+		
+		
+		public function get locationOffset():Point
+		{
+			return _location.subtract(_beginLocation);
+		}
+		
+		
+		protected var _time:uint;
+		public function get time():uint
+		{
+			return _time;
+		}
+		gestouch_internal function setTime(value:uint):void
+		{
+			_time = value;
+		}
+		
+		
+		protected var _beginTime:uint;
+		public function get beginTime():uint
+		{
+			return _beginTime;
+		}
+		gestouch_internal function setBeginTime(value:uint):void
+		{
+			_beginTime = value;
+		}
+		
+		
 		public function clone():Touch
 		{
 			var touch:Touch = new Touch(id);
-			touch.x = x;
-			touch.y = y;
+			touch._location = _location;
+			touch._beginLocation = _beginLocation;
 			touch.target = target;
 			touch.sizeX = sizeX;
 			touch.sizeY = sizeY;
 			touch.pressure = pressure;
-			touch.time = time;
+			touch._time = _time;
+			touch._beginTime = _beginTime;
 			
 			return touch;
 		}
@@ -57,7 +111,7 @@ package org.gestouch.core
 		
 		public function toString():String
 		{
-			return "Touch [id: " + id + ", x: " + x + ", y: " + y + ", ...]";
+			return "Touch [id: " + id + ", location: " + location + ", ...]";
 		}
 	}
 }

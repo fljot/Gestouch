@@ -7,6 +7,7 @@ package org.gestouch.input
 	import flash.display.Stage;
 	import flash.events.EventPhase;
 	import flash.events.TouchEvent;
+	import flash.geom.Point;
 	import flash.utils.getTimer;
 
 
@@ -81,19 +82,20 @@ package org.gestouch.input
 			var touch:Touch = _touchesManager.createTouch();
 			touch.id = event.touchPointID;
 			touch.target = event.target as InteractiveObject;
-			touch.x = event.stageX;
-			touch.y = event.stageY;
+			touch.gestouch_internal::setLocation(new Point(event.stageX, event.stageY));
 			touch.sizeX = event.sizeX;
 			touch.sizeY = event.sizeY;
 			touch.pressure = event.pressure;
 			//TODO: conditional compilation?
 			if (event.hasOwnProperty("timestamp"))
 			{
-				touch.time = event["timestamp"];
+				touch.gestouch_internal::setTime(event["timestamp"]);
+				touch.gestouch_internal::setBeginTime(event["timestamp"]);
 			}
 			else
 			{
-				touch.time = getTimer();
+				touch.gestouch_internal::setTime(getTimer());
+				touch.gestouch_internal::setBeginTime(getTimer());
 			}
 			
 			_touchesManager.addTouch(touch);
@@ -111,19 +113,18 @@ package org.gestouch.input
 				return;
 			
 			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
-			touch.x = event.stageX;
-			touch.y = event.stageY;
+			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
 			touch.sizeX = event.sizeX;
 			touch.sizeY = event.sizeY;
 			touch.pressure = event.pressure;
 			//TODO: conditional compilation?
 			if (event.hasOwnProperty("timestamp"))
 			{
-				touch.time = event["timestamp"];
+				touch.gestouch_internal::setTime(event["timestamp"]);
 			}
 			else
 			{
-				touch.time = getTimer();
+				touch.gestouch_internal::setTime(getTimer());
 			}
 			
 			_gesturesManager.gestouch_internal::onTouchMove(touch);
@@ -142,19 +143,18 @@ package org.gestouch.input
 				return;
 			
 			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
-			touch.x = event.stageX;
-			touch.y = event.stageY;
+			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
 			touch.sizeX = event.sizeX;
 			touch.sizeY = event.sizeY;
 			touch.pressure = event.pressure;
 			//TODO: conditional compilation?
 			if (event.hasOwnProperty("timestamp"))
 			{
-				touch.time = event["timestamp"];
+				touch.gestouch_internal::setTime(event["timestamp"]);
 			}
 			else
 			{
-				touch.time = getTimer();
+				touch.gestouch_internal::setTime(getTimer());
 			}
 			
 			_gesturesManager.gestouch_internal::onTouchEnd(touch);

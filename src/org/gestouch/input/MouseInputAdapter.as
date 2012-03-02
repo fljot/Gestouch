@@ -7,6 +7,7 @@ package org.gestouch.input
 	import flash.display.Stage;
 	import flash.events.EventPhase;
 	import flash.events.MouseEvent;
+	import flash.geom.Point;
 	import flash.utils.getTimer;
 
 
@@ -78,9 +79,9 @@ package org.gestouch.input
 			var touch:Touch = _touchesManager.createTouch();
 			touch.id = 0;
 			touch.target = event.target as InteractiveObject;
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.time = getTimer();
+			touch.gestouch_internal::setLocation(new Point(event.stageX, event.stageY));
+			touch.gestouch_internal::setTime(getTimer());
+			touch.gestouch_internal::setBeginTime(getTimer());
 			
 			_touchesManager.addTouch(touch);
 			
@@ -96,9 +97,8 @@ package org.gestouch.input
 				return;
 			
 			var touch:Touch = _touchesManager.getTouch(PRIMARY_TOUCH_POINT_ID);
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.time = getTimer();
+			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
+			touch.gestouch_internal::setTime(getTimer());
 			
 			_gesturesManager.gestouch_internal::onTouchMove(touch);
 		}
@@ -117,9 +117,8 @@ package org.gestouch.input
 				return;
 			
 			var touch:Touch = _touchesManager.getTouch(PRIMARY_TOUCH_POINT_ID);
-			touch.x = event.stageX;
-			touch.y = event.stageY;
-			touch.time = getTimer();
+			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
+			touch.gestouch_internal::setTime(getTimer());
 			
 			_gesturesManager.gestouch_internal::onTouchEnd(touch);
 			
