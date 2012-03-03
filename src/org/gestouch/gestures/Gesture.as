@@ -105,7 +105,7 @@ package org.gestouch.gestures
 			
 			_enabled = value;
 			//TODO
-			if (!_enabled && touchesCount > 0)
+			if (!_enabled && state != GestureState.IDLE)
 			{
 				setState(GestureState.CANCELLED);
 				reset();
@@ -113,7 +113,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected var _state:uint = GestureState.POSSIBLE;
+		protected var _state:uint = GestureState.IDLE;
 		public function get state():uint
 		{
 			return _state;
@@ -184,7 +184,7 @@ package org.gestouch.gestures
 			_touchesMap = {};
 			_touchesCount = 0;
 			
-			setState(GestureState.POSSIBLE);
+			setState(GestureState.IDLE);
 		}
 		
 		
@@ -396,6 +396,11 @@ package org.gestouch.gestures
 			_touchesCount++;
 			
 			onTouchBegin(touch);
+			
+			if (_touchesCount == 1 && state == GestureState.IDLE)
+			{
+				setState(GestureState.POSSIBLE);
+			}
 		}
 		
 		
