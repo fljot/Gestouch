@@ -103,8 +103,7 @@ package org.gestouch.core
 		
 		public function getTouch(touchPointID:int):Touch
 		{
-			var touch:Touch = _touchesMap[touchPointID] as Touch;
-			return touch ? touch.clone() : null;
+			return _touchesMap[touchPointID] as Touch;
 		}
 	}
 }
