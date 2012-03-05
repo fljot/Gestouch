@@ -5,11 +5,11 @@ package org.gestouch.gestures
 	import org.gestouch.events.TapGestureEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
+	[Event(name="gestureTap", type="org.gestouch.events.TapGestureEvent")]
 	/**
 	 * TODO: check failing conditions (iDevice)
 	 * 
@@ -139,7 +139,8 @@ package org.gestouch.gestures
 					updateLocation();
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(TapGestureEvent.GESTURE_TAP))
 					{
-						dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y));
+						dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GestureState.RECOGNIZED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y));
 					}
 				}
 				else

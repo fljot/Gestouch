@@ -5,7 +5,6 @@ package org.gestouch.gestures
 	import org.gestouch.events.LongPressGestureEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
@@ -124,7 +123,8 @@ package org.gestouch.gestures
 				updateLocation();
 				if (setState(GestureState.CHANGED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
 				{
-					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y));
+					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.CHANGED,
+						_location.x, _location.y, _localLocation.x, _localLocation.y));
 				}
 			}
 		}
@@ -140,7 +140,8 @@ package org.gestouch.gestures
 					updateLocation();
 					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
 					{
-						dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.END, _localLocation.x, _localLocation.y));
+						dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.ENDED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y));
 					} 
 				}
 				else
@@ -170,7 +171,8 @@ package org.gestouch.gestures
 				updateLocation();
 				if (setState(GestureState.BEGAN) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
 				{
-					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y));
+					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.BEGAN,
+							_location.x, _location.y, _localLocation.x, _localLocation.y));
 				}
 			}
 		}

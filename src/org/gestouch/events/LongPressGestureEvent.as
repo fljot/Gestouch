@@ -1,7 +1,6 @@
 package org.gestouch.events
 {
 	import flash.events.Event;
-	import flash.events.GestureEvent;
 
 
 	/**
@@ -12,15 +11,18 @@ package org.gestouch.events
 		public static const GESTURE_LONG_PRESS:String = "gestureLongPress";
 		
 		
-		public function LongPressGestureEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false, phase:String = null, localX:Number = 0, localY:Number = 0)
+		public function LongPressGestureEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false,
+											  gestureState:uint = 0,
+											  stageX:Number = 0, stageY:Number = 0,
+											  localX:Number = 0, localY:Number = 0)
 		{
-			super(type, bubbles, cancelable, phase, localX, localY);
+			super(type, bubbles, cancelable, gestureState, stageX, stageY, localX, localY);
 		}
 		
 		
 		override public function clone():Event
 		{
-			return new LongPressGestureEvent(type, bubbles, cancelable, phase, localX, localY);
+			return new LongPressGestureEvent(type, bubbles, cancelable, gestureState, localX, localY);
 		}
 		
 		

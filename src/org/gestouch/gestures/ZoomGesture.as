@@ -5,13 +5,11 @@ package org.gestouch.gestures
 	import org.gestouch.events.ZoomGestureEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
 	import flash.geom.Point;
 
 	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
 	/**
 	 * TODO:
-	 * -location
 	 * -check native behavior on iDevice
 	 * 
 	 * @author Pavel fljot
@@ -21,9 +19,9 @@ package org.gestouch.gestures
 		public var slop:Number = Gesture.DEFAULT_SLOP >> 1;
 		public var lockAspectRatio:Boolean = true;
 		
-		protected var _scaleVector:Point = new Point();
-		protected var _firstTouch:Touch;
-		protected var _secondTouch:Touch;
+		protected var _touch1:Touch;
+		protected var _touch2:Touch;
+		protected var _transformVector:Point;
 		
 		
 		public function ZoomGesture(target:InteractiveObject = null)
@@ -65,78 +63,63 @@ package org.gestouch.gestures
 			
 			if (touchesCount == 1)
 			{
-				_firstTouch = touch;
+				_touch1 = touch;
 			}
 			else// == 2
 			{
-				_secondTouch = touch;
+				_touch2 = touch;
 				
-				_scaleVector = _secondTouch.location.subtract(_firstTouch.location);
+				_transformVector = _touch2.location.subtract(_touch1.location);
 			}
 		}
 		
 		
 		override protected function onTouchMove(touch:Touch):void
 		{
-			if (touch.id == _firstTouch.id)
+			if (touchesCount < 2)
+				return;
+			
+			var recognized:Boolean = true;
+			
+			if (state == GestureState.POSSIBLE && slop > 0 && touch.locationOffset.length < slop)
 			{
-				_firstTouch = touch;
-			}
-			else
-			{
-				_secondTouch = touch;
+				recognized = false;
 			}
 			
-			if (touchesCount == 2)
+			if (recognized)
 			{
-				var recognized:Boolean;
+				var currTransformVector:Point = _touch2.location.subtract(_touch1.location);
+				var scaleX:Number;
+				var scaleY:Number;
+				if (lockAspectRatio)
+				{
+					scaleX = scaleY = currTransformVector.length / _transformVector.length;
+				}
+				else
+				{
+					scaleX = currTransformVector.x / _transformVector.x;
+					scaleY = currTransformVector.y / _transformVector.y;
+				}
+				
+				_transformVector.x = currTransformVector.x;
+				_transformVector.y = currTransformVector.y;
+				
+				updateLocation();
 				
 				if (state == GestureState.POSSIBLE)
 				{
-					// Check if finger moved enough for gesture to be recognized
-					if (touch.locationOffset.length > slop || slop != slop)//faster isNaN(slop)
+					if (setState(GestureState.BEGAN) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
 					{
-						recognized = true;
+						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.BEGAN,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, scaleX, scaleY));
 					}
 				}
 				else
 				{
-					recognized = true;
-				}
-				
-				if (recognized)
-				{
-					var currScaleVector:Point = _secondTouch.location.subtract(_firstTouch.location);
-					var scaleX:Number;
-					var scaleY:Number;
-					if (lockAspectRatio)
+					if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
 					{
-						scaleX = scaleY = currScaleVector.length / _scaleVector.length;
-					}
-					else
-					{
-						scaleX = currScaleVector.x / _scaleVector.x;
-						scaleY = currScaleVector.y / _scaleVector.y;
-					}
-					
-					_scaleVector.x = currScaleVector.x;
-					_scaleVector.y = currScaleVector.y;
-					
-					updateLocation();
-					
-					if (state == GestureState.POSSIBLE)
-					{
-						if (setState(GestureState.BEGAN) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
-						{
-							dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, scaleX, scaleY));
-						}
-					}
-					else
-					{
-						if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
-						{
-							dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, scaleX, scaleY));
-						}
+						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.CHANGED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, scaleX, scaleY));
 					}
 				}
 			}
@@ -151,7 +134,8 @@ package org.gestouch.gestures
 				{
 					if (setState(GestureState.ENDED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
 					{
-						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 1, 1));
+						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.ENDED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, 1, 1));
 					}
 				}
 				else if (state == GestureState.POSSIBLE)
@@ -161,16 +145,19 @@ package org.gestouch.gestures
 			}
 			else//== 1
 			{
-				if (touch.id == _firstTouch.id)
+				if (touch == _touch1)
 				{
-					_firstTouch = _secondTouch;
+					_touch1 = _touch2;
 				}
+				_touch2 = null;
+				
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
 					if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
 					{
-						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, 1, 1));
+						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.CHANGED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, 1, 1));
 					}
 				}
 			}

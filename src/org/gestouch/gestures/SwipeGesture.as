@@ -5,7 +5,6 @@ package org.gestouch.gestures
 	import org.gestouch.events.SwipeGestureEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
 
@@ -72,14 +71,19 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
+				//TODO: or ignore?
 				setState(GestureState.FAILED);
 				return;
 			}
 			
+			if (touchesCount == 1)
+			{
+				// Because we want to fail as quick as possible
+				_startTime = touch.time;
+			}
 			if (touchesCount == numTouchesRequired)
 			{
 				updateLocation();
-				_startTime = touch.time;
 				
 				// cache direction condition for performance
 				_noDirection = (SwipeGestureDirection.ORTHOGONAL & direction) == 0;
@@ -100,7 +104,6 @@ package org.gestouch.gestures
 			var timeDelta:int = touch.time - _startTime;			
 			var vel:Number = offsetLength / timeDelta;
 			var absVel:Number = vel > 0 ? vel : -vel;//faster Math.abs()
-//			trace(_offset, _offset.length, ".....velocity:", vel);
 			
 			if (offsetLength < Gesture.DEFAULT_SLOP)
 			{
@@ -123,7 +126,9 @@ package org.gestouch.gestures
 				{
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 					{
-						dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
+						_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+						dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 					}
 				}
 			}
@@ -154,7 +159,9 @@ package org.gestouch.gestures
 					{
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
-							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, _offset.x, 0));
+							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
+								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, 0));
 						}
 					}
 				}
@@ -177,7 +184,9 @@ package org.gestouch.gestures
 					{
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
-							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GesturePhase.ALL, _localLocation.x, _localLocation.y, 0, _offset.y));
+							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
+								_location.x, _location.y, _localLocation.x, _localLocation.y, 0, _offset.y));
 						}
 					}
 				}

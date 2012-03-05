@@ -5,7 +5,6 @@ package org.gestouch.gestures
 	import org.gestouch.events.PanGestureEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
 	import flash.geom.Point;
 
 	[Event(name="gesturePan", type="org.gestouch.events.PanGestureEvent")]
@@ -155,7 +154,8 @@ package org.gestouch.gestures
 					
 					if (setState(GestureState.BEGAN) && hasEventListener(PanGestureEvent.GESTURE_PAN))
 					{
-						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.BEGIN, _localLocation.x, _localLocation.y, offset.x, offset.y));
+						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.BEGAN,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, offset.x, offset.y));
 					}
 				}
 			}
@@ -169,7 +169,8 @@ package org.gestouch.gestures
 				
 				if (setState(GestureState.CHANGED) && hasEventListener(PanGestureEvent.GESTURE_PAN))
 				{
-					dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.UPDATE, _localLocation.x, _localLocation.y, offsetX, offsetY));
+					dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.CHANGED,
+						_location.x, _location.y, _localLocation.x, _localLocation.y, offsetX, offsetY));
 				}
 			}
 		}
@@ -187,7 +188,8 @@ package org.gestouch.gestures
 				{
 					if (setState(GestureState.ENDED) && hasEventListener(PanGestureEvent.GESTURE_PAN))
 					{
-						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GesturePhase.END, _localLocation.x, _localLocation.y, 0, 0));
+						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.ENDED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y, 0, 0));
 					}
 				}
 			}
