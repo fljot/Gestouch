@@ -43,11 +43,14 @@ package org.gestouch.core
 		{
 			_location = value;
 			_beginLocation = _location.clone();
+			_previousLocation = _location.clone();
 		}
 		gestouch_internal function updateLocation(x:Number, y:Number):void
 		{
 			if (_location)
 			{
+				_previousLocation.x = _location.x;
+				_previousLocation.y = _location.y;
 				_location.x = x;
 				_location.y = y;
 			}
@@ -55,6 +58,13 @@ package org.gestouch.core
 			{
 				gestouch_internal::setLocation(new Point(x, y));
 			}
+		}
+		
+		
+		protected var _previousLocation:Point;
+		public function get previousLocation():Point
+		{
+			return _previousLocation.clone();
 		}
 		
 		
