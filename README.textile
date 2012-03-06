@@ -1,37 +1,89 @@
-h2. Gestouch: NUI gestures detection framework for mouse, touch and multitouch AS3 development.
+h1. Gestouch: NUI gestures detection framework for mouse, touch and multitouch AS3 development.
 
-Gestouch is a very basic framework that helps you to detect gestures when you develop NUI (Natural User Interface).
-Last versions of Flash Player and AIR have built-in touch and multitouch support, but the gestures support is quite poor: only small set of gestures are supported, they depend on OS, they are not customizable, only one can be processed at the same time and, finally, you are forced to use either raw TouchEvents, or gestures (@see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/ui/Multitouch.html#inputMode).
+Gestouch is a ActionScript library/framework that helps you to deal with single- and multitouch gestures for building better NUI (Natural User Interface).
 
-This framework is aimed to simplify the process of detecting raw TouchEvents and processing them into a specific gesture(s). There are several built-in common gestures, but you are welcome write your own.
+
+h3. Why? There's already gesture support in Flash/AIR!
+
+Yes, last versions of Flash Player and AIR runtimes have built-in touch and multitouch support, but the gestures support is very poor: only small set of gestures are supported, they depend on OS, they are not customizable in any way, only one can be processed at the same time and, finally, you are forced to use either raw TouchEvents, or gestures (@see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/ui/Multitouch.html#inputMode).
+_Upd:_ With "native way" you also won't get anything out of Stage3D and of custom input like TUIO protocol. 
+
+
+
+h3. What Gestouch does in short?
+
+Well basically there's 3 distinctive tasks to solve.
+# To provide various input. It can be standard MouseEvents, TouchEvents or more complex things like custom input via TUIO protocol for your hand-made installation. So what we get here is Touches (touch points).
+# To recognize gesture out of touch points. Each type of Gesture has it's own inner algorithms that ... 
+# To manage gestures relations. Because they may "overlap" and once some has been recognized probably we don't want other to do so.
+
+Gestouch solves these 3 tasks.
+I was hardly inspired by Apple team, how they solved this (quite recently to my big surprise! I thought they had it right from the beginning) in they Cocoa-touch UIKit framework. Gestouch is very similar in many ways. But I wouldn't call it "direct port" because 1) the whole architecture was implemented based just on conference videos and user documentation 2) flash platform is a different platform with own specialization, needs, etc.
+So I want Gestouch to go far beyond that.
 
 Features:
+* Pretty neat architecture! Very similar to Apple's UIGestureRecognizers (Cocoa-Touch UIKit)
+* Doesn't require any additional software (may use runtime's build-in touch support)
+* Works across all platforms (where Flash Player or AIR run of course) in exactly same way
+* Doesn't break your DisplayList architecture (could be easily used for Flex development)
+* Extendable. You can write your own application-specific gestures
+* Open-source and free
+* *_+Planning to make it work with Stage3D. Hello Starling!+_*
 
-* Doesn't require any additional software (uses runtimes build-in touch support);
-* Doesn't break your DisplayList architecture (doesn't require any wrappers, so could be easily used for Flex development);
-* Basically allows you to write multi-user interfaces;
-* Extendable. You can write your own application-specific gestures;
-* Open-source and easy to use.
+
+
+h3. Current state of the project
+
+v0.3 introduces "new architecture". I'm planning to develop everything in develop branch and merge to master only release versions. Release versions suppose to be pretty stable. As much as I test them on the examples project.
+Current plan is to fix possible bugs in v0.3.#, and I really want to introduce Stage3D support in v0.4. So watch both branches.
+And I hope people to become giving some real feedback at least.
+
 
 
 h3. Getting Started
 
-* "Introduction video":http://www.youtube.com/watch?v=NjkmB8rfQjY
-* "Disclaimer and Architecture Overview":http://github.com/fljot/Gestouch/wiki/Overview
-* "Usage":http://github.com/fljot/Gestouch/wiki/Usage
+Like so:
+<pre><code>var doubleTap:TapGesture = new TapGesture(myButton);
+doubleTap.numTapsRequired = 2;
+doubleTap.addEventListener(TapGestureEvent.GESTURE_TAP, onDoubleTap);
+...
+private function onDoubleTap(event:TapGestureEvent):void
+{
+	// handle double tap!
+}
+</code></pre>
+or
+<pre><code>var freeTransform:TransformGesture = new TransformGesture(myImage);
+freeTransform.addEventListener(TransformGestureEvent.GESTURE_TRANSFORM, onFreeTransform);
+...
+private function onFreeTransform(event:TransformGestureEvent):void
+{
+	// move, rotate, scale — all at once for better performance!
+}
+</code></pre>
 
+* Check the "Gestouch Examples":http://github.com/fljot/GestouchExamples project for a quick jump-in
+* *+Highly recommended+* to watch videos from Apple WWDC conferences as they explain all the concepts and show more or less real-life examples. @see links below
+* "Introduction video":http://www.youtube.com/watch?v=NjkmB8rfQjY - my first video, currently outdated
+* TODO: wiki
 
-h3. Code
-
-* "Gestouch Framework":http://github.com/fljot/Gestouch
-* "Gestouch Examples":http://github.com/fljot/GestouchExamples
 
 
 h3. Roadmap, TODOs
 
-* Simulator (for testing multitouch gestures without special devices)
-* Chained gestures concept / behaviors.
+* *Stage3D support.* Hello Starling! Must move away from target as InteractiveObject to some abstract adapters.
+* "Massive gestures" & Clusters. For bigger form-factor multitouch usage, when gestures must be a bit less about separate fingers but rather touch clusters (massive multitouch) 
+* -Simulator (for testing multitouch gestures without special devices)- With new architecture it must be relatively easy to create SimulatorInputAdapter
+* Chained gestures concept? To transfer touches from one gesture to another. Example: press/hold for circular menu, then drag it around.
 * 3-fingers (3D) gestures (two fingers still, one moving)
+
+
+
+h3. News
+
+* "Follow me on Twitter":http://twitter.com/fljot for latest updates
+* Don't forget about "issues":https://github.com/fljot/Gestouch/issues section as good platform for discussions.
+
 
 
 h3. Contribution, Donations
@@ -39,17 +91,18 @@ h3. Contribution, Donations
 Contribute, share. Found it useful, nothing to add? Hire me for some project.
 
 
-h3. News:
 
-* "Follow me on Twitter":http://twitter.com/fljot for latest updates
+h3. Links
 
+* "Gestouch Examples":http://github.com/fljot/GestouchExamples
 
-h3. Other Resources
+* "Apple WWDC 2011: Making the Most of Multi-Touch on iOS":https://developer.apple.com/videos/wwdc/2011/?id=118
+* "Apple WWDC 2010: Simplifying Touch Event Handling with Gesture Recognizers":https://developer.apple.com/videos/wwdc/2010/?id=120
+* "Apple WWDC 2010: Advanced Gesture Recognition":https://developer.apple.com/videos/wwdc/2010/?id=121
+* "Event Handling Guide for iOS":https://developer.apple.com/library/ios/documentation/EventHandling/Conceptual/EventHandlingiPhoneOS/
+* "UIGestureRecognizer Class Reference":https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIGestureRecognizer_Class/
 
-* "GestureWorks":http://www.gestureworks.com
 * "TUIO":http://www.tuio.org
-
-* "Google: Flash + Multitouch":http://www.google.com/search?q=flash+multitouch
 
 
 h2. License

@@ -1,149 +1,164 @@
 package org.gestouch.gestures
 {
-	import org.gestouch.core.GesturesManager;
-	import org.gestouch.core.TouchPoint;
-	import org.gestouch.core.gestouch_internal;
+	import org.gestouch.core.GestureState;
+	import org.gestouch.core.Touch;
 	import org.gestouch.events.LongPressGestureEvent;
 
 	import flash.display.InteractiveObject;
-	import flash.events.GesturePhase;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
-	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
 	/**
-	 * 
+	 * TODO: -location
+	 * - check on iOS (Obj-C) what happens when numTouchesRequired=2, two finger down, then quickly release one.
 	 * 
 	 * @author Pavel fljot
 	 */
 	public class LongPressGesture extends Gesture
 	{
+		public var numTouchesRequired:uint = 1;
 		/**
-		 * Default value 1000ms
-		 */
-		public var timeThreshold:uint = 500;
-		/**
-		 * Deafult value is Gesture.DEFAULT_SLOP
-		 * @see org.gestouchers.core.Gesture#DEFAULT_SLOP
-		 */
+		 * The minimum time interval in millisecond fingers must press on the target for the gesture to be recognized.
+		 * 
+         * @default 500
+         */
+        public var minPressDuration:uint = 500;
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
-		protected var _thresholdTimer:Timer;
+		protected var _timer:Timer;
+		protected var _numTouchesRequiredReached:Boolean;
 		
 		
-		public function LongPressGesture(target:InteractiveObject = null, settings:Object = null)
+		public function LongPressGesture(target:InteractiveObject = null)
 		{
-			super(target, settings);
+			super(target);
 		}
 		
 		
 		
 		
-		//--------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
 		//
-		//  Static methods
+		// Public methods
 		//
-		//--------------------------------------------------------------------------
-		
-		public static function add(target:InteractiveObject, settings:Object = null):LongPressGesture
-		{
-			return new LongPressGesture(target, settings);
-		}
-		
-		
-		public static function remove(target:InteractiveObject):LongPressGesture
-		{
-			return GesturesManager.gestouch_internal::removeGestureByTarget(LongPressGesture, target) as LongPressGesture;
-		}
-		
-		
-		
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Public methods
-		//
-		//--------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
 		
 		override public function reflect():Class
 		{
-			return LongPressGesture;
+			return TapGesture;
+		}
+		
+			
+		override public function reset():void
+		{
+			super.reset();
+			
+			_numTouchesRequiredReached = false;
+			_timer.reset();
 		}
 		
 		
-		override public function onTouchBegin(touchPoint:TouchPoint):void
+		
+		
+		// --------------------------------------------------------------------------
+		//
+		// Protected methods
+		//
+		// --------------------------------------------------------------------------
+		
+		override protected function preinit():void
 		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
+			super.preinit();
+			
+			_timer = new Timer(minPressDuration, 1);
+			_timer.addEventListener(TimerEvent.TIMER_COMPLETE, timer_timerCompleteHandler);
+		}
+		
+		
+		override protected function onTouchBegin(touch:Touch):void
+		{
+			if (touchesCount > numTouchesRequired)
 			{
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+				{
+					ignoreTouch(touch);
+				}
+				else
+				{
+					setState(GestureState.FAILED);
+				}
 				return;
 			}
 			
-			_trackPoint(touchPoint);			
-			
-			if (_trackingPointsCount == minTouchPointsCount)
+			if (touchesCount == numTouchesRequired)
 			{
-				_thresholdTimer.reset();
-				_thresholdTimer.delay = timeThreshold;
-				_thresholdTimer.start();
-			}
-		}
-		
-		
-		override public function onTouchMove(touchPoint:TouchPoint):void
-		{
-			// faster isNaN
-			if (_thresholdTimer.currentCount == 0 && slop == slop)
-			{
-				if (touchPoint.moveOffset.length > slop)
+				_numTouchesRequiredReached = true;
+				_timer.reset();
+				_timer.delay = minPressDuration;
+				if (minPressDuration > 0)
 				{
-					cancel();
+					_timer.start();
+				}
+				else
+				{
+					timer_timerCompleteHandler();
 				}
 			}
 		}
 		
 		
-		override public function onTouchEnd(touchPoint:TouchPoint):void
-		{			
-			_forgetPoint(touchPoint);
-			
-			var held:Boolean = (_thresholdTimer.currentCount > 0);
-			_thresholdTimer.reset();
-			
-			if (held)
+		override protected function onTouchMove(touch:Touch):void
+		{
+			if (state == GestureState.POSSIBLE && slop > 0 && touch.locationOffset.length > slop)
 			{
-				_updateCentralPoint();
-				_reset();
-				_dispatch(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, true, false, GesturePhase.END, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
+				setState(GestureState.FAILED);
+			}
+			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+			{
+				updateLocation();
+				if (setState(GestureState.CHANGED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+				{
+					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.CHANGED,
+						_location.x, _location.y, _localLocation.x, _localLocation.y));
+				}
 			}
 		}
 		
 		
-		
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Protected methods
-		//
-		//--------------------------------------------------------------------------
-		
-		override protected function _preinit():void
+		override protected function onTouchEnd(touch:Touch):void
 		{
-			super._preinit();
-			
-			_thresholdTimer = new Timer(timeThreshold, 1);
-			_thresholdTimer.addEventListener(TimerEvent.TIMER_COMPLETE, _onThresholdTimerComplete);
-			
-			_propertyNames.push("timeThreshold", "slop");
+			//TODO: check proper condition (behavior) on iOS native
+			if (_numTouchesRequiredReached)
+			{
+				if (((GestureState.BEGAN | GestureState.CHANGED) & state) > 0)
+				{
+					updateLocation();
+					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+					{
+						dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.ENDED,
+							_location.x, _location.y, _localLocation.x, _localLocation.y));
+					} 
+				}
+				else
+				{
+					setState(GestureState.FAILED);
+				}
+			}
+			else
+			{
+				setState(GestureState.FAILED);
+			}
 		}
 		
 			
-		override protected function _reset():void
+		override protected function onDelayedRecognize():void
 		{
-			super._reset();
-			
-			_thresholdTimer.reset();
+			if (hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+			{
+				dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.BEGAN,
+						_location.x, _location.y, _localLocation.x, _localLocation.y));
+			}
 		}
 		
 		
@@ -154,11 +169,18 @@ package org.gestouch.gestures
 		//  Event handlers
 		//
 		//--------------------------------------------------------------------------
-
-		protected function _onThresholdTimerComplete(event:TimerEvent):void
+		
+		protected function timer_timerCompleteHandler(event:TimerEvent = null):void
 		{
-			_updateCentralPoint();
-			_dispatch(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, true, false, GesturePhase.BEGIN, _lastLocalCentralPoint.x, _lastLocalCentralPoint.y));
+			if (state == GestureState.POSSIBLE)
+			{
+				updateLocation();
+				if (setState(GestureState.BEGAN) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+				{
+					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.BEGAN,
+							_location.x, _location.y, _localLocation.x, _localLocation.y));
+				}
+			}
 		}
 	}
 }

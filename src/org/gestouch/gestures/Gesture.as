@@ -1,30 +1,33 @@
 package org.gestouch.gestures
 {
+	import org.gestouch.core.GestureState;
 	import org.gestouch.core.GesturesManager;
-	import org.gestouch.core.IGesture;
-	import org.gestouch.core.TouchPoint;
+	import org.gestouch.core.IGestureDelegate;
+	import org.gestouch.core.IGesturesManager;
+	import org.gestouch.core.ITouchesManager;
+	import org.gestouch.core.Touch;
+	import org.gestouch.core.TouchesManager;
 	import org.gestouch.core.gestouch_internal;
-	import org.gestouch.events.GestureTrackingEvent;
+	import org.gestouch.events.GestureStateEvent;
 
-	import flash.display.DisplayObjectContainer;
 	import flash.display.InteractiveObject;
-	import flash.errors.IllegalOperationError;
 	import flash.events.EventDispatcher;
-	import flash.events.GestureEvent;
-	import flash.events.TouchEvent;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
+	import flash.utils.Dictionary;
 	
 	
-	[Event(name="gestureTrackingBegin", type="org.gestouch.events.GestureTrackingEvent")]
-	[Event(name="gestureTrackingEnd", type="org.gestouch.events.GestureTrackingEvent")]
+	[Event(name="stateChange", type="org.gestouch.events.GestureStateEvent")]
 	/**
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points
 	 * in order detect specific gesture motion and form gesture event on target.
 	 * 
+	 * TODO:
+	 * - 
+	 * 
 	 * @author Pavel fljot
 	 */
-	public class Gesture extends EventDispatcher implements IGesture
+	public class Gesture extends EventDispatcher
 	{
 		/**
 		 * Threshold for screen distance they must move to count as valid input 
@@ -33,81 +36,32 @@ package org.gestouch.gestures
 		 */
 		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
 		
-		/**
-		 * Array of configuration properties (Strings).
-		 */
-		protected var _propertyNames:Array = ["minTouchPointsCount", "maxTouchPointsCount"];
+		
+		public var delegate:IGestureDelegate;
+		
+		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
+		protected const _gesturesManager:IGesturesManager = GesturesManager.getInstance();
 		/**
 		 * Map (generic object) of tracking touch points, where keys are touch points IDs.
 		 */
-		protected var _trackingPointsMap:Object = {};
-		protected var _trackingPointsCount:int = 0;
-		protected var _firstTouchPoint:TouchPoint;
-		protected var _lastLocalCentralPoint:Point;
+		protected var _touchesMap:Object = {};
+		protected var _centralPoint:Point = new Point();
+		protected var _localLocation:Point;
+		/**
+		 * List of gesture we require to fail.
+		 * @see requireGestureToFail()
+		 */
+		protected var _gesturesToFail:Dictionary = new Dictionary(true);
+		protected var _pendingRecognizedState:uint;
 		
 		
-		public function Gesture(target:InteractiveObject = null, settings:Object = null)
+		public function Gesture(target:InteractiveObject = null)
 		{
-			// Check if gesture reflects it's class properly
-			reflect();
-						
-			_preinit();
+			super();
 			
-			GesturesManager.gestouch_internal::addGesture(this);
+			preinit();
 			
 			this.target = target;
-
-			if (settings != null)
-			{
-				_parseSettings(settings);
-			}
-		}
-		
-		
-		/** @private */
-		private var _minTouchPointsCount:uint = 1;
-		/**
-		 * Minimum amount of touch points required for gesture.
-		 * 
-		 * @default 1
-		 */
-		public function get minTouchPointsCount():uint
-		{
-			return _minTouchPointsCount;
-		}
-		public function set minTouchPointsCount(value:uint):void
-		{
-			if (_minTouchPointsCount == value) return;
-			
-			_minTouchPointsCount = value;
-			if (maxTouchPointsCount < minTouchPointsCount)
-			{
-				maxTouchPointsCount = minTouchPointsCount;
-			}
-		}
-		
-		
-		/** @private */
-		private var _maxTouchPointsCount:uint = 1;
-		
-		/**
-		 * Maximum amount of touch points required for gesture.
-		 * 
-		 * @default 1
-		 */
-		public function get maxTouchPointsCount():uint
-		{
-			return _maxTouchPointsCount;
-		}
-		public function set maxTouchPointsCount(value:uint):void
-		{
-			if (value < minTouchPointsCount)
-			{
-				throw new IllegalOperationError("maxTouchPointsCount can not be less then minTouchPointsCount");
-			}
-			if (_maxTouchPointsCount == value) return;
-			
-			_maxTouchPointsCount = value;
 		}
 		
 		
@@ -131,63 +85,69 @@ package org.gestouch.gestures
 		}
 		public function set target(value:InteractiveObject):void
 		{
-			if (target == value) return;
+			if (_target == value)
+				return;
 			
-			GesturesManager.gestouch_internal::updateGestureTarget(this, target, value);
-			
-			// if GesturesManager hasn't thrown any error we can safely continue
-			
-			_uninstallTarget(target);
+			uninstallTarget(target);
 			_target = value;
-			_installTarget(target);
+			installTarget(target);
 		}
 		
 		
-		/**
-		 * Storage for the trackingPoints property.
+		/** @private */
+		protected var _enabled:Boolean = true;
+		
+		/** 
+		 * @default true
 		 */
-		protected var _trackingPoints:Vector.<TouchPoint> = new Vector.<TouchPoint>();
-		/**
-		 * Vector of tracking touch points — touch points this gesture is interested in.
-		 * 
-		 * <p>For the most gestures these points are which on top of the target.</p>
-		 * 
-		 * @see #isTracking()
-		 * @see #shouldTrackPoint()
-		 */
-		public function get trackingPoints():Vector.<TouchPoint>
+		public function get enabled():Boolean
 		{
-			return _trackingPoints.concat();
+			return _enabled;
 		}
-		
-		
-		/**
-		 * Amount of currently tracked touch points. Cached value of trackingPoints.length
-		 * 
-		 * @see #trackingPoints
-		 */
-		public function get trackingPointsCount():uint
+		public function set enabled(value:Boolean):void
 		{
-			return _trackingPointsCount;
+			if (_enabled == value)
+				return;
+			
+			_enabled = value;
+			//TODO
+			if (!_enabled && state != GestureState.IDLE)
+			{
+				setState(GestureState.CANCELLED);
+				reset();
+			}
 		}
 		
 		
+		protected var _state:uint = GestureState.IDLE;
+		public function get state():uint
+		{
+			return _state;
+		}
+		
+		
+		protected var _touchesCount:uint = 0;
 		/**
-		 * Storage for centralPoint property.
+		 * Amount of currently tracked touch points.
+		 * 
+		 * @see #_touches
 		 */
-		protected var _centralPoint:TouchPoint;
+		public function get touchesCount():uint
+		{
+			return _touchesCount;
+		}
+		
+		
+		protected var _location:Point = new Point();
 		/**
 		 * Virtual central touch point among all tracking touch points (geometrical center).
-		 * 
-		 * <p>Designed for multitouch gestures, where center could be used for
-		 * approximation or anchor. Use _adjustCentralPoint() method for updating centralPoint.</p>
-		 * 
-		 * @see #_adjustCentralPoint()
 		 */
-		public function get centralPoint():TouchPoint
+		public function get location():Point
 		{
-			return _centralPoint;
+			//TODO: to clone or not clone? performance & convention or ...
+			return _location.clone();
 		}
+		
 		
 		
 		
@@ -196,7 +156,7 @@ package org.gestouch.gestures
 		//  Public methods
 		//
 		//--------------------------------------------------------------------------
-				
+		
 		[Abstract]
 		/**
 		 * Reflects gesture class (for better perfomance).
@@ -211,44 +171,9 @@ package org.gestouch.gestures
 		}
 		
 		
-		/**
-		 * Used by GesturesManager to check wether this gesture is interested in
-		 * tracking this touch point upon this event (of type TouchEvent.TOUCH_BEGIN).
-		 * 
-		 * <p>Most of the gestures check, if event.target is target or target contains event.target.</p>
-		 * 
-		 * <p>No need to use it directly.</p>
-		 * 
-		 * @see org.gestouch.core.GesturesManager
-		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/events/TouchEvent.html
-		 */
-		public function shouldTrackPoint(event:TouchEvent, tp:TouchPoint):Boolean
+		public function isTrackingTouch(touchID:uint):Boolean
 		{
-			// No need to track more points than we need
-			if (_trackingPointsCount == maxTouchPointsCount)
-			{
-				return false;
-			}
-			//By default gesture is interested only in those touchpoints on top of target
-			var touchTarget:InteractiveObject = event.target as InteractiveObject;
-			if (touchTarget != target && !(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(touchTarget)))
-			{
-				return false;
-			}
-			
-			return true;
-		}
-		
-		
-		/**
-		 * Used by GesturesManager to check wether this gesture is tracking this touch point.
-		 * (Not to invoke onTouchBegin, onTouchMove and onTouchEnd methods with no need)
-		 * 
-		 * @see org.gestouch.core.GesturesManager
-		 */
-		public function isTracking(touchPointID:uint):Boolean
-		{
-			return (_trackingPointsMap[touchPointID] === true);
+			return (_touchesMap[touchID] != undefined);
 		}
 		
 		
@@ -257,23 +182,22 @@ package org.gestouch.gestures
 		 * 
 		 * <p>Could be useful to "stop" gesture for the current interaction cycle.</p>
 		 */
-		public function cancel():void
+		public function reset():void
 		{
-			GesturesManager.gestouch_internal::cancelGesture(this);
-		}
-		
-		
-		/**
-		 * TODO: write description, decide wethere this API is good.
-		 */
-		public function pickAndContinue(gesture:IGesture):void
-		{
-			GesturesManager.gestouch_internal::addCurrentGesture(this);
+			//FIXME: proper state change?		
+			_location.x = 0;
+			_location.y = 0;
+			_touchesMap = {};
+			_touchesCount = 0;
 			
-			for each (var tp:TouchPoint in gesture.trackingPoints)
+			for (var key:* in _gesturesToFail)
 			{
-				onTouchBegin(tp);
+				var gestureToFail:Gesture = key as Gesture;
+				gestureToFail.removeEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler);
 			}
+			_pendingRecognizedState = 0;
+			
+			setState(GestureState.IDLE);
 		}
 		
 		
@@ -284,69 +208,35 @@ package org.gestouch.gestures
 		 */
 		public function dispose():void
 		{
-			_reset();
+			//TODO
+			reset();
 			target = null;
-			try
-			{
-				GesturesManager.gestouch_internal::removeGesture(this);
-			}
-			catch (err:Error)
-			{
-				// do nothing
-				// GesturesManager may throw Error if this gesture is already removed:
-				// in case dispose() is called by GesturesManager upon GestureClass.remove(target)
-				
-				// this part smells a bit, eh?
-			}
+			_gesturesToFail = null;
 		}
 		
 		
-		[Abstract]
-		/**
-		 * Internal method, used by GesturesManager.
-		 * 
-		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
-		 */
-		public function onTouchBegin(touchPoint:TouchPoint):void
+		public function canBePreventedByGesture(preventingGesture:Gesture):Boolean
 		{
-			
+			return true;
 		}
 		
 		
-		[Abstract]
-		/**
-		 * Internal method, used by GesturesManager.
-		 * 
-		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
-		 */
-		public function onTouchMove(touchPoint:TouchPoint):void
+		public function canPreventGesture(preventedGesture:Gesture):Boolean
 		{
-		}
-		
-		
-		[Abstract]
-		/**
-		 * Internal method, used by GesturesManager.
-		 * 
-		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
-		 */
-		public function onTouchEnd(touchPoint:TouchPoint):void
-		{
-			
+			return true;
 		}
 		
 		
 		/**
-		 * Internal method, used by GesturesManager. Called upon gesture is cancelled.
-		 * 
-		 * @see #cancel()
+		 * <b>NB! Current implementation is highly experimental!</b> See examples for more info. 
 		 */
-		public function onCancel():void
+		public function requireGestureToFail(gesture:Gesture):void
 		{
-			_reset();
+			//TODO
+			_gesturesToFail[gesture] = true;
 		}
 		
-
+		
 
 
 		// --------------------------------------------------------------------------
@@ -357,14 +247,8 @@ package org.gestouch.gestures
 		
 		/**
 		 * First method, called in constructor.
-		 * 
-		 * <p>Good place to put gesture configuration related code. For example (abstract):</p>
-		 * <listing version="3.0">
-minTouchPointsCount = 2;
-_propertyNames.push("timeThreshold", "moveThreshold");
-		 * </listing>
 		 */
-		protected function _preinit():void
+		protected function preinit():void
 		{
 		}
 		
@@ -374,214 +258,265 @@ _propertyNames.push("timeThreshold", "moveThreshold");
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function _installTarget(target:InteractiveObject):void
+		protected function installTarget(target:InteractiveObject):void
 		{
-			
+			if (target)
+			{
+				_gesturesManager.gestouch_internal::addGesture(this);
+			}
 		}
 		
 		
 		/**
 		 * Called internally when changing the target.
 		 * 
+		 * <p>You should remove all listeners from target here.</p>
+		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function _uninstallTarget(target:InteractiveObject):void
+		protected function uninstallTarget(target:InteractiveObject):void
 		{
-			
+			if (target)
+			{
+				_gesturesManager.gestouch_internal::removeGesture(this);
+			}
 		}
 		
 		
 		/**
-		 * Dispatches gesture event on gesture and on target.
-		 * 
-		 * <p>Why dispatching event on gesture? Because it make sense to dispatch event from
-		 * detector object (gesture) and we can add [Event] metatag for better autocompletion.</p>
-		 * 
-		 * <p>Why dispatching event on target? Becase it supposed to be like this in
-		 * comparsion to native way, and it also make sense as similar to mouse and touch events.</p>
-		 * 
-		 * @param event GestureEvent to be dispatched
-		 * 
-		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/events/GestureEvent.html
+		 * TODO: clarify usage. For now it's supported to call this method in onTouchBegin with return.
 		 */
-		protected function _dispatch(event:GestureEvent):void
+		protected function ignoreTouch(touch:Touch):void
 		{
-			if (hasEventListener(event.type))
+			if (_touchesMap.hasOwnProperty(touch.id))
 			{
-				dispatchEvent(event);
+				delete _touchesMap[touch.id];
+				_touchesCount--;
+			}
+		}
+		
+		
+		[Abstract]
+		/**
+		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
+		 */
+		protected function onTouchBegin(touch:Touch):void
+		{
+		}
+		
+		
+		[Abstract]
+		/**
+		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
+		 */
+		protected function onTouchMove(touch:Touch):void
+		{
+		}
+		
+		
+		[Abstract]
+		/**
+		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
+		 */
+		protected function onTouchEnd(touch:Touch):void
+		{
+		}
+		
+		
+		protected function setState(newState:uint):Boolean
+		{
+			if (_state == newState && _state == GestureState.CHANGED)
+			{
+				return true;
 			}
 			
-			// event is almost always bubbles, so no point for optimization
-			target.dispatchEvent(event);
-		}
-
-
-		/**
-		 * Parses settings and configures the gesture.
-		 * 
-		 * @param settings Generic object with configuration properties
-		 */
-		protected function _parseSettings(settings:Object):void
-		{
-			for each (var propertyName:String in _propertyNames)
+			//TODO: is state sequence validation needed? e.g.:
+			//POSSIBLE should be followed by BEGAN or RECOGNIZED or FAILED
+			//BEGAN should be follwed by CHANGED or ENDED or CANCELLED
+			//CHANGED should be followed by CHANGED or ENDED or CANCELLED
+			//...
+			
+			if (newState == GestureState.BEGAN || newState == GestureState.RECOGNIZED)
 			{
-				if (settings.hasOwnProperty(propertyName))
+				var gestureToFail:Gesture;
+				// first we check if other required-to-fail gestures recognized
+				// TODO: is this really necessary? using "requireGestureToFail" API assume that
+				// required-to-fail gesture always recognizes AFTER this one.
+				for (var key:* in _gesturesToFail)
 				{
-					this[propertyName] = settings[propertyName];
+					gestureToFail = key as Gesture;
+					if (gestureToFail.state != GestureState.IDLE && gestureToFail.state != GestureState.POSSIBLE
+						&& gestureToFail.state != GestureState.FAILED)
+					{
+						// Looks like other gesture won't fail,
+						// which means the required condition will not happen, so we must fail
+						setState(GestureState.FAILED);
+						return false;
+					}
+				}
+				// then we check of other required-to-fail gestures are actually tracked (not IDLE)
+				// and not still not recognized (e.g. POSSIBLE state)
+				for (key in _gesturesToFail)
+				{
+					gestureToFail = key as Gesture;
+					if (gestureToFail.state == GestureState.POSSIBLE)
+					{
+						// Other gesture might fail soon, so we postpone state change
+						_pendingRecognizedState = newState;
+						return false;
+					}
+					// else if gesture is in IDLE state it means it doesn't track anything,
+					// so we simply ignore it as it doesn't seem like conflict from this perspective
+					// (perspective of using "requireGestureToFail" API)
+				}
+				
+				
+				if (delegate && !delegate.gestureShouldBegin(this))
+				{
+					setState(GestureState.FAILED);
+					return false;
 				}
 			}
+				
+			var oldState:uint = _state;			
+			_state = newState;
+			
+			if (((GestureState.CANCELLED | GestureState.RECOGNIZED | GestureState.ENDED | GestureState.FAILED) & _state) > 0)
+			{
+				_gesturesManager.gestouch_internal::scheduleGestureStateReset(this);
+			}
+			
+			//TODO: what if RTE happens in event handlers?
+			
+			if (hasEventListener(GestureStateEvent.STATE_CHANGE))
+			{
+				dispatchEvent(new GestureStateEvent(GestureStateEvent.STATE_CHANGE, _state, oldState));
+			}
+			
+			if (_state == GestureState.BEGAN || _state == GestureState.RECOGNIZED)
+			{
+				_gesturesManager.gestouch_internal::onGestureRecognized(this);
+			}
+			
+			return true;
 		}
 		
 		
-		/**
-		 * Saves touchPoint for tracking for the current gesture cycle.
-		 * 
-		 * <p>If this is the first touch point, it updates _firstTouchPoint and _centralPoint.</p>
-		 * 
-		 * @see #_firstTouchPoint
-		 * @see #centralPoint
-		 * @see #trackingPointsCount
-		 */
-		protected function _trackPoint(touchPoint:TouchPoint):void
+		gestouch_internal function setState_internal(state:uint):void
 		{
-			_trackingPointsMap[touchPoint.id] = true;
-			var index:uint = _trackingPoints.push(touchPoint);
-			_trackingPointsCount++;
-			if (index == 1)
-			{
-				_firstTouchPoint = touchPoint;
-				_centralPoint = touchPoint.clone() as TouchPoint;
-			}
-			else if (_trackingPointsCount == minTouchPointsCount)
-			{
-				_updateCentralPoint();
-				_centralPoint.touchBeginPos.x = _centralPoint.x;
-				_centralPoint.touchBeginPos.y = _centralPoint.y;
-				_centralPoint.moveOffset.x = 0;
-				_centralPoint.moveOffset.y = 0;
-				_centralPoint.lastMove.x = 0;
-				_centralPoint.lastMove.y = 0;
-			}
-			else if (_trackingPointsCount > minTouchPointsCount)
-			{
-				_adjustCentralPoint();
-			}
-			
-			if (_trackingPointsCount == minTouchPointsCount)
-			{
-				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_BEGIN))
-				{
-					dispatchEvent(new GestureTrackingEvent(GestureTrackingEvent.GESTURE_TRACKING_BEGIN));
-				}
-			}
+			setState(state);
 		}
 		
 		
-		/**
-		 * Removes touchPoint from the list of tracking points.
-		 * 
-		 * <p>If this is the first touch point, it updates _firstTouchPoint and _centralPoint.</p>
-		 * 
-		 * @see #trackingPoints
-		 * @see #_trackingPointsMap
-		 * @see #trackingPointsCount
-		 */
-		protected function _forgetPoint(touchPoint:TouchPoint):void
+		protected function updateCentralPoint():void
 		{
-			delete _trackingPointsMap[touchPoint.id];
-			_trackingPoints.splice(_trackingPoints.indexOf(touchPoint), 1);
-			_trackingPointsCount--;
-			
-			_adjustCentralPoint();
-			
-			if (_trackingPointsCount == minTouchPointsCount + 1)
-			{
-				if (hasEventListener(GestureTrackingEvent.GESTURE_TRACKING_END))
-				{
-					dispatchEvent(new GestureTrackingEvent(GestureTrackingEvent.GESTURE_TRACKING_END));
-				}
-			}
-		}
-		
-		
-		/**
-		 * Updates _centralPoint and all it's properties
-		 * (such as positions, offsets, velocity, etc...).
-		 * Also updates _lastLocalCentralPoint (used for dispatching events).
-		 * 
-		 * @see #centralPoint
-		 * @see #_lastLocalCentralPoint
-		 * @see #trackingPoints
-		 */
-		protected function _updateCentralPoint():void
-		{
+			var touchLocation:Point;
 			var x:Number = 0;
 			var y:Number = 0;
-			var velX:Number = 0;
-			var velY:Number = 0;
-			for each (var tp:TouchPoint in _trackingPoints)
+			for (var touchID:String in _touchesMap)
 			{
-				x += tp.x;
-				y += tp.y;
-				velX += tp.velocity.x;
-				velY += tp.velocity.y;
+				touchLocation = (_touchesMap[int(touchID)] as Touch).location; 
+				x += touchLocation.x;
+				y += touchLocation.y;
 			}
-			x /= _trackingPointsCount;
-			y /= _trackingPointsCount;
-			var lastMoveX:Number = x - _centralPoint.x;
-			var lastMoveY:Number = y - _centralPoint.y;
-			velX /= _trackingPointsCount;
-			velY /= _trackingPointsCount;
-			
-			_centralPoint.x = x;
-			_centralPoint.y = y;
-			_centralPoint.lastMove.x = lastMoveX;
-			_centralPoint.lastMove.y = lastMoveY;
-			_centralPoint.velocity.x = velX;
-			_centralPoint.velocity.y = velY;
-			// tp.moveOffset = tp.subtract(tp.touchBeginPos);
-			_centralPoint.moveOffset.x = x - _centralPoint.touchBeginPos.x;
-			_centralPoint.moveOffset.y = y - _centralPoint.touchBeginPos.y;
-			
-			_lastLocalCentralPoint = target.globalToLocal(_centralPoint);
+			_centralPoint.x = x / _touchesCount;
+			_centralPoint.y = y / _touchesCount;
 		}
-
-
-		protected function _adjustCentralPoint():void
+		
+		
+		protected function updateLocation():void
 		{
-			var oldCentralPoint:TouchPoint = _centralPoint.clone() as TouchPoint;
-			_updateCentralPoint();
-			var centralPointChange:Point = _centralPoint.subtract(oldCentralPoint);
-			_centralPoint.touchBeginPos = _centralPoint.touchBeginPos.add(centralPointChange);
-			// fix moveOffset according to fixed touchBeginPos
-			_centralPoint.moveOffset.x = _centralPoint.x - _centralPoint.touchBeginPos.x;
-			_centralPoint.moveOffset.y = _centralPoint.y - _centralPoint.touchBeginPos.y;
-			// restore original lastMove
-			_centralPoint.lastMove.x = oldCentralPoint.lastMove.x;
-			_centralPoint.lastMove.y = oldCentralPoint.lastMove.y;
+			updateCentralPoint();
+			_location.x = _centralPoint.x;
+			_location.y = _centralPoint.y;
+			_localLocation = target.globalToLocal(_location);
 		}
 		
 		
 		/**
-		 * Reset data for the current tracking (interaction) cycle.
-		 * 
-		 * <p>Clears up _trackingPointsMap, _trackingPoints, _trackingPointsCount
-		 * and other custom gestures-specific things.</p>
-		 * 
-		 * <p>Generally invoked in onCancel method and when certain conditions of gesture
-		 * have been failed and gesture doesn't need to continue processsing
-		 * (e.g. timer has completed in DoubleTapGesture)</p>
-		 * 
-		 * @see #trackingPoints
-		 * @see #trackingPointsCount
-		 * @see #onCancel()
+		 * Executed once requiredToFail gestures have been failed and
+		 * pending (delayed) recognized state has been entered.
+		 * You must dispatch gesture event here.
 		 */
-		protected function _reset():void
+		protected function onDelayedRecognize():void
 		{
-			// forget all touch points
-			_trackingPointsMap = {};
-			_trackingPoints.length = 0;
-			_trackingPointsCount = 0;
+			
+		}
+		
+		
+		
+		
+		//--------------------------------------------------------------------------
+		//
+		//  Event handlers
+		//
+		//--------------------------------------------------------------------------
+		
+		gestouch_internal function touchBeginHandler(touch:Touch):void
+		{
+			_touchesMap[touch.id] = touch;
+			_touchesCount++;
+			
+			onTouchBegin(touch);
+			
+			if (_touchesCount == 1 && state == GestureState.IDLE)
+			{
+				for (var key:* in _gesturesToFail)
+				{
+					var gestureToFail:Gesture = key as Gesture;
+					gestureToFail.addEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler, false, 0, true);
+				}
+				
+				setState(GestureState.POSSIBLE);
+			}
+		}
+		
+		
+		gestouch_internal function touchMoveHandler(touch:Touch):void
+		{
+			_touchesMap[touch.id] = touch;
+			onTouchMove(touch);
+		}
+		
+		
+		gestouch_internal function touchEndHandler(touch:Touch):void
+		{
+			delete _touchesMap[touch.id];
+			_touchesCount--;
+			
+			onTouchEnd(touch);
+		}
+		
+		
+		protected function gestureToFail_stateChangeHandler(event:GestureStateEvent):void
+		{
+			if (state != GestureState.POSSIBLE)
+				return;//just in case..FIXME?
+			
+			if (!_pendingRecognizedState)
+				return;
+			
+			if (event.newState == GestureState.FAILED)
+			{
+				for (var key:* in _gesturesToFail)
+				{
+					var gestureToFail:Gesture = key as Gesture;
+					if (gestureToFail.state == GestureState.POSSIBLE)
+					{
+						// we're still waiting for some gesture to fail
+						return;
+					}
+				}
+				
+				if (setState(_pendingRecognizedState))
+				{
+					onDelayedRecognize();
+				}
+			}
+			else if (event.newState != GestureState.POSSIBLE)
+			{
+				setState(GestureState.FAILED);
+			}
 		}
 	}
 }

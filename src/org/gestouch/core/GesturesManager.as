@@ -1,371 +1,402 @@
 package org.gestouch.core
 {
-	import org.gestouch.events.MouseTouchEvent;
-	import org.gestouch.utils.ObjectPool;
+	import org.gestouch.gestures.Gesture;
+	import org.gestouch.input.MouseInputAdapter;
+	import org.gestouch.input.TouchInputAdapter;
 
+	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.InteractiveObject;
+	import flash.display.Shape;
 	import flash.display.Stage;
-	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.events.TouchEvent;
 	import flash.ui.Multitouch;
-	import flash.ui.MultitouchInputMode;
 	import flash.utils.Dictionary;
-	import flash.utils.getTimer;
-
 
 	/**
 	 * @author Pavel fljot
 	 */
 	public class GesturesManager implements IGesturesManager
 	{
-		public static var implementation:IGesturesManager;
+		public static var initDefaultInputAdapter:Boolean = true;
+		private static var _instance:IGesturesManager;
+		private static var _allowInstantiation:Boolean;
 		
-		protected static var _impl:IGesturesManager;
-		protected static var _initialized:Boolean = false;
-		
+		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
+		protected const _frameTickerShape:Shape = new Shape();
+		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
 		protected var _stage:Stage;
-		protected var _gestures:Vector.<IGesture> = new Vector.<IGesture>();
-		protected var _currGestures:Vector.<IGesture> = new Vector.<IGesture>();
-		/**
-		 * Maps (Dictionary[target] = gesture) by gesture type.
-		 */
-		protected var _gestureMapsByType:Dictionary = new Dictionary();
-		protected var _touchPoints:Vector.<TouchPoint> = new Vector.<TouchPoint>(Multitouch.maxTouchPoints);
-		protected var _touchPointsPool:ObjectPool = new ObjectPool(TouchPoint);
+		protected var _gestures:Vector.<Gesture> = new Vector.<Gesture>();
+		protected var _gesturesForTouchMap:Array = [];
+		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
+		protected var _dirtyGestures:Vector.<Gesture> = new Vector.<Gesture>();
+		protected var _dirtyGesturesLength:uint = 0;
+		protected var _dirtyGesturesMap:Dictionary = new Dictionary(true);
 		
 		
-		gestouch_internal static function addGesture(gesture:IGesture):IGesture
+		public function GesturesManager()
 		{
-			if (!_impl)
+			if (Object(this).constructor == GesturesManager && !_allowInstantiation)
 			{
-				_impl = implementation || new GesturesManager();
+				throw new Error("Do not instantiate GesturesManager directly.");
 			}
-			return _impl.addGesture(gesture);
 		}
+		
+		
+		public function get inputAdapters():Vector.<IInputAdapter>
+		{
+			return _inputAdapters.concat();
+		}
+		
+		
+		public static function setImplementation(value:IGesturesManager):void
+		{
+			if (!value)
+			{
+				throw new ArgumentError("value cannot be null.");
+			}
+			if (_instance)
+			{
+				throw new Error("Instance of GesturesManager is already created. If you want to have own implementation of single GesturesManager instace, you should set it earlier.");
+			}
+			_instance = value;
+		}
+		
 
-
-		gestouch_internal static function removeGesture(gesture:IGesture):IGesture
+		public static function getInstance():IGesturesManager
 		{
-			return _impl.removeGesture(gesture);
+			if (!_instance)
+			{
+				_allowInstantiation = true;
+				_instance = new GesturesManager();
+				_allowInstantiation = false;
+			}
+			 
+			return _instance;
+		}
+			
+		
+		
+		
+		public function addInputAdapter(inputAdapter:IInputAdapter):void
+		{
+			if (!inputAdapter)
+			{
+				throw new Error("Input adapter must be non null.");
+			}
+			
+			if (_inputAdapters.indexOf(inputAdapter) > -1)
+				return;//TODO: throw Error or ignore?
+			
+			_inputAdapters.push(inputAdapter);
+			inputAdapter.touchesManager = _touchesManager;
+			inputAdapter.gesturesManager = this;
+			inputAdapter.init();
 		}
 		
 		
-		gestouch_internal static function removeGestureByTarget(gestureType:Class, target:InteractiveObject):IGesture
+		public function removeInputAdapter(inputAdapter:IInputAdapter, dispose:Boolean = true):void
 		{
-			return _impl.removeGestureByTarget(gestureType, target);
+			if (!inputAdapter)
+			{
+				throw new Error("Input adapter must be non null.");
+			}
+			var index:int = _inputAdapters.indexOf(inputAdapter);
+			if (index == -1)
+			{
+				throw new Error("This input manager is not registered.");
+			}
+			
+			_inputAdapters.splice(index, 1);
+			if (dispose)
+			{
+				inputAdapter.dispose();
+			}
 		}
 		
 		
-		gestouch_internal static function cancelGesture(gesture:IGesture):void
+		
+		
+		//--------------------------------------------------------------------------
+		//
+		//  Private methods
+		//
+		//--------------------------------------------------------------------------
+		
+		protected function installStage(stage:Stage):void
 		{
-			_impl.cancelGesture(gesture);
-		}
-		
-		
-		gestouch_internal static function addCurrentGesture(gesture:IGesture):void
-		{
-			_impl.addCurrentGesture(gesture);
-		}
-		
-		
-		gestouch_internal static function updateGestureTarget(gesture:IGesture, oldTarget:InteractiveObject, newTarget:InteractiveObject):void
-		{
-			_impl.updateGestureTarget(gesture, oldTarget, newTarget);
-		}
-		
-		
-		public function init(stage:Stage):void
-		{
-			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
-						
 			_stage = stage;
-			_stage.addEventListener(MouseEvent.MOUSE_DOWN, stage_mouseDownHandler);
-			_stage.addEventListener(TouchEvent.TOUCH_BEGIN, stage_touchBeginHandler);
-			_stage.addEventListener(TouchEvent.TOUCH_MOVE, stage_touchMoveHandler);
-			_stage.addEventListener(TouchEvent.TOUCH_END, stage_touchEndHandler, true);
-		}
-		
-		
-		public static function getTouchPoint(touchPointID:int):TouchPoint
-		{
-			return _impl.getTouchPoint(touchPointID);
-		}
-		
-		
-		public function addGesture(gesture:IGesture):IGesture
-		{
-			if (_gestures.indexOf(gesture) > -1)
-			{
-				throw new IllegalOperationError("Gesture instace '" + gesture + "' is already registered.");
-			}
 			
-			_gestures.push(gesture);
-			
-			return gesture;
-		}
-
-
-		public function removeGesture(gesture:IGesture):IGesture
-		{
-			var index:int = _gestures.indexOf(gesture); 
-			if (index == -1)
-			{
-				throw new IllegalOperationError("Gesture instace '" + gesture + "' is not registered.");
-			}
-			
-			_gestures.splice(index, 1);
-			
-			index = _currGestures.indexOf(gesture);
-			if (index > -1)
-			{
-				_currGestures.splice(index, 1);
-			}
-			
-			gesture.dispose();
-			
-			return gesture;
-		}
-
-
-		public function removeGestureByTarget(gestureType:Class, target:InteractiveObject):IGesture
-		{
-			var gesture:IGesture = getGestureByTarget(gestureType, target);
-			return removeGesture(gesture);
-		}
-
-
-		public function getGestureByTarget(gestureType:Class, target:InteractiveObject):IGesture
-		{
-			var gesturesOfTypeByTarget:Dictionary = _gestureMapsByType[gestureType] as Dictionary;
-			var gesture:IGesture = gesturesOfTypeByTarget ? gesturesOfTypeByTarget[target] as IGesture : null;
-			return gesture;
-		}
-		
-		
-		public function cancelGesture(gesture:IGesture):void
-		{
-			var index:int = _currGestures.indexOf(gesture);
-			if (index == -1)
-			{
-				return;// don't see point in throwing error
-			}
-			
-			_currGestures.splice(index, 1);
-			gesture.onCancel();
-		}
-		
-		
-		public function addCurrentGesture(gesture:IGesture):void
-		{
-			if (_currGestures.indexOf(gesture) == -1)
-			{
-				_currGestures.push(gesture);
-			}
-		}
-		
-		
-		public function updateGestureTarget(gesture:IGesture, oldTarget:InteractiveObject, newTarget:InteractiveObject):void
-		{			
-			if (!_initialized && newTarget)
-			{
-				var stage:Stage = newTarget.stage; 
-				if (stage)
-				{
-					_impl.init(stage);
-					_initialized = true;			
-				}
-				else
-				{
-					newTarget.addEventListener(Event.ADDED_TO_STAGE, target_addedToStageHandler, false, 0, true);
-				}
-			}
-			
-			var gesturesOfTypeByTarget:Dictionary = _gestureMapsByType[gesture.reflect()] as Dictionary;
-			if (!gesturesOfTypeByTarget)
-			{
-				gesturesOfTypeByTarget = _gestureMapsByType[gesture.reflect()] = new Dictionary();
-			}
-			else if (gesturesOfTypeByTarget[newTarget])
-			{
-				throw new IllegalOperationError("You cannot add two gestures of the same type to one target (it makes no sence).");
-			}
-			if (oldTarget)
-			{
-				oldTarget.addEventListener(Event.ADDED_TO_STAGE, target_addedToStageHandler);
-				delete gesturesOfTypeByTarget[oldTarget];
-			}
-			if (newTarget)
-			{
-				gesturesOfTypeByTarget[newTarget] = gesture;
-			}
-		}
-		
-		
-		public function getTouchPoint(touchPointID:int):TouchPoint
-		{
-			var p:TouchPoint = _touchPoints[touchPointID];
-			if (!p)
-			{
-				throw new ArgumentError("No touch point with ID " + touchPointID + " found.");
-			}
-			return p.clone() as TouchPoint;
-		}
-
-
-		private static function target_addedToStageHandler(event:Event):void
-		{
-			var target:InteractiveObject = event.currentTarget as InteractiveObject;
-			target.removeEventListener(Event.ADDED_TO_STAGE, target_addedToStageHandler);
-			
-			if (!_initialized)
-			{
-				_impl.init(target.stage);
-				_initialized = true;
-			}
-		}
-
-
-		protected function stage_mouseDownHandler(event:MouseEvent):void
-		{
 			if (Multitouch.supportsTouchEvents)
 			{
-				return;
+				addInputAdapter(new TouchInputAdapter(stage));
 			}
-			
-			_stage.addEventListener(MouseEvent.MOUSE_MOVE, stage_mouseMoveHandler);
-			_stage.addEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler);
-			
-			stage_touchBeginHandler(new MouseTouchEvent(TouchEvent.TOUCH_BEGIN, event));
-		}
-		
-		
-		protected function stage_mouseMoveHandler(event:MouseEvent):void
-		{
-			stage_touchMoveHandler(new MouseTouchEvent(TouchEvent.TOUCH_MOVE, event));
-		}
-		
-		
-		protected function stage_mouseUpHandler(event:MouseEvent):void
-		{
-			_stage.removeEventListener(MouseEvent.MOUSE_MOVE, stage_mouseMoveHandler);
-			_stage.removeEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler);
-			
-			stage_touchEndHandler(new MouseTouchEvent(TouchEvent.TOUCH_END, event));
-		}
-
-
-		protected function stage_touchBeginHandler(event:TouchEvent):void
-		{
-			var outOfRange:Boolean = (_touchPoints.length <= event.touchPointID);
-			var tp:TouchPoint = outOfRange ? null : _touchPoints[event.touchPointID];
-			if (!tp)
+			else
 			{
-				tp = _touchPointsPool.getObject() as TouchPoint;
-				tp.id = event.touchPointID;
-				if (outOfRange)
-				{
-					_touchPoints.length = tp.id + 1;
-				}
-				_touchPoints[tp.id] = tp;
-			}
-			tp.reset();
-			tp.x = event.stageX;
-			tp.y = event.stageY;
-			tp.sizeX = event.sizeX;
-			tp.sizeY = event.sizeY;
-			tp.pressure = event.pressure;
-			tp.touchBeginPos.x = tp.x;
-			tp.touchBeginPos.y = tp.y;
-			tp.touchBeginTime = tp.lastTime = getTimer();
-			tp.moveOffset.x = tp.moveOffset.y = 0; 
-			tp.lastMove.x = tp.lastMove.y = 0;
-			tp.velocity.x = tp.velocity.y = 0;
-			
-			for each (var gesture:IGesture in _gestures)
-			{
-				if (gesture.target && gesture.shouldTrackPoint(event, tp))
-				{
-					gesture.onTouchBegin(tp);
-				}
-			}
-			
-			// add gestures that are being tracked to the current gestures list
-			var n:uint = _gestures.length;
-			while (n-- > 0)
-			{
-				gesture = _gestures[n];
-				//TODO: which condition first (performance-wise)?
-				if (_currGestures.indexOf(gesture) == -1 && gesture.isTracking(tp.id))
-				{
-					_currGestures.push(gesture);
-				}
+				addInputAdapter(new MouseInputAdapter(stage));
 			}
 		}
 		
 		
-		protected function stage_touchMoveHandler(event:TouchEvent):void
+		protected function resetDirtyGestures():void
 		{
-			var tp:TouchPoint = _touchPoints[event.touchPointID];
-			var oldX:Number = tp.x;
-			var oldY:Number = tp.y;
-			tp.x = event.stageX;
-			tp.y = event.stageY;
-			tp.sizeX = event.sizeX;
-			tp.sizeY = event.sizeY;
-			tp.pressure = event.pressure;
-//			tp.moveOffset = tp.subtract(tp.touchBeginPos);
-			tp.moveOffset.x = tp.x - tp.touchBeginPos.x;
-			tp.moveOffset.y = tp.y - tp.touchBeginPos.y;
-			tp.lastMove.x = tp.x - oldX;
-			tp.lastMove.y = tp.y - oldY;
-			var now:uint = getTimer(); 
-			var dt:uint = now - tp.lastTime;
-			tp.lastTime = now;
-			tp.velocity.x = tp.lastMove.x / dt;
-			tp.velocity.y = tp.lastMove.y / dt;
-			
-			for each (var gesture:IGesture in _currGestures)
+			for each (var gesture:Gesture in _dirtyGestures)
 			{
-				if (gesture.isTracking(tp.id))
-				{
-					gesture.onTouchMove(tp);
-				}
+				gesture.reset();
 			}
+			_dirtyGestures.length = 0;
+			_dirtyGesturesLength = 0;
+			_dirtyGesturesMap = new Dictionary(true);
+			_frameTickerShape.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		}
 		
 		
-		protected function stage_touchEndHandler(event:TouchEvent):void
+		gestouch_internal function addGesture(gesture:Gesture):void
 		{
-			var tp:TouchPoint = _touchPoints[event.touchPointID];
-			tp.x = event.stageX;
-			tp.y = event.stageY;
-			tp.sizeX = event.sizeX;
-			tp.sizeY = event.sizeY;
-			tp.pressure = event.pressure;
-			tp.moveOffset = tp.subtract(tp.touchBeginPos);
-			
-			for each (var gesture:IGesture in _currGestures)
+			if (!gesture)
 			{
-				if (gesture.isTracking(tp.id))
-				{
-					gesture.onTouchEnd(tp);
-				}
+				throw new ArgumentError("Argument 'gesture' must be not null.");
+			}
+			if (_gestures.indexOf(gesture) > -1)
+			{
+				throw new Error("This gesture is already registered.. something wrong.");
 			}
 			
-			var i:uint = 0;
-			for each (gesture in _currGestures.concat())
+			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[gesture.target] as Vector.<Gesture>;
+			if (!targetGestures)
 			{
-				if (gesture.trackingPointsCount == 0)
+				targetGestures = _gesturesForTargetMap[gesture.target] = new Vector.<Gesture>();
+			}
+			targetGestures.push(gesture);
+			
+			_gestures.push(gesture);	
+			
+			if (GesturesManager.initDefaultInputAdapter)
+			{
+				if (!_stage && gesture.target.stage)
 				{
-					_currGestures.splice(i, 1);
+					installStage(gesture.target.stage);
 				}
 				else
-				{				
-					i++;
+				{
+					gesture.target.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
 				}
 			}
+		}
+		
+		
+		gestouch_internal function removeGesture(gesture:Gesture):void
+		{
+			if (!gesture)
+			{
+				throw new ArgumentError("Argument 'gesture' must be not null.");
+			}
+			
+			
+			var target:InteractiveObject = gesture.target;
+			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
+			targetGestures.splice(targetGestures.indexOf(gesture), 1);
+			
+			if (targetGestures.length == 0)
+			{
+				delete _gesturesForTargetMap[target];
+				target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+			}
+			
+			var index:int = _gestures.indexOf(gesture);
+			if (index > -1)
+			{
+				_gestures.splice(index, 1);
+			}
+			
+			//TODO: decide about gesture state and _dirtyGestures
+		}
+		
+		
+		gestouch_internal function scheduleGestureStateReset(gesture:Gesture):void
+		{
+			if (!_dirtyGesturesMap[gesture])
+			{
+				_dirtyGestures.push(gesture);
+				_dirtyGesturesLength++;
+				_frameTickerShape.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+			}
+		}
+		
+		
+		gestouch_internal function onGestureRecognized(gesture:Gesture):void
+		{
+			for each (var otherGesture:Gesture in _gestures)
+			{
+				// conditions for otherGesture "own properties"
+				if (otherGesture != gesture &&
+					otherGesture.enabled &&
+					otherGesture.state == GestureState.POSSIBLE)
+				{
+					// conditions for otherGesture target
+					if (otherGesture.target == gesture.target ||
+						(gesture.target is DisplayObjectContainer && (gesture.target as DisplayObjectContainer).contains(otherGesture.target)) ||
+						(otherGesture.target is DisplayObjectContainer && (otherGesture.target as DisplayObjectContainer).contains(gesture.target))						
+						)
+					{
+						// conditions for gestures relations
+						if (gesture.canPreventGesture(otherGesture) &&
+							otherGesture.canBePreventedByGesture(gesture) &&
+							(!gesture.delegate || !gesture.delegate.gesturesShouldRecognizeSimultaneously(gesture, otherGesture)) &&
+							(!otherGesture.delegate || !otherGesture.delegate.gesturesShouldRecognizeSimultaneously(otherGesture, gesture)))
+						{
+							otherGesture.gestouch_internal::setState_internal(GestureState.FAILED);
+						}
+					}					
+				}
+			}
+		}
+		
+		
+		gestouch_internal function onTouchBegin(touch:Touch):void
+		{
+			if (_dirtyGesturesLength > 0)
+			{
+				resetDirtyGestures();
+			}
+			
+			var gesture:Gesture;
+			var i:uint;
+			
+			// This vector will contain active gestures for specific touch (ID) during all touch session.
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
+			if (!gesturesForTouch)
+			{
+				gesturesForTouch = new Vector.<Gesture>(); 
+				_gesturesForTouchMap[touch.id] = gesturesForTouch;
+			}
+			else
+			{
+				gesturesForTouch.length = 0;
+			}			
+			
+			
+			// Create a sorted(!) list of gestures which are interested in this touch.
+			// Sorting priority: deeper target has higher priority, recently added gesture has higher priority.
+			var target:InteractiveObject = touch.target;
+			var gesturesForTarget:Vector.<Gesture>;
+			while (target)
+			{
+				gesturesForTarget = _gesturesForTargetMap[target] as Vector.<Gesture>;
+				if (gesturesForTarget)
+				{
+					i = gesturesForTarget.length;
+					while (i-- > 0)
+					{
+						gesture = gesturesForTarget[i] as Gesture;
+						if (gesture.enabled &&
+							(!gesture.delegate || gesture.delegate.gestureShouldReceiveTouch(gesture, touch)))
+						{
+							//TODO: optimize performance! decide between unshift() vs [i++] = gesture + reverse()
+							gesturesForTouch.unshift(gesture);
+						}
+					}
+				}
+				
+				target = target.parent;
+			}
+			
+			// Then we populate them with this touch and event.
+			// They might start tracking this touch or ignore it (via Gesture#ignoreTouch())
+			i = gesturesForTouch.length;
+			while (i-- > 0)
+			{
+				gesture = gesturesForTouch[i] as Gesture;
+				// Check for state because previous (i+1) gesture may already abort current (i) one
+				if (gesture.state != GestureState.FAILED)
+				{
+					gesture.gestouch_internal::touchBeginHandler(touch);
+				}
+				else
+				{
+					gesturesForTouch.splice(i, 1);
+				}
+			}
+		}
+		
+		
+		gestouch_internal function onTouchMove(touch:Touch):void
+		{
+			if (_dirtyGesturesLength > 0)
+			{
+				resetDirtyGestures();
+			}
+			
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
+			var gesture:Gesture;
+			var i:int = gesturesForTouch.length;
+			while (i-- > 0)
+			{
+				gesture = gesturesForTouch[i] as Gesture;
+				
+				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
+				{
+					gesture.gestouch_internal::touchMoveHandler(touch);
+				}
+				else
+				{
+					// gesture is no more interested in this touch (e.g. ignoreTouch was called)
+					gesturesForTouch.splice(i, 1);
+				}
+			}
+		}
+		
+		
+		gestouch_internal function onTouchEnd(touch:Touch):void
+		{
+			if (_dirtyGesturesLength > 0)
+			{
+				resetDirtyGestures();
+			}
+			
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
+			var gesture:Gesture;
+			var i:int = gesturesForTouch.length;
+			while (i-- > 0)
+			{
+				gesture = gesturesForTouch[i] as Gesture;
+									
+				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
+				{					
+					gesture.gestouch_internal::touchEndHandler(touch);
+				}
+			}
+		}
+		
+		
+		gestouch_internal function onTouchCancel(touch:Touch):void
+		{
+			//TODO
+		}
+		
+		
+		
+		
+		//--------------------------------------------------------------------------
+		//
+		//  Event handlers
+		//
+		//--------------------------------------------------------------------------		
+		
+		protected function gestureTarget_addedToStageHandler(event:Event):void
+		{
+			var target:DisplayObject = event.target as DisplayObject;
+			target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+			if (!_stage && GesturesManager.initDefaultInputAdapter)
+			{
+				installStage(target.stage);
+			}
+		}
+		
+		
+		private function enterFrameHandler(event:Event):void
+		{
+			resetDirtyGestures();
 		}
 	}
 }
