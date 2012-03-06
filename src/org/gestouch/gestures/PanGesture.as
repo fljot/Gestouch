@@ -23,6 +23,9 @@ package org.gestouch.gestures
 		 */
 		public var direction:uint = PanGestureDirection.NO_DIRECTION;
 		
+		protected var _gestureBeginOffsetX:Number;
+		protected var _gestureBeginOffsetY:Number;
+		
 		
 		public function PanGesture(target:InteractiveObject = null)
 		{
@@ -87,6 +90,15 @@ package org.gestouch.gestures
 			return PanGesture;
 		}
 		
+			
+		override public function reset():void
+		{
+			_gestureBeginOffsetX = NaN;
+			_gestureBeginOffsetY = NaN;
+			
+			super.reset();
+		}
+		
 		
 		
 		
@@ -142,20 +154,14 @@ package org.gestouch.gestures
 					updateLocation();
 					offsetX = _location.x - prevLocationX;
 					offsetY = _location.y - prevLocationY;
-					// Unfortunately we create several new point instances here,
-					// but thats not a big deal since this code executed only once per recognition session
-					var offset:Point = new Point(offsetX, offsetY);
-					if (offset.length > slop)
-					{
-						var slopVector:Point = offset.clone();
-						slopVector.normalize(slop);
-						offset = offset.subtract(slopVector);
-					}
+					// acummulate begin offsets for the case when this gesture recognition is delayed by requireGestureToFail
+					_gestureBeginOffsetX = (_gestureBeginOffsetX != _gestureBeginOffsetX) ? offsetX : _gestureBeginOffsetX + offsetX;
+					_gestureBeginOffsetY = (_gestureBeginOffsetY != _gestureBeginOffsetY) ? offsetY : _gestureBeginOffsetY + offsetY;
 					
 					if (setState(GestureState.BEGAN) && hasEventListener(PanGestureEvent.GESTURE_PAN))
 					{
 						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.BEGAN,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, offset.x, offset.y));
+							_location.x, _location.y, _localLocation.x, _localLocation.y, offsetX, offsetY));
 					}
 				}
 			}
@@ -196,6 +202,16 @@ package org.gestouch.gestures
 			else
 			{
 				updateLocation();
+			}
+		}
+		
+		
+		override protected function onDelayedRecognize():void
+		{
+			if (hasEventListener(PanGestureEvent.GESTURE_PAN))
+			{
+				dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.BEGAN,
+					_location.x, _location.y, _localLocation.x, _localLocation.y, _gestureBeginOffsetX, _gestureBeginOffsetY));
 			}
 		}
 	}

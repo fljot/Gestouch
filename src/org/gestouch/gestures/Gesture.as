@@ -14,6 +14,7 @@ package org.gestouch.gestures
 	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
+	import flash.utils.Dictionary;
 	
 	
 	[Event(name="stateChange", type="org.gestouch.events.GestureStateEvent")]
@@ -46,6 +47,12 @@ package org.gestouch.gestures
 		protected var _touchesMap:Object = {};
 		protected var _centralPoint:Point = new Point();
 		protected var _localLocation:Point;
+		/**
+		 * List of gesture we require to fail.
+		 * @see requireGestureToFail()
+		 */
+		protected var _gesturesToFail:Dictionary = new Dictionary(true);
+		protected var _pendingRecognizedState:uint;
 		
 		
 		public function Gesture(target:InteractiveObject = null)
@@ -177,11 +184,18 @@ package org.gestouch.gestures
 		 */
 		public function reset():void
 		{
-			//TODO			
+			//FIXME: proper state change?		
 			_location.x = 0;
 			_location.y = 0;
 			_touchesMap = {};
 			_touchesCount = 0;
+			
+			for (var key:* in _gesturesToFail)
+			{
+				var gestureToFail:Gesture = key as Gesture;
+				gestureToFail.removeEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler);
+			}
+			_pendingRecognizedState = 0;
 			
 			setState(GestureState.IDLE);
 		}
@@ -197,6 +211,7 @@ package org.gestouch.gestures
 			//TODO
 			reset();
 			target = null;
+			_gesturesToFail = null;
 		}
 		
 		
@@ -212,9 +227,13 @@ package org.gestouch.gestures
 		}
 		
 		
+		/**
+		 * <b>NB! Current implementation is highly experimental!</b> See examples for more info. 
+		 */
 		public function requireGestureToFail(gesture:Gesture):void
 		{
 			//TODO
+			_gesturesToFail[gesture] = true;
 		}
 		
 		
@@ -319,6 +338,39 @@ package org.gestouch.gestures
 			
 			if (newState == GestureState.BEGAN || newState == GestureState.RECOGNIZED)
 			{
+				var gestureToFail:Gesture;
+				// first we check if other required-to-fail gestures recognized
+				// TODO: is this really necessary? using "requireGestureToFail" API assume that
+				// required-to-fail gesture always recognizes AFTER this one.
+				for (var key:* in _gesturesToFail)
+				{
+					gestureToFail = key as Gesture;
+					if (gestureToFail.state != GestureState.IDLE && gestureToFail.state != GestureState.POSSIBLE
+						&& gestureToFail.state != GestureState.FAILED)
+					{
+						// Looks like other gesture won't fail,
+						// which means the required condition will not happen, so we must fail
+						setState(GestureState.FAILED);
+						return false;
+					}
+				}
+				// then we check of other required-to-fail gestures are actually tracked (not IDLE)
+				// and not still not recognized (e.g. POSSIBLE state)
+				for (key in _gesturesToFail)
+				{
+					gestureToFail = key as Gesture;
+					if (gestureToFail.state == GestureState.POSSIBLE)
+					{
+						// Other gesture might fail soon, so we postpone state change
+						_pendingRecognizedState = newState;
+						return false;
+					}
+					// else if gesture is in IDLE state it means it doesn't track anything,
+					// so we simply ignore it as it doesn't seem like conflict from this perspective
+					// (perspective of using "requireGestureToFail" API)
+				}
+				
+				
 				if (delegate && !delegate.gestureShouldBegin(this))
 				{
 					setState(GestureState.FAILED);
@@ -381,6 +433,17 @@ package org.gestouch.gestures
 		}
 		
 		
+		/**
+		 * Executed once requiredToFail gestures have been failed and
+		 * pending (delayed) recognized state has been entered.
+		 * You must dispatch gesture event here.
+		 */
+		protected function onDelayedRecognize():void
+		{
+			
+		}
+		
+		
 		
 		
 		//--------------------------------------------------------------------------
@@ -398,6 +461,12 @@ package org.gestouch.gestures
 			
 			if (_touchesCount == 1 && state == GestureState.IDLE)
 			{
+				for (var key:* in _gesturesToFail)
+				{
+					var gestureToFail:Gesture = key as Gesture;
+					gestureToFail.addEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler, false, 0, true);
+				}
+				
 				setState(GestureState.POSSIBLE);
 			}
 		}
@@ -416,6 +485,38 @@ package org.gestouch.gestures
 			_touchesCount--;
 			
 			onTouchEnd(touch);
+		}
+		
+		
+		protected function gestureToFail_stateChangeHandler(event:GestureStateEvent):void
+		{
+			if (state != GestureState.POSSIBLE)
+				return;//just in case..FIXME?
+			
+			if (!_pendingRecognizedState)
+				return;
+			
+			if (event.newState == GestureState.FAILED)
+			{
+				for (var key:* in _gesturesToFail)
+				{
+					var gestureToFail:Gesture = key as Gesture;
+					if (gestureToFail.state == GestureState.POSSIBLE)
+					{
+						// we're still waiting for some gesture to fail
+						return;
+					}
+				}
+				
+				if (setState(_pendingRecognizedState))
+				{
+					onDelayedRecognize();
+				}
+			}
+			else if (event.newState != GestureState.POSSIBLE)
+			{
+				setState(GestureState.FAILED);
+			}
 		}
 	}
 }

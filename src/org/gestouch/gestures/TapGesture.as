@@ -151,6 +151,16 @@ package org.gestouch.gestures
 			}
 		}
 		
+			
+		override protected function onDelayedRecognize():void
+		{
+			if (hasEventListener(TapGestureEvent.GESTURE_TAP))
+			{
+				dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GestureState.RECOGNIZED,
+					_location.x, _location.y, _localLocation.x, _localLocation.y));
+			}
+		}
+		
 		
 		
 		

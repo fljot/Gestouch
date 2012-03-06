@@ -151,6 +151,16 @@ package org.gestouch.gestures
 			}
 		}
 		
+			
+		override protected function onDelayedRecognize():void
+		{
+			if (hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
+			{
+				dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.BEGAN,
+						_location.x, _location.y, _localLocation.x, _localLocation.y));
+			}
+		}
+		
 		
 		
 		

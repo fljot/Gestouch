@@ -176,11 +176,12 @@ package org.gestouch.gestures
 					}
 					else if (absVelX >= minVelocity && (minOffset != minOffset || absOffsetX >= minOffset))
 					{
+						_offset.y = 0;
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
 							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
 							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
-								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, 0));
+								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 						}
 					}
 				}
@@ -203,11 +204,12 @@ package org.gestouch.gestures
 					}
 					else if (absVelY >= minVelocity && (minOffset != minOffset || absOffsetY >= minOffset))
 					{
+						_offset.x = 0;
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
 							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
 							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
-								_location.x, _location.y, _localLocation.x, _localLocation.y, 0, _offset.y));
+								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 						}
 					}
 				}
@@ -224,6 +226,17 @@ package org.gestouch.gestures
 			if (touchesCount < numTouchesRequired)
 			{
 				setState(GestureState.FAILED);
+			}
+		}
+		
+		
+		override protected function onDelayedRecognize():void
+		{
+			if (hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
+			{
+				_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+				dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
+					_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 			}
 		}
 	}
