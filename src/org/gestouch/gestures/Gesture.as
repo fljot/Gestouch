@@ -34,7 +34,6 @@ package org.gestouch.gestures
 		 * based on 20 pixels on a 252ppi device.
 		 */
 		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
-		public static const TOUCH_EVENT_CAPTURE_PRIORITY:int = 10;
 		
 		
 		public var delegate:IGestureDelegate;
