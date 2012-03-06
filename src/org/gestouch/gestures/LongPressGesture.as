@@ -110,13 +110,9 @@ package org.gestouch.gestures
 		
 		override protected function onTouchMove(touch:Touch):void
 		{
-			if (state == GestureState.POSSIBLE && slop > 0)
+			if (state == GestureState.POSSIBLE && slop > 0 && touch.locationOffset.length > slop)
 			{
-				if (touch.locationOffset.length > slop)
-				{
-					setState(GestureState.FAILED);
-					return;
-				}
+				setState(GestureState.FAILED);
 			}
 			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 			{
