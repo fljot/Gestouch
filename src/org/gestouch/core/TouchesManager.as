@@ -1,7 +1,5 @@
 package org.gestouch.core
 {
-	import flash.ui.Multitouch;
-	import flash.ui.MultitouchInputMode;
 	/**
 	 * @author Pavel fljot
 	 */
@@ -11,10 +9,6 @@ package org.gestouch.core
 		private static var _allowInstantiation:Boolean;
 		
 		protected var _touchesMap:Object = {};
-		
-		{
-			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
-		}
 		
 		
 		public function TouchesManager()
