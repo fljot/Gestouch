@@ -1,16 +1,10 @@
 package org.gestouch.input
 {
-	import org.gestouch.core.Touch;
-	import org.gestouch.core.gestouch_internal;
-
-	import flash.display.InteractiveObject;
 	import flash.display.Stage;
 	import flash.events.EventPhase;
 	import flash.events.TouchEvent;
-	import flash.geom.Point;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
-	import flash.utils.getTimer;
 
 
 	/**
@@ -57,6 +51,8 @@ package org.gestouch.input
 			_stage.removeEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
 			_stage.removeEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler);
 			uninstallStageListeners();
+			_touchesManager.onInputAdapterDispose(this);
+			_touchesManager = null;
 		}
 		
 		
@@ -83,36 +79,13 @@ package org.gestouch.input
 		{
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;//we listen in capture or at_target (to catch on empty stage)
-			// Way to prevent MouseEvent/TouchEvent collisions.
-			// Also helps to ignore possible fake events.
-			if (_touchesManager.hasTouch(event.touchPointID))
-				return;
+				
+			_touchesManager.onTouchBegin(this, event.touchPointID, event.stageX, event.stageY, event.target);
 			
-			installStageListeners();
-			
-			var touch:Touch = _touchesManager.createTouch();
-			touch.id = event.touchPointID;
-			touch.target = event.target as InteractiveObject;
-			touch.gestouch_internal::setLocation(new Point(event.stageX, event.stageY));
-			touch.sizeX = event.sizeX;
-			touch.sizeY = event.sizeY;
-			touch.pressure = event.pressure;
-			//TODO: conditional compilation?
-			if (event.hasOwnProperty("timestamp"))
+			if (_touchesManager.activeTouchesCount > 0)
 			{
-				touch.gestouch_internal::setTime(event["timestamp"]);
-				touch.gestouch_internal::setBeginTime(event["timestamp"]);
+				installStageListeners();			
 			}
-			else
-			{
-				touch.gestouch_internal::setTime(getTimer());
-				touch.gestouch_internal::setBeginTime(getTimer());
-			}
-			
-			_touchesManager.addTouch(touch);
-			_touchesMap[touch.id] = true;
-			
-			_gesturesManager.gestouch_internal::onTouchBegin(touch);
 		}
 		
 		
@@ -120,27 +93,8 @@ package org.gestouch.input
 		{
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;//we listen in capture or at_target (to catch on empty stage)
-			// Way to prevent MouseEvent/TouchEvent collisions.
-			// Also helps to ignore possible fake events.
-			if (!_touchesManager.hasTouch(event.touchPointID) || !_touchesMap.hasOwnProperty(event.touchPointID))
-				return;
 			
-			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
-			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
-			touch.sizeX = event.sizeX;
-			touch.sizeY = event.sizeY;
-			touch.pressure = event.pressure;
-			//TODO: conditional compilation?
-			if (event.hasOwnProperty("timestamp"))
-			{
-				touch.gestouch_internal::setTime(event["timestamp"]);
-			}
-			else
-			{
-				touch.gestouch_internal::setTime(getTimer());
-			}
-			
-			_gesturesManager.gestouch_internal::onTouchMove(touch);
+			_touchesManager.onTouchMove(this, event.touchPointID, event.stageX, event.stageY);
 		}
 		
 		
@@ -149,30 +103,7 @@ package org.gestouch.input
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;//we listen in capture or at_target (to catch on empty stage)
 			
-			// Way to prevent MouseEvent/TouchEvent collisions.
-			// Also helps to ignore possible fake events.
-			if (!_touchesManager.hasTouch(event.touchPointID))
-				return;
-			
-			var touch:Touch = _touchesManager.getTouch(event.touchPointID);
-			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
-			touch.sizeX = event.sizeX;
-			touch.sizeY = event.sizeY;
-			touch.pressure = event.pressure;
-			//TODO: conditional compilation?
-			if (event.hasOwnProperty("timestamp"))
-			{
-				touch.gestouch_internal::setTime(event["timestamp"]);
-			}
-			else
-			{
-				touch.gestouch_internal::setTime(getTimer());
-			}
-			
-			_gesturesManager.gestouch_internal::onTouchEnd(touch);
-			
-			_touchesManager.removeTouch(touch);
-			delete _touchesMap[touch.id];
+			_touchesManager.onTouchEnd(this, event.touchPointID, event.stageX, event.stageY);
 			
 			if (_touchesManager.activeTouchesCount == 0)
 			{

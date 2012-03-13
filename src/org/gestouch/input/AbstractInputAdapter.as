@@ -1,6 +1,5 @@
 package org.gestouch.input
 {
-	import org.gestouch.core.IGesturesManager;
 	import org.gestouch.core.IInputAdapter;
 	import org.gestouch.core.ITouchesManager;
 
@@ -11,7 +10,6 @@ package org.gestouch.input
 	public class AbstractInputAdapter implements IInputAdapter
 	{
 		protected var _touchesManager:ITouchesManager;
-		protected var _gesturesManager:IGesturesManager;
 		
 		
 		public function AbstractInputAdapter()
@@ -26,12 +24,6 @@ package org.gestouch.input
 		public function set touchesManager(value:ITouchesManager):void
 		{
 			_touchesManager = value;
-		}
-		
-		
-		public function set gesturesManager(value:IGesturesManager):void
-		{
-			_gesturesManager = value;
 		}
 		
 		

@@ -5,12 +5,14 @@ package org.gestouch.core
 	 */
 	public interface ITouchesManager
 	{
+		function set gesturesManager(value:IGesturesManager):void;
+		
 		function get activeTouchesCount():uint;
 		
-		function createTouch():Touch;
-		function addTouch(touch:Touch):Touch;
-		function removeTouch(touch:Touch):Touch;
-		function getTouch(touchPointID:int):Touch;
-		function hasTouch(touchPointID:int):Boolean;
+		function onTouchBegin(inputAdapter:IInputAdapter, touchID:uint, x:Number, y:Number, target:Object):void;
+		function onTouchMove(inputAdapter:IInputAdapter, touchID:uint, x:Number, y:Number):void;
+		function onTouchEnd(inputAdapter:IInputAdapter, touchID:uint, x:Number, y:Number):void;
+
+		function onInputAdapterDispose(inputAdapter:IInputAdapter):void;
 	}
 }

@@ -1,10 +1,10 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
+	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.SwipeGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
 	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
@@ -31,7 +31,7 @@ package org.gestouch.gestures
 		protected var _decelerationCounter:uint = 0;
 		
 		
-		public function SwipeGesture(target:InteractiveObject = null)
+		public function SwipeGesture(target:IGestureTargetAdapter = null)
 		{
 			super(target);
 		}

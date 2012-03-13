@@ -1,10 +1,10 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
+	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.ZoomGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
 	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
@@ -24,7 +24,7 @@ package org.gestouch.gestures
 		protected var _transformVector:Point;
 		
 		
-		public function ZoomGesture(target:InteractiveObject = null)
+		public function ZoomGesture(target:IGestureTargetAdapter = null)
 		{
 			super(target);
 		}

@@ -3,12 +3,12 @@ package org.gestouch.gestures
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGestureDelegate;
+	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.IGesturesManager;
 	import org.gestouch.core.Touch;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.GestureStateEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
@@ -50,20 +50,29 @@ package org.gestouch.gestures
 		protected var _pendingRecognizedState:uint;
 		
 		
-		public function Gesture(target:InteractiveObject = null)
+		public function Gesture(targetAdapter:IGestureTargetAdapter = null)
 		{
 			super();
 			
 			preinit();
 			
-			this.target = target;
+			setTarget(targetAdapter);
 		}
 		
 		
 		/** @private */
-		private var _targetWeekStorage:Dictionary;
+		protected var _targetAdapter:IGestureTargetAdapter;
+		/**
+		 * 
+		 */
+		public function get targetAdapter():IGestureTargetAdapter
+		{
+			return _targetAdapter;
+		}
+		
 		
 		/**
+		 * FIXME
 		 * InteractiveObject (DisplayObject) which this gesture is tracking the actual gesture motion on.
 		 * 
 		 * <p>Could be some image, component (like map) or the larger view like Stage.</p>
@@ -74,30 +83,9 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		public function get target():InteractiveObject
+		public function get target():Object
 		{
-			for (var key:Object in _targetWeekStorage)
-            {
-                return key as InteractiveObject;
-            }
-            return null;
-		}
-		public function set target(value:InteractiveObject):void
-		{
-			var target:InteractiveObject = this.target;
-			if (target == value)
-				return;
-			
-			uninstallTarget(target);
-			for (var key:Object in _targetWeekStorage)
-			{
-				delete _targetWeekStorage[key];
-			}
-			if (value)
-			{
-				(_targetWeekStorage ||= new Dictionary(true))[value] = true;
-			}
-			installTarget(value);
+			return _targetAdapter ? _targetAdapter.target : null;
 		}
 		
 		
@@ -185,6 +173,17 @@ package org.gestouch.gestures
 		//  Public methods
 		//
 		//--------------------------------------------------------------------------
+				
+		public function setTarget(targetAdapter:IGestureTargetAdapter):void
+		{
+			if (_targetAdapter == targetAdapter)
+				return;
+			
+			uninstallTarget(this.targetAdapter);
+			_targetAdapter = targetAdapter;
+			installTarget(this.targetAdapter);
+		}
+		
 		
 		[Abstract]
 		/**
@@ -261,7 +260,7 @@ package org.gestouch.gestures
 		{
 			//TODO
 			reset();
-			target = null;
+			setTarget(null);
 			delegate = null;
 			_gesturesToFail = null;
 		}
@@ -310,9 +309,9 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function installTarget(target:InteractiveObject):void
+		protected function installTarget(targetAdapter:IGestureTargetAdapter):void
 		{
-			if (target)
+			if (targetAdapter)
 			{
 				_gesturesManager.gestouch_internal::addGesture(this);
 			}
@@ -326,9 +325,9 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function uninstallTarget(target:InteractiveObject):void
+		protected function uninstallTarget(targetAdapter:IGestureTargetAdapter):void
 		{
-			if (target)
+			if (targetAdapter)
 			{
 				_gesturesManager.gestouch_internal::removeGesture(this);
 			}

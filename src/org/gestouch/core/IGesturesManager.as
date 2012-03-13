@@ -13,5 +13,7 @@ package org.gestouch.core
 	{
 		function addInputAdapter(inputAdapter:IInputAdapter):void;
 		function removeInputAdapter(inputAdapter:IInputAdapter, dispose:Boolean = true):void;
+		
+		function addDisplayListAdapter(targetClass:Class, adapter:IDisplayListAdapter):void;
 	}
 }

@@ -1,10 +1,10 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
+	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.LongPressGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
@@ -30,7 +30,7 @@ package org.gestouch.gestures
 		protected var _numTouchesRequiredReached:Boolean;
 		
 		
-		public function LongPressGesture(target:InteractiveObject = null)
+		public function LongPressGesture(target:IGestureTargetAdapter = null)
 		{
 			super(target);
 		}

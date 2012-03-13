@@ -1,14 +1,8 @@
 package org.gestouch.input
 {
-	import org.gestouch.core.Touch;
-	import org.gestouch.core.gestouch_internal;
-
-	import flash.display.InteractiveObject;
 	import flash.display.Stage;
 	import flash.events.EventPhase;
 	import flash.events.MouseEvent;
-	import flash.geom.Point;
-	import flash.utils.getTimer;
 
 
 	/**
@@ -46,6 +40,8 @@ package org.gestouch.input
 			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
 			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
 			uninstallStageListeners();
+			_touchesManager.onInputAdapterDispose(this);
+			_touchesManager = null;
 		}
 		
 		
@@ -72,23 +68,13 @@ package org.gestouch.input
 		{
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;//we listen in capture or at_target (to catch on empty stage)
-			// Way to prevent MouseEvent/TouchEvent collisions.
-			// Also helps to ignore possible fake events.
-			if (_touchesManager.hasTouch(PRIMARY_TOUCH_POINT_ID))
-				return;
 			
-			installStageListeners();
+			_touchesManager.onTouchBegin(this, PRIMARY_TOUCH_POINT_ID, event.stageX, event.stageY, event.target);
 			
-			var touch:Touch = _touchesManager.createTouch();
-			touch.target = event.target as InteractiveObject;
-			touch.id = PRIMARY_TOUCH_POINT_ID;
-			touch.gestouch_internal::setLocation(new Point(event.stageX, event.stageY));
-			touch.gestouch_internal::setTime(getTimer());
-			touch.gestouch_internal::setBeginTime(getTimer());
-			
-			_touchesManager.addTouch(touch);
-			
-			_gesturesManager.gestouch_internal::onTouchBegin(touch);
+			if (_touchesManager.activeTouchesCount > 0)
+			{
+				installStageListeners();			
+			}
 		}
 		
 		
@@ -96,16 +82,8 @@ package org.gestouch.input
 		{
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;//we listen in capture or at_target (to catch on empty stage)
-			// Way to prevent MouseEvent/TouchEvent collisions.
-			// Also helps to ignore possible fake events.
-			if (!_touchesManager.hasTouch(PRIMARY_TOUCH_POINT_ID))
-				return;
 			
-			var touch:Touch = _touchesManager.getTouch(PRIMARY_TOUCH_POINT_ID);
-			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
-			touch.gestouch_internal::setTime(getTimer());
-			
-			_gesturesManager.gestouch_internal::onTouchMove(touch);
+			_touchesManager.onTouchMove(this, PRIMARY_TOUCH_POINT_ID, event.stageX, event.stageY);
 		}
 		
 		
@@ -114,18 +92,7 @@ package org.gestouch.input
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;//we listen in capture or at_target (to catch on empty stage)			
 			
-			// Way to prevent MouseEvent/TouchEvent collisions.
-			// Also helps to ignore possible fake events.
-			if (!_touchesManager.hasTouch(PRIMARY_TOUCH_POINT_ID))
-				return;
-			
-			var touch:Touch = _touchesManager.getTouch(PRIMARY_TOUCH_POINT_ID);
-			touch.gestouch_internal::updateLocation(event.stageX, event.stageY);
-			touch.gestouch_internal::setTime(getTimer());
-			
-			_gesturesManager.gestouch_internal::onTouchEnd(touch);
-			
-			_touchesManager.removeTouch(touch);
+			_touchesManager.onTouchEnd(this, PRIMARY_TOUCH_POINT_ID, event.stageX, event.stageY);
 			
 			if (_touchesManager.activeTouchesCount == 0)
 			{

@@ -5,11 +5,10 @@ package org.gestouch.core
 	import org.gestouch.input.TouchInputAdapter;
 
 	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
-	import flash.display.InteractiveObject;
 	import flash.display.Shape;
 	import flash.display.Stage;
 	import flash.events.Event;
+	import flash.events.IEventDispatcher;
 	import flash.ui.Multitouch;
 	import flash.utils.Dictionary;
 
@@ -25,9 +24,10 @@ package org.gestouch.core
 		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
 		protected const _frameTickerShape:Shape = new Shape();
 		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
+		protected var _displayListAdaptersMap:Dictionary = new Dictionary();
 		protected var _stage:Stage;
 		protected var _gesturesMap:Dictionary = new Dictionary(true);
-		protected var _gesturesForTouchMap:Array = [];
+		protected var _gesturesForTouchMap:Dictionary = new Dictionary();
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
 		protected var _dirtyGestures:Vector.<Gesture> = new Vector.<Gesture>();
 		protected var _dirtyGesturesLength:uint = 0;
@@ -40,6 +40,9 @@ package org.gestouch.core
 			{
 				throw new Error("Do not instantiate GesturesManager directly.");
 			}
+			
+			_touchesManager.gesturesManager = this;
+			_displayListAdaptersMap[DisplayObject] = new DisplayListAdapter();
 		}
 		
 		
@@ -90,7 +93,6 @@ package org.gestouch.core
 			
 			_inputAdapters.push(inputAdapter);
 			inputAdapter.touchesManager = _touchesManager;
-			inputAdapter.gesturesManager = this;
 			inputAdapter.init();
 		}
 		
@@ -112,6 +114,16 @@ package org.gestouch.core
 			{
 				inputAdapter.dispose();
 			}
+		}
+		
+		
+		public function addDisplayListAdapter(targetClass:Class, adapter:IDisplayListAdapter):void
+		{
+			if (!targetClass || !adapter)
+			{
+				throw new Error("Argument error: both arguments required.");
+			}
+			_displayListAdaptersMap[targetClass] = adapter;
 		}
 		
 		
@@ -166,7 +178,7 @@ package org.gestouch.core
 			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
 			if (!targetGestures)
 			{
-				targetGestures = _gesturesForTargetMap[gesture.target] = new Vector.<Gesture>();
+				targetGestures = _gesturesForTargetMap[target] = new Vector.<Gesture>();
 			}
 			targetGestures.push(gesture);
 			
@@ -174,13 +186,17 @@ package org.gestouch.core
 			
 			if (GesturesManager.initDefaultInputAdapter)
 			{
-				if (!_stage && gesture.target.stage)
+				var targetAsDO:DisplayObject = target as DisplayObject;
+				if (targetAsDO)
 				{
-					installStage(gesture.target.stage);
-				}
-				else
-				{
-					gesture.target.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+					if (!_stage && targetAsDO.stage)
+					{
+						installStage(targetAsDO.stage);
+					}
+					else
+					{
+						targetAsDO.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+					}
 				}
 			}
 		}
@@ -194,7 +210,7 @@ package org.gestouch.core
 			}
 			
 			
-			var target:InteractiveObject = gesture.target;
+			var target:Object = gesture.target;
 			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
 			if (targetGestures.length > 1)
 			{
@@ -203,7 +219,10 @@ package org.gestouch.core
 			else
 			{
 				delete _gesturesForTargetMap[target];
-				target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+				if (target is IEventDispatcher)
+				{
+					(target as IEventDispatcher).removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+				}
 			}
 			
 			delete _gesturesMap[gesture];
@@ -228,8 +247,8 @@ package org.gestouch.core
 			for (var key:Object in _gesturesMap)
 			{
 				var otherGesture:Gesture = key as Gesture;
-                var target:DisplayObject = gesture.target;
-                var otherTarget:DisplayObject = otherGesture.target;
+                var target:Object = gesture.target;
+                var otherTarget:Object = otherGesture.target;
 				
 				// conditions for otherGesture "own properties"
 				if (otherGesture != gesture &&
@@ -237,10 +256,10 @@ package org.gestouch.core
 					otherGesture.enabled &&
 					otherGesture.state == GestureState.POSSIBLE)
 				{
-					// conditions for otherGesture target
 					if (otherTarget == target ||
-						(target is DisplayObjectContainer && (target as DisplayObjectContainer).contains(otherTarget)) ||
-						(otherTarget is DisplayObjectContainer && (otherTarget as DisplayObjectContainer).contains(target)))
+						gesture.targetAdapter.contains(otherTarget) ||
+						otherGesture.targetAdapter.contains(target)						
+						)
 					{
 						var gestureDelegate:IGestureDelegate = gesture.delegate;
 						var otherGestureDelegate:IGestureDelegate = otherGesture.delegate;
@@ -268,24 +287,37 @@ package org.gestouch.core
 			var gesture:Gesture;
 			var i:uint;
 			
-			// This vector will contain active gestures for specific touch (ID) during all touch session.
-			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
+			// This vector will contain active gestures for specific touch during all touch session.
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			if (!gesturesForTouch)
 			{
-				gesturesForTouch = new Vector.<Gesture>(); 
-				_gesturesForTouchMap[touch.id] = gesturesForTouch;
+				gesturesForTouch = _gesturesForTouchMap[touch] = new Vector.<Gesture>();
 			}
 			else
 			{
 				gesturesForTouch.length = 0;
-			}			
+			}
 			
+			var target:Object = touch.target;
+			var hierarchy:Vector.<Object>;
+			for (var key:* in _displayListAdaptersMap)
+			{
+				var targetClass:Class = key as Class;
+				if (target is targetClass)
+				{
+					hierarchy = (_displayListAdaptersMap[key] as IDisplayListAdapter).getHierarchy(target);
+					break;
+				}
+			}
+			if (!hierarchy)
+			{
+				throw new Error("Display list adapter not found for target of type '" + targetClass + "'.");
+			}
 			
 			// Create a sorted(!) list of gestures which are interested in this touch.
 			// Sorting priority: deeper target has higher priority, recently added gesture has higher priority.
-			var target:InteractiveObject = touch.target;
 			var gesturesForTarget:Vector.<Gesture>;
-			while (target)
+			for each (target in hierarchy)
 			{
 				gesturesForTarget = _gesturesForTargetMap[target] as Vector.<Gesture>;
 				if (gesturesForTarget)
@@ -302,8 +334,6 @@ package org.gestouch.core
 						}
 					}
 				}
-				
-				target = target.parent;
 			}
 			
 			// Then we populate them with this touch and event.
@@ -332,7 +362,7 @@ package org.gestouch.core
 				resetDirtyGestures();
 			}
 			
-			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			var gesture:Gesture;
 			var i:int = gesturesForTouch.length;
 			while (i-- > 0)
@@ -359,7 +389,7 @@ package org.gestouch.core
 				resetDirtyGestures();
 			}
 			
-			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch.id] as Vector.<Gesture>;
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			var gesture:Gesture;
 			var i:int = gesturesForTouch.length;
 			while (i-- > 0)
@@ -371,6 +401,8 @@ package org.gestouch.core
 					gesture.gestouch_internal::touchEndHandler(touch);
 				}
 			}
+			
+			gesturesForTouch.length = 0;// release for GC
 		}
 		
 		

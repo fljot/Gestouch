@@ -1,11 +1,11 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
+	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.TransformGestureEvent;
 	import org.gestouch.utils.GestureUtils;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 	
 	
@@ -22,7 +22,7 @@ package org.gestouch.gestures
 		protected var _transformVector:Point;
 		
 		
-		public function TransformGesture(target:InteractiveObject = null)
+		public function TransformGesture(target:IGestureTargetAdapter = null)
 		{
 			super(target);
 		}
