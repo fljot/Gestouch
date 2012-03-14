@@ -4,9 +4,7 @@ package org.gestouch.gestures
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGestureDelegate;
 	import org.gestouch.core.IGesturesManager;
-	import org.gestouch.core.ITouchesManager;
 	import org.gestouch.core.Touch;
-	import org.gestouch.core.TouchesManager;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.GestureStateEvent;
 
@@ -37,7 +35,6 @@ package org.gestouch.gestures
 		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
 		
 		
-		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
 		protected const _gesturesManager:IGesturesManager = GesturesManager.getInstance();
 		/**
 		 * Map (generic object) of tracking touch points, where keys are touch points IDs.
