@@ -95,15 +95,8 @@ package org.gestouch.gestures
 			{
 				_numTouchesRequiredReached = true;
 				_timer.reset();
-				_timer.delay = minPressDuration;
-				if (minPressDuration > 0)
-				{
-					_timer.start();
-				}
-				else
-				{
-					timer_timerCompleteHandler();
-				}
+				_timer.delay = minPressDuration || 1;
+				_timer.start();
 			}
 		}
 		
