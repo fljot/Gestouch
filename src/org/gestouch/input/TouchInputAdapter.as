@@ -8,6 +8,8 @@ package org.gestouch.input
 	import flash.events.EventPhase;
 	import flash.events.TouchEvent;
 	import flash.geom.Point;
+	import flash.ui.Multitouch;
+	import flash.ui.MultitouchInputMode;
 	import flash.utils.getTimer;
 
 
@@ -24,6 +26,10 @@ package org.gestouch.input
 		 * TODO: any better way?
 		 */
 		protected var _touchesMap:Object = {};
+		
+		{
+			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
+		}
 		
 		
 		public function TouchInputAdapter(stage:Stage)
@@ -42,12 +48,14 @@ package org.gestouch.input
 		override public function init():void
 		{
 			_stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
+			_stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler);// to catch with EventPhase.AT_TARGET
 		}
 		
 			
 		override public function dispose():void
 		{
 			_stage.removeEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
+			_stage.removeEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler);
 			uninstallStageListeners();
 		}
 		
@@ -56,8 +64,8 @@ package org.gestouch.input
 		{
 			// Maximum priority to prevent event hijacking	
 			_stage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true, int.MAX_VALUE);
+			_stage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, false, int.MAX_VALUE);
 			_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler, true, int.MAX_VALUE);
-			// To catch event out of stage
 			_stage.addEventListener(TouchEvent.TOUCH_END, touchEndHandler, false, int.MAX_VALUE);
 		}
 		
@@ -65,6 +73,7 @@ package org.gestouch.input
 		protected function uninstallStageListeners():void
 		{
 			_stage.removeEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true);
+			_stage.removeEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler);
 			_stage.removeEventListener(TouchEvent.TOUCH_END, touchEndHandler, true);
 			_stage.removeEventListener(TouchEvent.TOUCH_END, touchEndHandler);
 		}
@@ -72,6 +81,8 @@ package org.gestouch.input
 		
 		protected function touchBeginHandler(event:TouchEvent):void
 		{
+			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
+				return;//we listen in capture or at_target (to catch on empty stage)
 			// Way to prevent MouseEvent/TouchEvent collisions.
 			// Also helps to ignore possible fake events.
 			if (_touchesManager.hasTouch(event.touchPointID))
@@ -107,6 +118,8 @@ package org.gestouch.input
 		
 		protected function touchMoveHandler(event:TouchEvent):void
 		{
+			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
+				return;//we listen in capture or at_target (to catch on empty stage)
 			// Way to prevent MouseEvent/TouchEvent collisions.
 			// Also helps to ignore possible fake events.
 			if (!_touchesManager.hasTouch(event.touchPointID) || !_touchesMap.hasOwnProperty(event.touchPointID))
@@ -133,9 +146,8 @@ package org.gestouch.input
 		
 		protected function touchEndHandler(event:TouchEvent):void
 		{
-			// If event happens outside of stage it will be with AT_TARGET phase
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
-				return;
+				return;//we listen in capture or at_target (to catch on empty stage)
 			
 			// Way to prevent MouseEvent/TouchEvent collisions.
 			// Also helps to ignore possible fake events.

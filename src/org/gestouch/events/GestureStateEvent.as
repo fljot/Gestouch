@@ -31,7 +31,7 @@ package org.gestouch.events
 		
 		override public function toString():String
 		{
-			return formatToString("GestureStateEvent", newState, oldState);
+			return formatToString("GestureStateEvent", "type", "oldState", "newState");
 		}
 	}
 }

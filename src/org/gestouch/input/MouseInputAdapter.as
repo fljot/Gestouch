@@ -31,20 +31,20 @@ package org.gestouch.input
 			}
 			
 			_stage = stage;
-			
-			stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
 		}
 		
 		
 		override public function init():void
 		{
 			_stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
+			_stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);// to catch with EventPhase.AT_TARGET
 		}
 		
 			
 		override public function dispose():void
 		{
 			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
+			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
 			uninstallStageListeners();
 		}
 		
@@ -53,8 +53,8 @@ package org.gestouch.input
 		{
 			// Maximum priority to prevent event hijacking
 			_stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true, int.MAX_VALUE);
+			_stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, false, int.MAX_VALUE);
 			_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true,  int.MAX_VALUE);
-			// To catch event out of stage
 			_stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, false,  int.MAX_VALUE);
 		}
 		
@@ -62,6 +62,7 @@ package org.gestouch.input
 		protected function uninstallStageListeners():void
 		{			
 			_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
+			_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
 			_stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, true);
 			_stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
 		}
@@ -69,6 +70,8 @@ package org.gestouch.input
 		
 		protected function mouseDownHandler(event:MouseEvent):void
 		{
+			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
+				return;//we listen in capture or at_target (to catch on empty stage)
 			// Way to prevent MouseEvent/TouchEvent collisions.
 			// Also helps to ignore possible fake events.
 			if (_touchesManager.hasTouch(PRIMARY_TOUCH_POINT_ID))
@@ -77,8 +80,8 @@ package org.gestouch.input
 			installStageListeners();
 			
 			var touch:Touch = _touchesManager.createTouch();
-			touch.id = 0;
 			touch.target = event.target as InteractiveObject;
+			touch.id = PRIMARY_TOUCH_POINT_ID;
 			touch.gestouch_internal::setLocation(new Point(event.stageX, event.stageY));
 			touch.gestouch_internal::setTime(getTimer());
 			touch.gestouch_internal::setBeginTime(getTimer());
@@ -91,6 +94,8 @@ package org.gestouch.input
 		
 		protected function mouseMoveHandler(event:MouseEvent):void
 		{
+			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
+				return;//we listen in capture or at_target (to catch on empty stage)
 			// Way to prevent MouseEvent/TouchEvent collisions.
 			// Also helps to ignore possible fake events.
 			if (!_touchesManager.hasTouch(PRIMARY_TOUCH_POINT_ID))
@@ -106,10 +111,8 @@ package org.gestouch.input
 		
 		protected function mouseUpHandler(event:MouseEvent):void
 		{
-			// If event happens outside of stage it will be with AT_TARGET phase
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
-				return;
-			
+				return;//we listen in capture or at_target (to catch on empty stage)			
 			
 			// Way to prevent MouseEvent/TouchEvent collisions.
 			// Also helps to ignore possible fake events.

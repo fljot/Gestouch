@@ -4,9 +4,7 @@ package org.gestouch.gestures
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGestureDelegate;
 	import org.gestouch.core.IGesturesManager;
-	import org.gestouch.core.ITouchesManager;
 	import org.gestouch.core.Touch;
-	import org.gestouch.core.TouchesManager;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.GestureStateEvent;
 
@@ -37,9 +35,6 @@ package org.gestouch.gestures
 		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
 		
 		
-		public var delegate:IGestureDelegate;
-		
-		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
 		protected const _gesturesManager:IGesturesManager = GesturesManager.getInstance();
 		/**
 		 * Map (generic object) of tracking touch points, where keys are touch points IDs.
@@ -66,7 +61,7 @@ package org.gestouch.gestures
 		
 		
 		/** @private */
-		protected var _target:InteractiveObject;
+		private var _targetWeekStorage:Dictionary;
 		
 		/**
 		 * InteractiveObject (DisplayObject) which this gesture is tracking the actual gesture motion on.
@@ -81,16 +76,28 @@ package org.gestouch.gestures
 		 */
 		public function get target():InteractiveObject
 		{
-			return _target;
+			for (var key:Object in _targetWeekStorage)
+            {
+                return key as InteractiveObject;
+            }
+            return null;
 		}
 		public function set target(value:InteractiveObject):void
 		{
-			if (_target == value)
+			var target:InteractiveObject = this.target;
+			if (target == value)
 				return;
 			
 			uninstallTarget(target);
-			_target = value;
-			installTarget(target);
+			for (var key:Object in _targetWeekStorage)
+			{
+				delete _targetWeekStorage[key];
+			}
+			if (value)
+			{
+				(_targetWeekStorage ||= new Dictionary(true))[value] = true;
+			}
+			installTarget(value);
 		}
 		
 		
@@ -115,6 +122,28 @@ package org.gestouch.gestures
 			{
 				setState(GestureState.CANCELLED);
 				reset();
+			}
+		}
+		
+		
+		private var _delegateWeekStorage:Dictionary;
+		public function get delegate():IGestureDelegate
+		{
+			for (var key:Object in _delegateWeekStorage)
+			{
+				return key as IGestureDelegate;
+			}
+			return null;
+		}
+		public function set delegate(value:IGestureDelegate):void
+		{
+			for (var key:Object in _delegateWeekStorage)
+			{
+				delete _delegateWeekStorage[key];
+			}
+			if (value)
+			{
+				(_delegateWeekStorage ||= new Dictionary(true))[value] = true;
 			}
 		}
 		
@@ -184,7 +213,11 @@ package org.gestouch.gestures
 		 */
 		public function reset():void
 		{
-			//FIXME: proper state change?		
+			var state:uint = this.state;//caching getter
+			
+			if (state == GestureState.IDLE)
+				return;// Do nothing as we're in IDLE and nothing to reset
+			
 			_location.x = 0;
 			_location.y = 0;
 			_touchesMap = {};
@@ -197,7 +230,25 @@ package org.gestouch.gestures
 			}
 			_pendingRecognizedState = 0;
 			
-			setState(GestureState.IDLE);
+			if (state == GestureState.POSSIBLE)
+			{
+				// manual reset() call. Set to FAILED to keep our State Machine clean and stable
+				setState(GestureState.FAILED);
+			}
+			else if (state == GestureState.BEGAN || state == GestureState.RECOGNIZED)
+			{
+				// manual reset() call. Set to CANCELLED to keep our State Machine clean and stable
+				setState(GestureState.CANCELLED);
+			}
+			else
+			{
+				// reset from GesturesManager after reaching one of the 4 final states:
+				// (state == GestureState.RECOGNIZED ||
+				// state == GestureState.ENDED ||
+				// state == GestureState.FAILED ||
+				// state == GestureState.CANCELLED)
+				setState(GestureState.IDLE);
+			}
 		}
 		
 		
@@ -211,6 +262,7 @@ package org.gestouch.gestures
 			//TODO
 			reset();
 			target = null;
+			delegate = null;
 			_gesturesToFail = null;
 		}
 		
