@@ -213,7 +213,11 @@ package org.gestouch.gestures
 		 */
 		public function reset():void
 		{
-			//FIXME: proper state change?		
+			var state:uint = this.state;//caching getter
+			
+			if (state == GestureState.IDLE)
+				return;// Do nothing as we're in IDLE and nothing to reset
+			
 			_location.x = 0;
 			_location.y = 0;
 			_touchesMap = {};
@@ -226,7 +230,25 @@ package org.gestouch.gestures
 			}
 			_pendingRecognizedState = 0;
 			
-			setState(GestureState.IDLE);
+			if (state == GestureState.POSSIBLE)
+			{
+				// manual reset() call. Set to FAILED to keep our State Machine clean and stable
+				setState(GestureState.FAILED);
+			}
+			else if (state == GestureState.BEGAN || state == GestureState.RECOGNIZED)
+			{
+				// manual reset() call. Set to CANCELLED to keep our State Machine clean and stable
+				setState(GestureState.CANCELLED);
+			}
+			else
+			{
+				// reset from GesturesManager after reaching one of the 4 final states:
+				// (state == GestureState.RECOGNIZED ||
+				// state == GestureState.ENDED ||
+				// state == GestureState.FAILED ||
+				// state == GestureState.CANCELLED)
+				setState(GestureState.IDLE);
+			}
 		}
 		
 		
