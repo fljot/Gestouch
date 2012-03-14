@@ -37,8 +37,6 @@ package org.gestouch.gestures
 		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
 		
 		
-		public var delegate:IGestureDelegate;
-		
 		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
 		protected const _gesturesManager:IGesturesManager = GesturesManager.getInstance();
 		/**
@@ -66,7 +64,7 @@ package org.gestouch.gestures
 		
 		
 		/** @private */
-		protected var _target:InteractiveObject;
+		private var _targetWeekStorage:Dictionary;
 		
 		/**
 		 * InteractiveObject (DisplayObject) which this gesture is tracking the actual gesture motion on.
@@ -81,16 +79,28 @@ package org.gestouch.gestures
 		 */
 		public function get target():InteractiveObject
 		{
-			return _target;
+			for (var key:Object in _targetWeekStorage)
+            {
+                return key as InteractiveObject;
+            }
+            return null;
 		}
 		public function set target(value:InteractiveObject):void
 		{
-			if (_target == value)
+			var target:InteractiveObject = this.target;
+			if (target == value)
 				return;
 			
 			uninstallTarget(target);
-			_target = value;
-			installTarget(target);
+			for (var key:Object in _targetWeekStorage)
+			{
+				delete _targetWeekStorage[key];
+			}
+			if (value)
+			{
+				(_targetWeekStorage ||= new Dictionary(true))[value] = true;
+			}
+			installTarget(value);
 		}
 		
 		
@@ -115,6 +125,28 @@ package org.gestouch.gestures
 			{
 				setState(GestureState.CANCELLED);
 				reset();
+			}
+		}
+		
+		
+		private var _delegateWeekStorage:Dictionary;
+		public function get delegate():IGestureDelegate
+		{
+			for (var key:Object in _delegateWeekStorage)
+			{
+				return key as IGestureDelegate;
+			}
+			return null;
+		}
+		public function set delegate(value:IGestureDelegate):void
+		{
+			for (var key:Object in _delegateWeekStorage)
+			{
+				delete _delegateWeekStorage[key];
+			}
+			if (value)
+			{
+				(_delegateWeekStorage ||= new Dictionary(true))[value] = true;
 			}
 		}
 		
@@ -211,6 +243,7 @@ package org.gestouch.gestures
 			//TODO
 			reset();
 			target = null;
+			delegate = null;
 			_gesturesToFail = null;
 		}
 		
