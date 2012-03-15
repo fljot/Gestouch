@@ -23,12 +23,11 @@ So I want Gestouch to go far beyond that.
 
 Features:
 * Pretty neat architecture! Very similar to Apple's UIGestureRecognizers (Cocoa-Touch UIKit)
+* Works with any display list hierarchy structures: native DisplayList (pure AS3/Flex/your UI framework), Starling or ND2D (Stage3D), and 3D libs... 
 * Doesn't require any additional software (may use runtime's build-in touch support)
 * Works across all platforms (where Flash Player or AIR run of course) in exactly same way
-* Doesn't break your DisplayList architecture (could be easily used for Flex development)
 * Extendable. You can write your own application-specific gestures
 * Open-source and free
-* *_+Planning to make it work with Stage3D. Hello Starling!+_*
 
 
 
@@ -43,7 +42,7 @@ And I hope people to become giving some real feedback at least.
 h3. Getting Started
 
 Like so:
-<pre><code>var doubleTap:TapGesture = new TapGesture(myButton);
+<pre><code>var doubleTap:TapGesture = new TapGesture(new DisplayObjectAdapter(myButton));
 doubleTap.numTapsRequired = 2;
 doubleTap.addEventListener(TapGestureEvent.GESTURE_TAP, onDoubleTap);
 ...
@@ -69,9 +68,30 @@ private function onFreeTransform(event:TransformGestureEvent):void
 
 
 
+h3. Advanced usage: Starling, ...
+
+Recent changes made it possible to work with "Starling":http://www.starling-framework.org display list objects as well as any one display list hierarchical structures, e.g. other Stage3D frameworks that have display objects hierarchy like "ND2D":https://github.com/nulldesign/nd2d or even 3D libraries.
+In order to use detect gestures with Starling do following:
+<pre><code>starling = new Starling(MyStarlingRootClass, stage);
+/* setup & start your Starling instance here */
+
+var gesturesManager:IGesturesManager = GesturesManager.getInstance();
+// Register instance of StarlingDisplayListAdapter to be used for objects of type starling.display.DisplayObject.
+// What StarlingDisplayListAdapter does: helps to build hierarchy (chain of parents) for any Starling display object.
+gesturesManager.addDisplayListAdapter(starling.display.DisplayObject, new StarlingDisplayListAdapter());
+
+// Initialize and register StarlingInputAdapter.
+// What StarlingInputAdapter does: populates library with touches for Starling "layer" 
+gesturesManager.addInputAdapter(new StarlingInputAdapter(starling));
+</code></pre>
+
+Now you can register gesture in familiar way:
+<pre><code>var tap:TapGesture = new TapGesture(new StarlingDisplayObjectAdapter(starlingSprite));</code></pre>
+
+
+
 h3. Roadmap, TODOs
 
-* *Stage3D support.* Hello Starling! Must move away from target as InteractiveObject to some abstract adapters.
 * "Massive gestures" & Clusters. For bigger form-factor multitouch usage, when gestures must be a bit less about separate fingers but rather touch clusters (massive multitouch) 
 * -Simulator (for testing multitouch gestures without special devices)- With new architecture it must be relatively easy to create SimulatorInputAdapter
 * Chained gestures concept? To transfer touches from one gesture to another. Example: press/hold for circular menu, then drag it around.
