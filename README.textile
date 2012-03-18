@@ -42,7 +42,7 @@ And I hope people to become giving some real feedback at least.
 h3. Getting Started
 
 Like so:
-<pre><code>var doubleTap:TapGesture = new TapGesture(new DisplayObjectAdapter(myButton));
+<pre><code>var doubleTap:TapGesture = new TapGesture(myButton);
 doubleTap.numTapsRequired = 2;
 doubleTap.addEventListener(TapGestureEvent.GESTURE_TAP, onDoubleTap);
 ...
@@ -77,7 +77,8 @@ In order to use detect gestures with Starling do following:
 
 var gesturesManager:IGesturesManager = GesturesManager.getInstance();
 // Register instance of StarlingDisplayListAdapter to be used for objects of type starling.display.DisplayObject.
-// What StarlingDisplayListAdapter does: helps to build hierarchy (chain of parents) for any Starling display object.
+// What StarlingDisplayListAdapter does: helps to build hierarchy (chain of parents) for any Starling display object
+// and acts as a adapter for gesture target to provide strong-typed access to methods like globalToLocal() and contains().
 gesturesManager.addDisplayListAdapter(starling.display.DisplayObject, new StarlingDisplayListAdapter());
 
 // Initialize and register StarlingInputAdapter.
@@ -86,7 +87,7 @@ gesturesManager.addInputAdapter(new StarlingInputAdapter(starling));
 </code></pre>
 
 Now you can register gesture in familiar way:
-<pre><code>var tap:TapGesture = new TapGesture(new StarlingDisplayObjectAdapter(starlingSprite));</code></pre>
+<pre><code>var tap:TapGesture = new TapGesture(starlingSprite);</code></pre>
 
 
 
