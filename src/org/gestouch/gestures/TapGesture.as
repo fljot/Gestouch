@@ -1,7 +1,6 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
-	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.TapGestureEvent;
 
@@ -28,7 +27,7 @@ package org.gestouch.gestures
 		protected var _tapCounter:uint = 0;
 		
 		
-		public function TapGesture(target:IGestureTargetAdapter = null)
+		public function TapGesture(target:Object = null)
 		{
 			super(target);
 		}

@@ -1,5 +1,6 @@
 package org.gestouch.core
 {
+	import flash.utils.getQualifiedClassName;
 	import org.gestouch.gestures.Gesture;
 	import org.gestouch.input.MouseInputAdapter;
 	import org.gestouch.input.TouchInputAdapter;
@@ -163,6 +164,22 @@ package org.gestouch.core
 		}
 		
 		
+		gestouch_internal function createGestureTargetAdapter(target:Object):IDisplayListAdapter
+		{
+			for (var key:Object in _displayListAdaptersMap)
+			{
+				var targetClass:Class = key as Class;
+				if (target is targetClass)
+				{
+					var adapter:IDisplayListAdapter = _displayListAdaptersMap[key] as IDisplayListAdapter;
+					return new (adapter.reflect())(target);
+				}
+			}
+			
+			throw new Error("Cannot create adapter for target " + target + " of type " + getQualifiedClassName(target) + ".");
+		}
+		
+		
 		gestouch_internal function addGesture(gesture:Gesture):void
 		{
 			if (!gesture)
@@ -257,8 +274,8 @@ package org.gestouch.core
 					otherGesture.state == GestureState.POSSIBLE)
 				{
 					if (otherTarget == target ||
-						gesture.targetAdapter.contains(otherTarget) ||
-						otherGesture.targetAdapter.contains(target)						
+						gesture.gestouch_internal::targetAdapter.contains(otherTarget) ||
+						otherGesture.gestouch_internal::targetAdapter.contains(target)						
 						)
 					{
 						var gestureDelegate:IGestureDelegate = gesture.delegate;
@@ -300,7 +317,7 @@ package org.gestouch.core
 			
 			var target:Object = touch.target;
 			var hierarchy:Vector.<Object>;
-			for (var key:* in _displayListAdaptersMap)
+			for (var key:Object in _displayListAdaptersMap)
 			{
 				var targetClass:Class = key as Class;
 				if (target is targetClass)

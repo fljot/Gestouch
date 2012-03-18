@@ -1,7 +1,6 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
-	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.ZoomGestureEvent;
 
@@ -24,7 +23,7 @@ package org.gestouch.gestures
 		protected var _transformVector:Point;
 		
 		
-		public function ZoomGesture(target:IGestureTargetAdapter = null)
+		public function ZoomGesture(target:Object = null)
 		{
 			super(target);
 		}

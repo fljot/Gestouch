@@ -1,7 +1,6 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
-	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.TransformGestureEvent;
 	import org.gestouch.utils.GestureUtils;
@@ -22,7 +21,7 @@ package org.gestouch.gestures
 		protected var _transformVector:Point;
 		
 		
-		public function TransformGesture(target:IGestureTargetAdapter = null)
+		public function TransformGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -127,7 +126,7 @@ package org.gestouch.gestures
 					{
 						// Note that we dispatch previous location point which gives a way to perform
 						// accurate UI redraw. See examples project for more info.
-						prevLocalLocation = target.globalToLocal(prevLocation);
+						prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
 						dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.BEGAN,
 							prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
 					}
@@ -138,7 +137,7 @@ package org.gestouch.gestures
 					{
 						// Note that we dispatch previous location point which gives a way to perform
 						// accurate UI redraw. See examples project for more info.
-						prevLocalLocation = target.globalToLocal(prevLocation);
+						prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
 						dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.CHANGED,
 							prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
 					}

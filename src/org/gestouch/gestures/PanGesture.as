@@ -1,7 +1,6 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
-	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.PanGestureEvent;
 
@@ -27,7 +26,7 @@ package org.gestouch.gestures
 		protected var _gestureBeginOffsetY:Number;
 		
 		
-		public function PanGesture(target:IGestureTargetAdapter = null)
+		public function PanGesture(target:Object = null)
 		{
 			super(target);
 		}

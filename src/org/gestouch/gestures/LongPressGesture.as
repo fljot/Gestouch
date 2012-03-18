@@ -1,7 +1,6 @@
 package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
-	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.LongPressGestureEvent;
 
@@ -30,7 +29,7 @@ package org.gestouch.gestures
 		protected var _numTouchesRequiredReached:Boolean;
 		
 		
-		public function LongPressGesture(target:IGestureTargetAdapter = null)
+		public function LongPressGesture(target:Object = null)
 		{
 			super(target);
 		}

@@ -50,13 +50,13 @@ package org.gestouch.gestures
 		protected var _pendingRecognizedState:uint;
 		
 		
-		public function Gesture(targetAdapter:IGestureTargetAdapter = null)
+		public function Gesture(target:Object = null)
 		{
 			super();
 			
 			preinit();
 			
-			setTarget(targetAdapter);
+			this.target = target;
 		}
 		
 		
@@ -65,7 +65,11 @@ package org.gestouch.gestures
 		/**
 		 * 
 		 */
-		public function get targetAdapter():IGestureTargetAdapter
+		gestouch_internal function get targetAdapter():IGestureTargetAdapter
+		{
+			return _targetAdapter;
+		}
+		protected function get targetAdapter():IGestureTargetAdapter
 		{
 			return _targetAdapter;
 		}
@@ -86,6 +90,16 @@ package org.gestouch.gestures
 		public function get target():Object
 		{
 			return _targetAdapter ? _targetAdapter.target : null;
+		}
+		public function set target(value:Object):void
+		{
+			var target:Object = this.target;
+            if (target == value)
+                return;
+			
+			uninstallTarget(target);
+			_targetAdapter = value ? _gesturesManager.gestouch_internal::createGestureTargetAdapter(value) : null;
+			installTarget(value);
 		}
 		
 		
@@ -172,18 +186,7 @@ package org.gestouch.gestures
 		//
 		//  Public methods
 		//
-		//--------------------------------------------------------------------------
-				
-		public function setTarget(targetAdapter:IGestureTargetAdapter):void
-		{
-			if (_targetAdapter == targetAdapter)
-				return;
-			
-			uninstallTarget(this.targetAdapter);
-			_targetAdapter = targetAdapter;
-			installTarget(this.targetAdapter);
-		}
-		
+		//--------------------------------------------------------------------------		
 		
 		[Abstract]
 		/**
@@ -260,7 +263,7 @@ package org.gestouch.gestures
 		{
 			//TODO
 			reset();
-			setTarget(null);
+			target = null;
 			delegate = null;
 			_gesturesToFail = null;
 		}
@@ -309,9 +312,9 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function installTarget(targetAdapter:IGestureTargetAdapter):void
+		protected function installTarget(target:Object):void
 		{
-			if (targetAdapter)
+			if (target)
 			{
 				_gesturesManager.gestouch_internal::addGesture(this);
 			}
@@ -325,9 +328,9 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function uninstallTarget(targetAdapter:IGestureTargetAdapter):void
+		protected function uninstallTarget(target:Object):void
 		{
-			if (targetAdapter)
+			if (target)
 			{
 				_gesturesManager.gestouch_internal::removeGesture(this);
 			}
