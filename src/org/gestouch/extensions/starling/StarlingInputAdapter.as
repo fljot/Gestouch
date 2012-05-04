@@ -1,12 +1,14 @@
 package org.gestouch.extensions.starling
 {
+	import starling.core.Starling;
+
+	import org.gestouch.input.AbstractInputAdapter;
+
 	import flash.events.EventPhase;
 	import flash.events.MouseEvent;
 	import flash.events.TouchEvent;
 	import flash.geom.Point;
-	import flash.ui.Mouse;
-	import org.gestouch.input.AbstractInputAdapter;
-	import starling.core.Starling;
+	import flash.ui.Multitouch;
 
 
 
@@ -33,19 +35,12 @@ package org.gestouch.extensions.starling
 		}
 		
 		
-		protected function get supportsTouchEvents():Boolean
-		{
-			// just like in Starling (starling.core::Starling)
-			return !(Mouse.supportsCursor || !Starling.multitouchEnabled);
-		}
-		
-		
 		override public function init():void
 		{
 			// We want to begin tracking only those touches that happen on Stage3D layer,
 			// e.g. event.target == nativeStage. That's we don't listen for touch begin
 			// in capture phase (as we do for native display list).
-			if (supportsTouchEvents)
+			if (Multitouch.supportsTouchEvents)
 			{
 				_starling.nativeStage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler);
 			}
@@ -70,7 +65,7 @@ package org.gestouch.extensions.starling
 		protected function installStageListeners():void
 		{
 			// Maximum priority to prevent event hijacking
-			if (supportsTouchEvents)
+			if (Multitouch.supportsTouchEvents)
 			{
 				_starling.nativeStage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, true, int.MAX_VALUE);
 				_starling.nativeStage.addEventListener(TouchEvent.TOUCH_MOVE, touchMoveHandler, false, int.MAX_VALUE);
