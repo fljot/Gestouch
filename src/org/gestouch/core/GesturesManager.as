@@ -1,32 +1,24 @@
 package org.gestouch.core
 {
-	import flash.utils.getQualifiedClassName;
 	import org.gestouch.gestures.Gesture;
-	import org.gestouch.input.MouseInputAdapter;
-	import org.gestouch.input.TouchInputAdapter;
+	import org.gestouch.input.NativeInputAdapter;
 
 	import flash.display.DisplayObject;
 	import flash.display.Shape;
 	import flash.display.Stage;
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
-	import flash.ui.Multitouch;
 	import flash.utils.Dictionary;
+	import flash.utils.getQualifiedClassName;
 
 	/**
 	 * @author Pavel fljot
 	 */
-	public class GesturesManager implements IGesturesManager
+	public class GesturesManager
 	{
-		public static var initDefaultInputAdapter:Boolean = true;
-		private static var _instance:IGesturesManager;
-		private static var _allowInstantiation:Boolean;
-		
-		protected const _touchesManager:ITouchesManager = TouchesManager.getInstance();
+		protected const _displayListAdaptersMap:Dictionary = new Dictionary();
 		protected const _frameTickerShape:Shape = new Shape();
 		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
-		protected var _displayListAdaptersMap:Dictionary = new Dictionary();
-		protected var _stage:Stage;
 		protected var _gesturesMap:Dictionary = new Dictionary(true);
 		protected var _gesturesForTouchMap:Dictionary = new Dictionary();
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
@@ -34,99 +26,24 @@ package org.gestouch.core
 		protected var _dirtyGesturesLength:uint = 0;
 		protected var _dirtyGesturesMap:Dictionary = new Dictionary(true);
 		
+		use namespace gestouch_internal;
+		
 		
 		public function GesturesManager()
-		{
-			if (Object(this).constructor == GesturesManager && !_allowInstantiation)
-			{
-				throw new Error("Do not instantiate GesturesManager directly.");
-			}
+		{			
 			
-			_touchesManager.gesturesManager = this;
-			_displayListAdaptersMap[DisplayObject] = new DisplayListAdapter();
 		}
 		
 		
-		public function get inputAdapters():Vector.<IInputAdapter>
-		{
-			return _inputAdapters.concat();
-		}
-		
-		
-		public static function setImplementation(value:IGesturesManager):void
-		{
-			if (!value)
-			{
-				throw new ArgumentError("value cannot be null.");
-			}
-			if (_instance)
-			{
-				throw new Error("Instance of GesturesManager is already created. If you want to have own implementation of single GesturesManager instace, you should set it earlier.");
-			}
-			_instance = value;
-		}
-		
-
-		public static function getInstance():IGesturesManager
-		{
-			if (!_instance)
-			{
-				_allowInstantiation = true;
-				_instance = new GesturesManager();
-				_allowInstantiation = false;
-			}
-			 
-			return _instance;
-		}
-			
-		
-		
-		
-		public function addInputAdapter(inputAdapter:IInputAdapter):void
-		{
-			if (!inputAdapter)
-			{
-				throw new Error("Input adapter must be non null.");
-			}
-			
-			if (_inputAdapters.indexOf(inputAdapter) > -1)
-				return;//TODO: throw Error or ignore?
-			
-			_inputAdapters.push(inputAdapter);
-			inputAdapter.touchesManager = _touchesManager;
-			inputAdapter.init();
-		}
-		
-		
-		public function removeInputAdapter(inputAdapter:IInputAdapter, dispose:Boolean = true):void
-		{
-			if (!inputAdapter)
-			{
-				throw new Error("Input adapter must be non null.");
-			}
-			var index:int = _inputAdapters.indexOf(inputAdapter);
-			if (index == -1)
-			{
-				throw new Error("This input manager is not registered.");
-			}
-			
-			_inputAdapters.splice(index, 1);
-			if (dispose)
-			{
-				inputAdapter.dispose();
-			}
-		}
-		
-		
-		public function addDisplayListAdapter(targetClass:Class, adapter:IDisplayListAdapter):void
+		gestouch_internal function addDisplayListAdapter(targetClass:Class, adapter:IDisplayListAdapter):void
 		{
 			if (!targetClass || !adapter)
 			{
 				throw new Error("Argument error: both arguments required.");
 			}
+			
 			_displayListAdaptersMap[targetClass] = adapter;
 		}
-		
 		
 		
 		
@@ -136,18 +53,9 @@ package org.gestouch.core
 		//
 		//--------------------------------------------------------------------------
 		
-		protected function installStage(stage:Stage):void
+		protected function installDefaultInputAdapter(stage:Stage):void
 		{
-			_stage = stage;
-			
-			if (Multitouch.supportsTouchEvents)
-			{
-				addInputAdapter(new TouchInputAdapter(stage));
-			}
-			else
-			{
-				addInputAdapter(new MouseInputAdapter(stage));
-			}
+			Gestouch.inputAdapter ||= new NativeInputAdapter(stage);
 		}
 		
 		
@@ -201,14 +109,14 @@ package org.gestouch.core
 			
 			_gesturesMap[gesture] = true;
 			
-			if (GesturesManager.initDefaultInputAdapter)
+			if (!Gestouch.inputAdapter)
 			{
 				var targetAsDO:DisplayObject = target as DisplayObject;
 				if (targetAsDO)
 				{
-					if (!_stage && targetAsDO.stage)
+					if (targetAsDO.stage)
 					{
-						installStage(targetAsDO.stage);
+						installDefaultInputAdapter(targetAsDO.stage);
 					}
 					else
 					{
@@ -274,8 +182,8 @@ package org.gestouch.core
 					otherGesture.state == GestureState.POSSIBLE)
 				{
 					if (otherTarget == target ||
-						gesture.gestouch_internal::targetAdapter.contains(otherTarget) ||
-						otherGesture.gestouch_internal::targetAdapter.contains(target)						
+						gesture.targetAdapter.contains(otherTarget) ||
+						otherGesture.targetAdapter.contains(target)						
 						)
 					{
 						var gestureDelegate:IGestureDelegate = gesture.delegate;
@@ -286,7 +194,7 @@ package org.gestouch.core
 							(!gestureDelegate || !gestureDelegate.gesturesShouldRecognizeSimultaneously(gesture, otherGesture)) &&
 							(!otherGestureDelegate || !otherGestureDelegate.gesturesShouldRecognizeSimultaneously(otherGesture, gesture)))
 						{
-							otherGesture.gestouch_internal::setState_internal(GestureState.FAILED);
+							otherGesture.setState_internal(GestureState.FAILED);
 						}
 					}					
 				}
@@ -362,7 +270,7 @@ package org.gestouch.core
 				// Check for state because previous (i+1) gesture may already abort current (i) one
 				if (gesture.state != GestureState.FAILED)
 				{
-					gesture.gestouch_internal::touchBeginHandler(touch);
+					gesture.touchBeginHandler(touch);
 				}
 				else
 				{
@@ -388,7 +296,7 @@ package org.gestouch.core
 				
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
 				{
-					gesture.gestouch_internal::touchMoveHandler(touch);
+					gesture.touchMoveHandler(touch);
 				}
 				else
 				{
@@ -415,7 +323,7 @@ package org.gestouch.core
 									
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
 				{					
-					gesture.gestouch_internal::touchEndHandler(touch);
+					gesture.touchEndHandler(touch);
 				}
 			}
 			
@@ -441,9 +349,9 @@ package org.gestouch.core
 		{
 			var target:DisplayObject = event.target as DisplayObject;
 			target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
-			if (!_stage && GesturesManager.initDefaultInputAdapter)
+			if (!Gestouch.inputAdapter)
 			{
-				installStage(target.stage);
+				installDefaultInputAdapter(target.stage);
 			}
 		}
 		

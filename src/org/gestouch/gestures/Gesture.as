@@ -1,10 +1,10 @@
 package org.gestouch.gestures
 {
+	import org.gestouch.core.Gestouch;
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGestureDelegate;
 	import org.gestouch.core.IGestureTargetAdapter;
-	import org.gestouch.core.IGesturesManager;
 	import org.gestouch.core.Touch;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.GestureStateEvent;
@@ -20,9 +20,6 @@ package org.gestouch.gestures
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points
 	 * in order detect specific gesture motion and form gesture event on target.
 	 * 
-	 * TODO:
-	 * - 
-	 * 
 	 * @author Pavel fljot
 	 */
 	public class Gesture extends EventDispatcher
@@ -35,7 +32,7 @@ package org.gestouch.gestures
 		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
 		
 		
-		protected const _gesturesManager:IGesturesManager = GesturesManager.getInstance();
+		protected const _gesturesManager:GesturesManager = Gestouch.gesturesManager;
 		/**
 		 * Map (generic object) of tracking touch points, where keys are touch points IDs.
 		 */
@@ -175,7 +172,6 @@ package org.gestouch.gestures
 		 */
 		public function get location():Point
 		{
-			//TODO: to clone or not clone? performance & convention or ...
 			return _location.clone();
 		}
 		

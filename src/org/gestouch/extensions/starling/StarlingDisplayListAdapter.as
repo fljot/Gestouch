@@ -1,5 +1,6 @@
 package org.gestouch.extensions.starling
 {
+	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
 
@@ -14,22 +15,22 @@ package org.gestouch.extensions.starling
 	 */
 	final public class StarlingDisplayListAdapter implements IDisplayListAdapter
 	{
-		private var _targetWeekStorage:Dictionary;
+		private var targetWeekStorage:Dictionary;
 		
 		
 		public function StarlingDisplayListAdapter(target:DisplayObject = null)
 		{
 			if (target)
 			{
-				_targetWeekStorage = new Dictionary(true);
-				_targetWeekStorage[target] = true;
+				targetWeekStorage = new Dictionary(true);
+				targetWeekStorage[target] = true;
 			}
 		}
 		
 		
 		public function get target():Object
 		{
-			for (var key:Object in _targetWeekStorage)
+			for (var key:Object in targetWeekStorage)
 			{
 				return key;
 			}
@@ -39,6 +40,7 @@ package org.gestouch.extensions.starling
 		
 		public function globalToLocal(point:Point):Point
 		{
+			point = StarlingUtils.adjustGlobalPoint(Starling.current, point);
 			return (target as DisplayObject).globalToLocal(point);
 		}
 		

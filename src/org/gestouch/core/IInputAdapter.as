@@ -5,9 +5,14 @@ package org.gestouch.core
 	 */
 	public interface IInputAdapter
 	{
-		function set touchesManager(value:ITouchesManager):void;
+		/**
+		 * @private
+		 */
+		function set touchesManager(value:TouchesManager):void;
 		
+		/**
+		 * Called when input adapter is set.
+		 */
 		function init():void;
-		function dispose():void;
 	}
 }

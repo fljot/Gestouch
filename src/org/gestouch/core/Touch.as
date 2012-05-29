@@ -25,6 +25,8 @@ package org.gestouch.core
 		public var pressure:Number;
 		
 //		public var lastMove:Point;
+
+		use namespace gestouch_internal;
 		
 		
 		public function Touch(id:uint = 0)
@@ -38,9 +40,9 @@ package org.gestouch.core
 		{
 			return _location.clone();
 		}
-		gestouch_internal function setLocation(value:Point, time:uint):void
+		gestouch_internal function setLocation(x:Number, y:Number, time:uint):void
 		{
-			_location = value;
+			_location = new Point(x, y);
 			_beginLocation = _location.clone();
 			_previousLocation = _location.clone();
 			
@@ -59,7 +61,7 @@ package org.gestouch.core
 			}
 			else
 			{
-				gestouch_internal::setLocation(new Point(x, y), time);
+				setLocation(x, y, time);
 			}
 		}
 		
