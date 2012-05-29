@@ -483,7 +483,7 @@ package org.gestouch.gestures
 			updateCentralPoint();
 			_location.x = _centralPoint.x;
 			_location.y = _centralPoint.y;
-			_localLocation = target.globalToLocal(_location);
+			_localLocation = targetAdapter.globalToLocal(_location);
 		}
 		
 		
