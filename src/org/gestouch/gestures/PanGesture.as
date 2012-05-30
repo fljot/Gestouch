@@ -135,6 +135,10 @@ package org.gestouch.gestures
 			
 			if (state == GestureState.POSSIBLE)
 			{
+				prevLocationX = _location.x;
+				prevLocationY = _location.y;
+				updateLocation();
+				
 				// Check if finger moved enough for gesture to be recognized
 				var locationOffset:Point = touch.locationOffset;
 				if (direction == PanGestureDirection.VERTICAL)
@@ -148,9 +152,6 @@ package org.gestouch.gestures
 				
 				if (locationOffset.length > slop || slop != slop)//faster isNaN(slop)
 				{
-					prevLocationX = _location.x;
-					prevLocationY = _location.y;
-					updateLocation();
 					offsetX = _location.x - prevLocationX;
 					offsetY = _location.y - prevLocationY;
 					// acummulate begin offsets for the case when this gesture recognition is delayed by requireGestureToFail

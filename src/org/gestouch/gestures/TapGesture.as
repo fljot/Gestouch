@@ -105,6 +105,7 @@ package org.gestouch.gestures
 			if (touchesCount == numTouchesRequired)
 			{
 				_numTouchesRequiredReached = true;				
+				updateLocation();		
 			}
 		}
 		
@@ -135,7 +136,6 @@ package org.gestouch.gestures
 				
 				if (_tapCounter == numTapsRequired)
 				{
-					updateLocation();
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(TapGestureEvent.GESTURE_TAP))
 					{
 						dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GestureState.RECOGNIZED,
