@@ -8,6 +8,10 @@ package org.gestouch.gestures
 	import flash.utils.Timer;
 
 
+	/**
+	 * 
+	 * @eventType org.gestouch.events.TapGestureEvent
+	 */
 	[Event(name="gestureTap", type="org.gestouch.events.TapGestureEvent")]
 	/**
 	 * TODO: check failing conditions (iDevice)

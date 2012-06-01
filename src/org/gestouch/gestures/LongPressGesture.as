@@ -9,6 +9,11 @@ package org.gestouch.gestures
 
 
 	/**
+	 * 
+	 * @eventType org.gestouch.events.LongPressGestureEvent
+	 */
+	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
+	/**
 	 * TODO: -location
 	 * - check on iOS (Obj-C) what happens when numTouchesRequired=2, two finger down, then quickly release one.
 	 * 

@@ -6,8 +6,12 @@ package org.gestouch.gestures
 	import org.gestouch.utils.GestureUtils;
 
 	import flash.geom.Point;
-	
-	
+
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.TransformGestureEvent
+	 */
 	[Event(name="gestureTransform", type="org.gestouch.events.TransformGestureEvent")]
 	/**
 	 * @author Pavel fljot

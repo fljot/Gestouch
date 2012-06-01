@@ -6,6 +6,11 @@ package org.gestouch.gestures
 
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.ZoomGestureEvent
+	 */
 	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
 	/**
 	 * TODO:

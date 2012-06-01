@@ -15,6 +15,12 @@ package org.gestouch.gestures
 	import flash.utils.Dictionary;
 	
 	
+	/**
+	 * Dispatched when the state of the gesture changes.
+	 * 
+	 * @eventType org.gestouch.events.GestureStateEvent
+	 * @see #state
+	 */
 	[Event(name="stateChange", type="org.gestouch.events.GestureStateEvent")]
 	/**
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points

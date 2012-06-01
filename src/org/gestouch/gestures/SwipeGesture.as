@@ -6,6 +6,11 @@ package org.gestouch.gestures
 
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.SwipeGestureEvent
+	 */
 	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
 	/**
 	 * TODO:

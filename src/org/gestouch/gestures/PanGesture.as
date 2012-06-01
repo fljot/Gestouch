@@ -6,6 +6,11 @@ package org.gestouch.gestures
 
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.PanGestureEvent
+	 */
 	[Event(name="gesturePan", type="org.gestouch.events.PanGestureEvent")]
 	/**
 	 * TODO:
