@@ -25,6 +25,7 @@ package org.gestouch.core
 		protected var _dirtyGestures:Vector.<Gesture> = new Vector.<Gesture>();
 		protected var _dirtyGesturesLength:uint = 0;
 		protected var _dirtyGesturesMap:Dictionary = new Dictionary(true);
+		protected var _stage:Stage;
 		
 		use namespace gestouch_internal;
 		
@@ -53,8 +54,10 @@ package org.gestouch.core
 		//
 		//--------------------------------------------------------------------------
 		
-		protected function installDefaultInputAdapter(stage:Stage):void
+		protected function onStageAvailable(stage:Stage):void
 		{
+			_stage = stage;
+			
 			Gestouch.inputAdapter ||= new NativeInputAdapter(stage);
 		}
 		
@@ -109,14 +112,14 @@ package org.gestouch.core
 			
 			_gesturesMap[gesture] = true;
 			
-			if (!Gestouch.inputAdapter)
+			if (!_stage)
 			{
 				var targetAsDO:DisplayObject = target as DisplayObject;
 				if (targetAsDO)
 				{
 					if (targetAsDO.stage)
 					{
-						installDefaultInputAdapter(targetAsDO.stage);
+						onStageAvailable(targetAsDO.stage);
 					}
 					else
 					{
@@ -238,6 +241,18 @@ package org.gestouch.core
 			{
 				throw new Error("Display list adapter not found for target of type '" + targetClass + "'.");
 			}
+			const hierarchyLength:uint = hierarchy.length;
+			if (hierarchyLength == 0)
+			{
+				throw new Error("No hierarchy build for target '" + target +"'. Something is wrong with that IDisplayListAdapter.");
+			}
+			if (_stage && !(hierarchy[hierarchyLength - 1] is Stage))
+			{
+				// Looks like some non-native (non DisplayList) hierarchy
+				// but we must always handle gestures with Stage target
+				// since Stage is anyway the top-most parent
+				hierarchy[hierarchyLength] = _stage;
+			}
 			
 			// Create a sorted(!) list of gestures which are interested in this touch.
 			// Sorting priority: deeper target has higher priority, recently added gesture has higher priority.
@@ -349,9 +364,9 @@ package org.gestouch.core
 		{
 			var target:DisplayObject = event.target as DisplayObject;
 			target.removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
-			if (!Gestouch.inputAdapter)
+			if (!_stage)
 			{
-				installDefaultInputAdapter(target.stage);
+				onStageAvailable(target.stage);
 			}
 		}
 		
