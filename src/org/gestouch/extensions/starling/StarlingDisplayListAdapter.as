@@ -45,10 +45,11 @@ package org.gestouch.extensions.starling
 		}
 		
 		
-		public function contains(target:Object):Boolean
+		public function contains(object:Object):Boolean
 		{
 			const targetAsDOC:DisplayObjectContainer = this.target as DisplayObjectContainer;
-			return (targetAsDOC && targetAsDOC.contains(target as DisplayObject));
+			const objectAsDO:DisplayObject = object as DisplayObject;
+			return (targetAsDOC && objectAsDO && targetAsDOC.contains(objectAsDO));
 		}
 		
 		

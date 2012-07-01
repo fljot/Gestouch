@@ -10,6 +10,6 @@ package org.gestouch.core
 		
 		function globalToLocal(point:Point):Point;
 		
-		function contains(target:Object):Boolean;
+		function contains(object:Object):Boolean;
 	}
 }
