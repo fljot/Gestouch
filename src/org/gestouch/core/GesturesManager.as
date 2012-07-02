@@ -116,7 +116,7 @@ package org.gestouch.core
 			if (targetGestures.length > 1)
 			{
 				targetGestures.splice(targetGestures.indexOf(gesture), 1);
-			}			
+			}
 			else
 			{
 				delete _gesturesForTargetMap[target];
@@ -145,11 +145,12 @@ package org.gestouch.core
 		
 		gestouch_internal function onGestureRecognized(gesture:Gesture):void
 		{
+			const target:Object = gesture.target;
+			
 			for (var key:Object in _gesturesMap)
 			{
 				var otherGesture:Gesture = key as Gesture;
-                var target:Object = gesture.target;
-                var otherTarget:Object = otherGesture.target;
+				var otherTarget:Object = otherGesture.target;
 				
 				// conditions for otherGesture "own properties"
 				if (otherGesture != gesture &&
@@ -159,7 +160,7 @@ package org.gestouch.core
 				{
 					if (otherTarget == target ||
 						gesture.targetAdapter.contains(otherTarget) ||
-						otherGesture.targetAdapter.contains(target)						
+						otherGesture.targetAdapter.contains(target)
 						)
 					{
 						var gestureDelegate:IGestureDelegate = gesture.delegate;
@@ -172,7 +173,7 @@ package org.gestouch.core
 						{
 							otherGesture.setState_internal(GestureState.FAILED);
 						}
-					}					
+					}
 				}
 			}
 		}
@@ -300,9 +301,9 @@ package org.gestouch.core
 			while (i-- > 0)
 			{
 				gesture = gesturesForTouch[i] as Gesture;
-									
+				
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
-				{					
+				{
 					gesture.touchEndHandler(touch);
 				}
 			}
@@ -323,7 +324,7 @@ package org.gestouch.core
 		//
 		//  Event handlers
 		//
-		//--------------------------------------------------------------------------		
+		//--------------------------------------------------------------------------
 		
 		protected function gestureTarget_addedToStageHandler(event:Event):void
 		{

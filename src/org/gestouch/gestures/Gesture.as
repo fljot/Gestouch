@@ -97,8 +97,8 @@ package org.gestouch.gestures
 		public function set target(value:Object):void
 		{
 			var target:Object = this.target;
-            if (target == value)
-                return;
+			if (target == value)
+				return;
 			
 			uninstallTarget(target);
 			_targetAdapter = value ? Gestouch.gestouch_internal::createGestureTargetAdapter(value) : null;
@@ -434,7 +434,7 @@ package org.gestouch.gestures
 				}
 			}
 				
-			var oldState:uint = _state;			
+			var oldState:uint = _state;	
 			_state = newState;
 			
 			if (((GestureState.CANCELLED | GestureState.RECOGNIZED | GestureState.ENDED | GestureState.FAILED) & _state) > 0)

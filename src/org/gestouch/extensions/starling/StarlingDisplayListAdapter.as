@@ -60,7 +60,7 @@ package org.gestouch.extensions.starling
 			var target:DisplayObject = genericTarget as DisplayObject;
 			while (target)
 			{
-				list[i] = target;				
+				list[i] = target;
 				target = target.parent;
 				i++;
 			}
