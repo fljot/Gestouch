@@ -101,7 +101,7 @@ package org.gestouch.gestures
                 return;
 			
 			uninstallTarget(target);
-			_targetAdapter = value ? _gesturesManager.gestouch_internal::createGestureTargetAdapter(value) : null;
+			_targetAdapter = value ? Gestouch.gestouch_internal::createGestureTargetAdapter(value) : null;
 			installTarget(value);
 		}
 		

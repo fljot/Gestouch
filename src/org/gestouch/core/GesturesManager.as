@@ -16,7 +16,6 @@ package org.gestouch.core
 	 */
 	public class GesturesManager
 	{
-		protected const _displayListAdaptersMap:Dictionary = new Dictionary();
 		protected const _frameTickerShape:Shape = new Shape();
 		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
 		protected var _gesturesMap:Dictionary = new Dictionary(true);
@@ -31,20 +30,10 @@ package org.gestouch.core
 		
 		
 		public function GesturesManager()
-		{			
-			
-		}
-		
-		
-		gestouch_internal function addDisplayListAdapter(targetClass:Class, adapter:IDisplayListAdapter):void
 		{
-			if (!targetClass || !adapter)
-			{
-				throw new Error("Argument error: both arguments required.");
-			}
 			
-			_displayListAdaptersMap[targetClass] = adapter;
 		}
+		
 		
 		
 		
@@ -72,22 +61,6 @@ package org.gestouch.core
 			_dirtyGesturesLength = 0;
 			_dirtyGesturesMap = new Dictionary(true);
 			_frameTickerShape.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
-		}
-		
-		
-		gestouch_internal function createGestureTargetAdapter(target:Object):IDisplayListAdapter
-		{
-			for (var key:Object in _displayListAdaptersMap)
-			{
-				var targetClass:Class = key as Class;
-				if (target is targetClass)
-				{
-					var adapter:IDisplayListAdapter = _displayListAdaptersMap[key] as IDisplayListAdapter;
-					return new (adapter.reflect())(target);
-				}
-			}
-			
-			throw new Error("Cannot create adapter for target " + target + " of type " + getQualifiedClassName(target) + ".");
 		}
 		
 		
@@ -227,19 +200,11 @@ package org.gestouch.core
 			}
 			
 			var target:Object = touch.target;
-			var hierarchy:Vector.<Object>;
-			for (var key:Object in _displayListAdaptersMap)
-			{
-				var targetClass:Class = key as Class;
-				if (target is targetClass)
-				{
-					hierarchy = (_displayListAdaptersMap[key] as IDisplayListAdapter).getHierarchy(target);
-					break;
-				}
-			}
+			const displayListAdapter:IDisplayListAdapter = Gestouch.gestouch_internal::getDisplayListAdapter(target);
+			const hierarchy:Vector.<Object> = displayListAdapter.getHierarchy(target);
 			if (!hierarchy)
 			{
-				throw new Error("Display list adapter not found for target of type '" + targetClass + "'.");
+				throw new Error("Display list adapter not found for target of type '" + getQualifiedClassName(target) + "'.");
 			}
 			const hierarchyLength:uint = hierarchy.length;
 			if (hierarchyLength == 0)
