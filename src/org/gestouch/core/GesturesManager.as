@@ -21,8 +21,7 @@ package org.gestouch.core
 		protected var _gesturesMap:Dictionary = new Dictionary(true);
 		protected var _gesturesForTouchMap:Dictionary = new Dictionary();
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
-		protected var _dirtyGestures:Vector.<Gesture> = new Vector.<Gesture>();
-		protected var _dirtyGesturesLength:uint = 0;
+		protected var _dirtyGesturesCount:uint = 0;
 		protected var _dirtyGesturesMap:Dictionary = new Dictionary(true);
 		protected var _stage:Stage;
 		
@@ -53,12 +52,11 @@ package org.gestouch.core
 		
 		protected function resetDirtyGestures():void
 		{
-			for each (var gesture:Gesture in _dirtyGestures)
+			for (var gesture:* in _dirtyGesturesMap)
 			{
-				gesture.reset();
+				(gesture as Gesture).reset();
 			}
-			_dirtyGestures.length = 0;
-			_dirtyGesturesLength = 0;
+			_dirtyGesturesCount = 0;
 			_dirtyGesturesMap = new Dictionary(true);
 			_frameTickerShape.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		}
@@ -136,8 +134,8 @@ package org.gestouch.core
 		{
 			if (!_dirtyGesturesMap[gesture])
 			{
-				_dirtyGestures.push(gesture);
-				_dirtyGesturesLength++;
+				_dirtyGesturesMap[gesture] = true;
+				_dirtyGesturesCount++;
 				_frameTickerShape.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 			}
 		}
@@ -181,7 +179,7 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchBegin(touch:Touch):void
 		{
-			if (_dirtyGesturesLength > 0)
+			if (_dirtyGesturesCount > 0)
 			{
 				resetDirtyGestures();
 			}
@@ -263,7 +261,7 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchMove(touch:Touch):void
 		{
-			if (_dirtyGesturesLength > 0)
+			if (_dirtyGesturesCount > 0)
 			{
 				resetDirtyGestures();
 			}
@@ -290,7 +288,7 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchEnd(touch:Touch):void
 		{
-			if (_dirtyGesturesLength > 0)
+			if (_dirtyGesturesCount > 0)
 			{
 				resetDirtyGestures();
 			}
