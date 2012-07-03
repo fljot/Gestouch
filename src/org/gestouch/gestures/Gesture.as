@@ -104,7 +104,7 @@ package org.gestouch.gestures
 				return;
 			
 			uninstallTarget(target);
-			_targetAdapter = value ? Gestouch.gestouch_internal::createGestureTargetAdapter(value) : null;
+			_targetAdapter = value ? Gestouch.createGestureTargetAdapter(value) : null;
 			installTarget(value);
 		}
 		
@@ -328,7 +328,7 @@ package org.gestouch.gestures
 		{
 			if (target)
 			{
-				_gesturesManager.gestouch_internal::addGesture(this);
+				_gesturesManager.addGesture(this);
 			}
 		}
 		
@@ -344,7 +344,7 @@ package org.gestouch.gestures
 		{
 			if (target)
 			{
-				_gesturesManager.gestouch_internal::removeGesture(this);
+				_gesturesManager.removeGesture(this);
 			}
 		}
 		
@@ -450,7 +450,7 @@ package org.gestouch.gestures
 			
 			if (_state.isEndState)
 			{
-				_gesturesManager.gestouch_internal::scheduleGestureStateReset(this);
+				_gesturesManager.scheduleGestureStateReset(this);
 			}
 			
 			//TODO: what if RTE happens in event handlers?
@@ -462,7 +462,7 @@ package org.gestouch.gestures
 			
 			if (_state == GestureState.BEGAN || _state == GestureState.RECOGNIZED)
 			{
-				_gesturesManager.gestouch_internal::onGestureRecognized(this);
+				_gesturesManager.onGestureRecognized(this);
 			}
 			
 			return true;
