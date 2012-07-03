@@ -1,5 +1,7 @@
 package org.gestouch.events
 {
+	import org.gestouch.core.GestureState;
+
 	import flash.events.Event;
 
 
@@ -12,7 +14,7 @@ package org.gestouch.events
 		
 		
 		public function ZoomGestureEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false,
-										 gestureState:uint = 0,
+										 gestureState:GestureState = null,
 										 stageX:Number = 0, stageY:Number = 0,
 										 localX:Number = 0, localY:Number = 0,
 										 scaleX:Number = 1.0, scaleY:Number = 1.0)

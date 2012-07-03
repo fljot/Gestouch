@@ -128,7 +128,7 @@ package org.gestouch.gestures
 			//TODO: check proper condition (behavior) on iOS native
 			if (_numTouchesRequiredReached)
 			{
-				if (((GestureState.BEGAN | GestureState.CHANGED) & state) > 0)
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
 					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))

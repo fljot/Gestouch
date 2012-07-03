@@ -9,6 +9,7 @@ package org.gestouch.gestures
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.GestureStateEvent;
 
+	import flash.errors.IllegalOperationError;
 	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
@@ -50,7 +51,9 @@ package org.gestouch.gestures
 		 * @see requireGestureToFail()
 		 */
 		protected var _gesturesToFail:Dictionary = new Dictionary(true);
-		protected var _pendingRecognizedState:uint;
+		protected var _pendingRecognizedState:GestureState;
+		
+		use namespace gestouch_internal;
 		
 		
 		public function Gesture(target:Object = null)
@@ -122,11 +125,18 @@ package org.gestouch.gestures
 				return;
 			
 			_enabled = value;
-			//TODO
-			if (!_enabled && state != GestureState.IDLE)
+			
+			if (!_enabled)
 			{
-				setState(GestureState.CANCELLED);
-				reset();
+				if (state == GestureState.POSSIBLE)
+				{
+					setState(GestureState.FAILED);
+				}
+				else
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+				{
+					setState(GestureState.CANCELLED);
+				}
 			}
 		}
 		
@@ -153,8 +163,8 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected var _state:uint = GestureState.IDLE;
-		public function get state():uint
+		protected var _state:GestureState = GestureState.IDLE;
+		public function get state():GestureState
 		{
 			return _state;
 		}
@@ -217,7 +227,7 @@ package org.gestouch.gestures
 		 */
 		public function reset():void
 		{
-			var state:uint = this.state;//caching getter
+			var state:GestureState = this.state;//caching getter
 			
 			if (state == GestureState.IDLE)
 				return;// Do nothing as we're in IDLE and nothing to reset
@@ -232,14 +242,14 @@ package org.gestouch.gestures
 				var gestureToFail:Gesture = key as Gesture;
 				gestureToFail.removeEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler);
 			}
-			_pendingRecognizedState = 0;
+			_pendingRecognizedState = null;
 			
 			if (state == GestureState.POSSIBLE)
 			{
 				// manual reset() call. Set to FAILED to keep our State Machine clean and stable
 				setState(GestureState.FAILED);
 			}
-			else if (state == GestureState.BEGAN || state == GestureState.RECOGNIZED)
+			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 			{
 				// manual reset() call. Set to CANCELLED to keep our State Machine clean and stable
 				setState(GestureState.CANCELLED);
@@ -379,18 +389,19 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected function setState(newState:uint):Boolean
+		protected function setState(newState:GestureState):Boolean
 		{
 			if (_state == newState && _state == GestureState.CHANGED)
 			{
 				return true;
 			}
 			
-			//TODO: is state sequence validation needed? e.g.:
-			//POSSIBLE should be followed by BEGAN or RECOGNIZED or FAILED
-			//BEGAN should be follwed by CHANGED or ENDED or CANCELLED
-			//CHANGED should be followed by CHANGED or ENDED or CANCELLED
-			//...
+			if (!_state.canTransitionTo(newState))
+			{
+				throw new IllegalOperationError("You cannot change from state " +
+					_state + " to state " + newState  + ".");
+			}
+			
 			
 			if (newState == GestureState.BEGAN || newState == GestureState.RECOGNIZED)
 			{
@@ -434,10 +445,10 @@ package org.gestouch.gestures
 				}
 			}
 				
-			var oldState:uint = _state;	
+			var oldState:GestureState = _state;	
 			_state = newState;
 			
-			if (((GestureState.CANCELLED | GestureState.RECOGNIZED | GestureState.ENDED | GestureState.FAILED) & _state) > 0)
+			if (_state.isEndState)
 			{
 				_gesturesManager.gestouch_internal::scheduleGestureStateReset(this);
 			}
@@ -458,7 +469,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		gestouch_internal function setState_internal(state:uint):void
+		gestouch_internal function setState_internal(state:GestureState):void
 		{
 			setState(state);
 		}
