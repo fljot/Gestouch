@@ -38,7 +38,7 @@ package org.gestouch.gestures
 		
 		
 		/** @private */
-		private var _maxNumTouchesRequired:uint = 1;
+		private var _maxNumTouchesRequired:uint = uint.MAX_VALUE;
 		
 		/**
 		 * 
