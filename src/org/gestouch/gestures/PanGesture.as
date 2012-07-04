@@ -116,15 +116,14 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > maxNumTouchesRequired)
 			{
-				//TODO
-				ignoreTouch(touch);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			
 			if (touchesCount >= minNumTouchesRequired)
 			{
 				updateLocation();
-			}			
+			}
 		}
 		
 		

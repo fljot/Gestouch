@@ -84,14 +84,7 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
-				{
-					ignoreTouch(touch);
-				}
-				else
-				{
-					setState(GestureState.FAILED);
-				}
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			

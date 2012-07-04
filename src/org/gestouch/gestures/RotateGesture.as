@@ -60,8 +60,7 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > 2)
 			{
-				//TODO
-				ignoreTouch(touch);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			

@@ -93,9 +93,7 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				// We put more fingers then required at the same time,
-				// so treat that as failed
-				setState(GestureState.FAILED);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			

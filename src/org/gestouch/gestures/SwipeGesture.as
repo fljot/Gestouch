@@ -78,8 +78,7 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				//TODO: or ignore?
-				setState(GestureState.FAILED);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			

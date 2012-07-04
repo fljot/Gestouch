@@ -367,6 +367,19 @@ package org.gestouch.gestures
 		}
 		
 		
+		protected function failOrIgnoreTouch(touch:Touch):void
+		{
+			if (state == GestureState.POSSIBLE)
+			{
+				setState(GestureState.FAILED);
+			}
+			else if (state != GestureState.IDLE)
+			{
+				ignoreTouch(touch);
+			}
+		}
+		
+		
 		[Abstract]
 		/**
 		 * <p><b>NB!</b> This is abstract method and must be overridden.</p>
