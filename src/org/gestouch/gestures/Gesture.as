@@ -299,6 +299,11 @@ package org.gestouch.gestures
 		public function requireGestureToFail(gesture:Gesture):void
 		{
 			//TODO
+			if (!gesture)
+			{
+				throw new ArgumentError();
+			}
+			
 			_gesturesToFail[gesture] = true;
 		}
 		
@@ -406,14 +411,16 @@ package org.gestouch.gestures
 			if (newState == GestureState.BEGAN || newState == GestureState.RECOGNIZED)
 			{
 				var gestureToFail:Gesture;
+				var key:*;
 				// first we check if other required-to-fail gestures recognized
 				// TODO: is this really necessary? using "requireGestureToFail" API assume that
 				// required-to-fail gesture always recognizes AFTER this one.
-				for (var key:* in _gesturesToFail)
+				for (key in _gesturesToFail)
 				{
 					gestureToFail = key as Gesture;
-					if (gestureToFail.state != GestureState.IDLE && gestureToFail.state != GestureState.POSSIBLE
-						&& gestureToFail.state != GestureState.FAILED)
+					if (gestureToFail.state != GestureState.IDLE &&
+						gestureToFail.state != GestureState.POSSIBLE &&
+						gestureToFail.state != GestureState.FAILED)
 					{
 						// Looks like other gesture won't fail,
 						// which means the required condition will not happen, so we must fail
@@ -421,7 +428,7 @@ package org.gestouch.gestures
 						return false;
 					}
 				}
-				// then we check of other required-to-fail gestures are actually tracked (not IDLE)
+				// then we check if other required-to-fail gestures are actually tracked (not IDLE)
 				// and not still not recognized (e.g. POSSIBLE state)
 				for (key in _gesturesToFail)
 				{
@@ -430,6 +437,13 @@ package org.gestouch.gestures
 					{
 						// Other gesture might fail soon, so we postpone state change
 						_pendingRecognizedState = newState;
+						
+						for (key in _gesturesToFail)
+						{
+							gestureToFail = key as Gesture;
+							gestureToFail.addEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler, false, 0, true);
+						}
+						
 						return false;
 					}
 					// else if gesture is in IDLE state it means it doesn't track anything,
@@ -528,12 +542,6 @@ package org.gestouch.gestures
 			
 			if (_touchesCount == 1 && state == GestureState.IDLE)
 			{
-				for (var key:* in _gesturesToFail)
-				{
-					var gestureToFail:Gesture = key as Gesture;
-					gestureToFail.addEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler, false, 0, true);
-				}
-				
 				setState(GestureState.POSSIBLE);
 			}
 		}
@@ -557,10 +565,7 @@ package org.gestouch.gestures
 		
 		protected function gestureToFail_stateChangeHandler(event:GestureStateEvent):void
 		{
-			if (state != GestureState.POSSIBLE)
-				return;//just in case..FIXME?
-			
-			if (!_pendingRecognizedState)
+			if (!_pendingRecognizedState || state != GestureState.POSSIBLE)
 				return;
 			
 			if (event.newState == GestureState.FAILED)
@@ -575,13 +580,18 @@ package org.gestouch.gestures
 					}
 				}
 				
+				// at this point all gestures-to-fail are either in IDLE or in FAILED states
 				if (setState(_pendingRecognizedState))
 				{
 					onDelayedRecognize();
 				}
 			}
-			else if (event.newState != GestureState.POSSIBLE)
+			else if (event.newState != GestureState.IDLE && event.newState != GestureState.POSSIBLE)
 			{
+				// NB: _other_ gesture may switch to IDLE state if it was in FAILED when
+				// _this_ gesture initially attempted to switch to one of recognized state.
+				// ...and that's OK (we ignore that)
+				
 				setState(GestureState.FAILED);
 			}
 		}
