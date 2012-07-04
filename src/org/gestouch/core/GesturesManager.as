@@ -1,5 +1,6 @@
 package org.gestouch.core
 {
+	import flash.errors.IllegalOperationError;
 	import org.gestouch.gestures.Gesture;
 	import org.gestouch.input.NativeInputAdapter;
 
@@ -68,18 +69,27 @@ package org.gestouch.core
 			{
 				throw new ArgumentError("Argument 'gesture' must be not null.");
 			}
-			if (_gesturesMap[gesture])
+			
+			const target:Object = gesture.target;
+			if (!target)
 			{
-				throw new Error("This gesture is already registered.. something wrong.");
+				throw new IllegalOperationError("Gesture must have target.");
 			}
 			
-			var target:Object = gesture.target;
 			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
-			if (!targetGestures)
+			if (targetGestures)
+			{
+				if (targetGestures.indexOf(gesture) == -1)
+				{
+					targetGestures.push(gesture);
+				}
+			}
+			else
 			{
 				targetGestures = _gesturesForTargetMap[target] = new Vector.<Gesture>();
+				targetGestures[0] = gesture;
 			}
-			targetGestures.push(gesture);
+			
 			
 			_gesturesMap[gesture] = true;
 			
@@ -110,23 +120,27 @@ package org.gestouch.core
 			
 			
 			var target:Object = gesture.target;
-			var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
-			if (targetGestures.length > 1)
+			// check for target because it could be already GC-ed (since target reference is weak)
+			if (target)
 			{
-				targetGestures.splice(targetGestures.indexOf(gesture), 1);
-			}
-			else
-			{
-				delete _gesturesForTargetMap[target];
-				if (target is IEventDispatcher)
+				var targetGestures:Vector.<Gesture> = _gesturesForTargetMap[target] as Vector.<Gesture>;
+				if (targetGestures.length > 1)
 				{
-					(target as IEventDispatcher).removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+					targetGestures.splice(targetGestures.indexOf(gesture), 1);
+				}
+				else
+				{
+					delete _gesturesForTargetMap[target];
+					if (target is IEventDispatcher)
+					{
+						(target as IEventDispatcher).removeEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+					}
 				}
 			}
 			
 			delete _gesturesMap[gesture];
 			
-			//TODO: decide about gesture state and _dirtyGestures
+			gesture.reset();
 		}
 		
 		
