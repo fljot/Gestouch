@@ -1,5 +1,6 @@
 package org.gestouch.utils
 {
+	import flash.geom.Point;
 	import flash.system.Capabilities;
 	/**
 	 * Set of constants.
@@ -24,5 +25,6 @@ package org.gestouch.utils
 		 * Precalculated coefficient Math.PI * 2
 		 */
 		public static const PI_DOUBLE:Number = Math.PI * 2;
+		public static const GLOBAL_ZERO:Point = new Point();
 	}
 }

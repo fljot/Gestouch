@@ -4,11 +4,14 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.TapGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
+	/**
+	 * 
+	 * @eventType org.gestouch.events.TapGestureEvent
+	 */
 	[Event(name="gestureTap", type="org.gestouch.events.TapGestureEvent")]
 	/**
 	 * TODO: check failing conditions (iDevice)
@@ -28,7 +31,7 @@ package org.gestouch.gestures
 		protected var _tapCounter:uint = 0;
 		
 		
-		public function TapGesture(target:InteractiveObject = null)
+		public function TapGesture(target:Object = null)
 		{
 			super(target);
 		}

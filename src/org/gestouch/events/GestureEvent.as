@@ -1,5 +1,7 @@
 package org.gestouch.events
 {
+	import org.gestouch.core.GestureState;
+
 	import flash.events.Event;
 
 
@@ -8,7 +10,7 @@ package org.gestouch.events
 	 */
 	public class GestureEvent extends Event
 	{
-		public var gestureState:uint;
+		public var gestureState:GestureState;
 		public var stageX:Number;
 		public var stageY:Number;
 		public var localX:Number;
@@ -16,7 +18,7 @@ package org.gestouch.events
 		
 		
 		public function GestureEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false,
-									 gestureState:uint = 0,
+									 gestureState:GestureState = null,
 									 stageX:Number = 0, stageY:Number = 0,
 									 localX:Number = 0, localY:Number = 0)
 		{

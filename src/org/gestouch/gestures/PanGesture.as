@@ -4,9 +4,13 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.PanGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.PanGestureEvent
+	 */
 	[Event(name="gesturePan", type="org.gestouch.events.PanGestureEvent")]
 	/**
 	 * TODO:
@@ -27,7 +31,7 @@ package org.gestouch.gestures
 		protected var _gestureBeginOffsetY:Number;
 		
 		
-		public function PanGesture(target:InteractiveObject = null)
+		public function PanGesture(target:Object = null)
 		{
 			super(target);
 		}

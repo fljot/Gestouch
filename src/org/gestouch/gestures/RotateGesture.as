@@ -5,9 +5,13 @@ package org.gestouch.gestures
 	import org.gestouch.events.RotateGestureEvent;
 	import org.gestouch.utils.GestureUtils;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.RotateGestureEvent
+	 */
 	[Event(name="gestureRotate", type="org.gestouch.events.RotateGestureEvent")]
 	/**
 	 * TODO:
@@ -24,7 +28,7 @@ package org.gestouch.gestures
 		protected var _transformVector:Point;
 		
 		
-		public function RotateGesture(target:InteractiveObject = null)
+		public function RotateGesture(target:Object = null)
 		{
 			super(target);
 		}

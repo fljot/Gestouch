@@ -1,5 +1,7 @@
 package org.gestouch.events
 {
+	import org.gestouch.core.GestureState;
+
 	import flash.events.Event;
 
 
@@ -10,11 +12,11 @@ package org.gestouch.events
 	{
 		public static const STATE_CHANGE:String = "stateChange";
 		
-		public var newState:uint;
-		public var oldState:uint;
+		public var newState:GestureState;
+		public var oldState:GestureState;
 		
 		
-		public function GestureStateEvent(type:String, newState:uint, oldState:uint)
+		public function GestureStateEvent(type:String, newState:GestureState, oldState:GestureState)
 		{
 			super(type, false, false);
 			

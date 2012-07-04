@@ -4,9 +4,13 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.SwipeGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.SwipeGestureEvent
+	 */
 	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
 	/**
 	 * TODO:
@@ -31,7 +35,7 @@ package org.gestouch.gestures
 		protected var _decelerationCounter:uint = 0;
 		
 		
-		public function SwipeGesture(target:InteractiveObject = null)
+		public function SwipeGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -143,7 +147,7 @@ package org.gestouch.gestures
 				{
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 					{
-						_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+						_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 						dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 							_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 					}
@@ -179,7 +183,7 @@ package org.gestouch.gestures
 						_offset.y = 0;
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
-							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+							_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 						}
@@ -207,7 +211,7 @@ package org.gestouch.gestures
 						_offset.x = 0;
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
-							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+							_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 						}
@@ -234,7 +238,7 @@ package org.gestouch.gestures
 		{
 			if (hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 			{
-				_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+				_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 				dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 					_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 			}

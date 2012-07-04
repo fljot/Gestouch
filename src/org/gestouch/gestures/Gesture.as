@@ -1,27 +1,31 @@
 package org.gestouch.gestures
 {
+	import org.gestouch.core.Gestouch;
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.GesturesManager;
 	import org.gestouch.core.IGestureDelegate;
-	import org.gestouch.core.IGesturesManager;
+	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.events.GestureStateEvent;
 
-	import flash.display.InteractiveObject;
+	import flash.errors.IllegalOperationError;
 	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.system.Capabilities;
 	import flash.utils.Dictionary;
 	
 	
+	/**
+	 * Dispatched when the state of the gesture changes.
+	 * 
+	 * @eventType org.gestouch.events.GestureStateEvent
+	 * @see #state
+	 */
 	[Event(name="stateChange", type="org.gestouch.events.GestureStateEvent")]
 	/**
 	 * Base class for all gestures. Gesture is essentially a detector that tracks touch points
 	 * in order detect specific gesture motion and form gesture event on target.
-	 * 
-	 * TODO:
-	 * - 
 	 * 
 	 * @author Pavel fljot
 	 */
@@ -32,10 +36,10 @@ package org.gestouch.gestures
 		 * (not an accidental offset on touch), 
 		 * based on 20 pixels on a 252ppi device.
 		 */
-		public static const DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
+		public static var DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
 		
 		
-		protected const _gesturesManager:IGesturesManager = GesturesManager.getInstance();
+		protected const _gesturesManager:GesturesManager = Gestouch.gesturesManager;
 		/**
 		 * Map (generic object) of tracking touch points, where keys are touch points IDs.
 		 */
@@ -47,10 +51,12 @@ package org.gestouch.gestures
 		 * @see requireGestureToFail()
 		 */
 		protected var _gesturesToFail:Dictionary = new Dictionary(true);
-		protected var _pendingRecognizedState:uint;
+		protected var _pendingRecognizedState:GestureState;
+		
+		use namespace gestouch_internal;
 		
 		
-		public function Gesture(target:InteractiveObject = null)
+		public function Gesture(target:Object = null)
 		{
 			super();
 			
@@ -61,9 +67,22 @@ package org.gestouch.gestures
 		
 		
 		/** @private */
-		private var _targetWeekStorage:Dictionary;
+		protected var _targetAdapter:IGestureTargetAdapter;
+		/**
+		 * 
+		 */
+		gestouch_internal function get targetAdapter():IGestureTargetAdapter
+		{
+			return _targetAdapter;
+		}
+		protected function get targetAdapter():IGestureTargetAdapter
+		{
+			return _targetAdapter;
+		}
+		
 		
 		/**
+		 * FIXME
 		 * InteractiveObject (DisplayObject) which this gesture is tracking the actual gesture motion on.
 		 * 
 		 * <p>Could be some image, component (like map) or the larger view like Stage.</p>
@@ -74,29 +93,18 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		public function get target():InteractiveObject
+		public function get target():Object
 		{
-			for (var key:Object in _targetWeekStorage)
-            {
-                return key as InteractiveObject;
-            }
-            return null;
+			return _targetAdapter ? _targetAdapter.target : null;
 		}
-		public function set target(value:InteractiveObject):void
+		public function set target(value:Object):void
 		{
-			var target:InteractiveObject = this.target;
+			var target:Object = this.target;
 			if (target == value)
 				return;
 			
 			uninstallTarget(target);
-			for (var key:Object in _targetWeekStorage)
-			{
-				delete _targetWeekStorage[key];
-			}
-			if (value)
-			{
-				(_targetWeekStorage ||= new Dictionary(true))[value] = true;
-			}
+			_targetAdapter = value ? Gestouch.createGestureTargetAdapter(value) : null;
 			installTarget(value);
 		}
 		
@@ -117,11 +125,18 @@ package org.gestouch.gestures
 				return;
 			
 			_enabled = value;
-			//TODO
-			if (!_enabled && state != GestureState.IDLE)
+			
+			if (!_enabled)
 			{
-				setState(GestureState.CANCELLED);
-				reset();
+				if (state == GestureState.POSSIBLE)
+				{
+					setState(GestureState.FAILED);
+				}
+				else
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+				{
+					setState(GestureState.CANCELLED);
+				}
 			}
 		}
 		
@@ -148,8 +163,8 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected var _state:uint = GestureState.IDLE;
-		public function get state():uint
+		protected var _state:GestureState = GestureState.IDLE;
+		public function get state():GestureState
 		{
 			return _state;
 		}
@@ -173,7 +188,6 @@ package org.gestouch.gestures
 		 */
 		public function get location():Point
 		{
-			//TODO: to clone or not clone? performance & convention or ...
 			return _location.clone();
 		}
 		
@@ -184,7 +198,7 @@ package org.gestouch.gestures
 		//
 		//  Public methods
 		//
-		//--------------------------------------------------------------------------
+		//--------------------------------------------------------------------------		
 		
 		[Abstract]
 		/**
@@ -213,7 +227,7 @@ package org.gestouch.gestures
 		 */
 		public function reset():void
 		{
-			var state:uint = this.state;//caching getter
+			var state:GestureState = this.state;//caching getter
 			
 			if (state == GestureState.IDLE)
 				return;// Do nothing as we're in IDLE and nothing to reset
@@ -228,14 +242,14 @@ package org.gestouch.gestures
 				var gestureToFail:Gesture = key as Gesture;
 				gestureToFail.removeEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler);
 			}
-			_pendingRecognizedState = 0;
+			_pendingRecognizedState = null;
 			
 			if (state == GestureState.POSSIBLE)
 			{
 				// manual reset() call. Set to FAILED to keep our State Machine clean and stable
 				setState(GestureState.FAILED);
 			}
-			else if (state == GestureState.BEGAN || state == GestureState.RECOGNIZED)
+			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 			{
 				// manual reset() call. Set to CANCELLED to keep our State Machine clean and stable
 				setState(GestureState.CANCELLED);
@@ -285,6 +299,11 @@ package org.gestouch.gestures
 		public function requireGestureToFail(gesture:Gesture):void
 		{
 			//TODO
+			if (!gesture)
+			{
+				throw new ArgumentError();
+			}
+			
 			_gesturesToFail[gesture] = true;
 		}
 		
@@ -310,11 +329,11 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function installTarget(target:InteractiveObject):void
+		protected function installTarget(target:Object):void
 		{
 			if (target)
 			{
-				_gesturesManager.gestouch_internal::addGesture(this);
+				_gesturesManager.addGesture(this);
 			}
 		}
 		
@@ -326,11 +345,11 @@ package org.gestouch.gestures
 		 * 
 		 * @see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/InteractiveObject.html
 		 */
-		protected function uninstallTarget(target:InteractiveObject):void
+		protected function uninstallTarget(target:Object):void
 		{
 			if (target)
 			{
-				_gesturesManager.gestouch_internal::removeGesture(this);
+				_gesturesManager.removeGesture(this);
 			}
 		}
 		
@@ -375,30 +394,33 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected function setState(newState:uint):Boolean
+		protected function setState(newState:GestureState):Boolean
 		{
 			if (_state == newState && _state == GestureState.CHANGED)
 			{
 				return true;
 			}
 			
-			//TODO: is state sequence validation needed? e.g.:
-			//POSSIBLE should be followed by BEGAN or RECOGNIZED or FAILED
-			//BEGAN should be follwed by CHANGED or ENDED or CANCELLED
-			//CHANGED should be followed by CHANGED or ENDED or CANCELLED
-			//...
+			if (!_state.canTransitionTo(newState))
+			{
+				throw new IllegalOperationError("You cannot change from state " +
+					_state + " to state " + newState  + ".");
+			}
+			
 			
 			if (newState == GestureState.BEGAN || newState == GestureState.RECOGNIZED)
 			{
 				var gestureToFail:Gesture;
+				var key:*;
 				// first we check if other required-to-fail gestures recognized
 				// TODO: is this really necessary? using "requireGestureToFail" API assume that
 				// required-to-fail gesture always recognizes AFTER this one.
-				for (var key:* in _gesturesToFail)
+				for (key in _gesturesToFail)
 				{
 					gestureToFail = key as Gesture;
-					if (gestureToFail.state != GestureState.IDLE && gestureToFail.state != GestureState.POSSIBLE
-						&& gestureToFail.state != GestureState.FAILED)
+					if (gestureToFail.state != GestureState.IDLE &&
+						gestureToFail.state != GestureState.POSSIBLE &&
+						gestureToFail.state != GestureState.FAILED)
 					{
 						// Looks like other gesture won't fail,
 						// which means the required condition will not happen, so we must fail
@@ -406,7 +428,7 @@ package org.gestouch.gestures
 						return false;
 					}
 				}
-				// then we check of other required-to-fail gestures are actually tracked (not IDLE)
+				// then we check if other required-to-fail gestures are actually tracked (not IDLE)
 				// and not still not recognized (e.g. POSSIBLE state)
 				for (key in _gesturesToFail)
 				{
@@ -415,6 +437,13 @@ package org.gestouch.gestures
 					{
 						// Other gesture might fail soon, so we postpone state change
 						_pendingRecognizedState = newState;
+						
+						for (key in _gesturesToFail)
+						{
+							gestureToFail = key as Gesture;
+							gestureToFail.addEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler, false, 0, true);
+						}
+						
 						return false;
 					}
 					// else if gesture is in IDLE state it means it doesn't track anything,
@@ -430,12 +459,12 @@ package org.gestouch.gestures
 				}
 			}
 				
-			var oldState:uint = _state;			
+			var oldState:GestureState = _state;	
 			_state = newState;
 			
-			if (((GestureState.CANCELLED | GestureState.RECOGNIZED | GestureState.ENDED | GestureState.FAILED) & _state) > 0)
+			if (_state.isEndState)
 			{
-				_gesturesManager.gestouch_internal::scheduleGestureStateReset(this);
+				_gesturesManager.scheduleGestureStateReset(this);
 			}
 			
 			//TODO: what if RTE happens in event handlers?
@@ -447,14 +476,14 @@ package org.gestouch.gestures
 			
 			if (_state == GestureState.BEGAN || _state == GestureState.RECOGNIZED)
 			{
-				_gesturesManager.gestouch_internal::onGestureRecognized(this);
+				_gesturesManager.onGestureRecognized(this);
 			}
 			
 			return true;
 		}
 		
 		
-		gestouch_internal function setState_internal(state:uint):void
+		gestouch_internal function setState_internal(state:GestureState):void
 		{
 			setState(state);
 		}
@@ -481,7 +510,7 @@ package org.gestouch.gestures
 			updateCentralPoint();
 			_location.x = _centralPoint.x;
 			_location.y = _centralPoint.y;
-			_localLocation = target.globalToLocal(_location);
+			_localLocation = targetAdapter.globalToLocal(_location);
 		}
 		
 		
@@ -513,12 +542,6 @@ package org.gestouch.gestures
 			
 			if (_touchesCount == 1 && state == GestureState.IDLE)
 			{
-				for (var key:* in _gesturesToFail)
-				{
-					var gestureToFail:Gesture = key as Gesture;
-					gestureToFail.addEventListener(GestureStateEvent.STATE_CHANGE, gestureToFail_stateChangeHandler, false, 0, true);
-				}
-				
 				setState(GestureState.POSSIBLE);
 			}
 		}
@@ -542,10 +565,7 @@ package org.gestouch.gestures
 		
 		protected function gestureToFail_stateChangeHandler(event:GestureStateEvent):void
 		{
-			if (state != GestureState.POSSIBLE)
-				return;//just in case..FIXME?
-			
-			if (!_pendingRecognizedState)
+			if (!_pendingRecognizedState || state != GestureState.POSSIBLE)
 				return;
 			
 			if (event.newState == GestureState.FAILED)
@@ -560,13 +580,18 @@ package org.gestouch.gestures
 					}
 				}
 				
+				// at this point all gestures-to-fail are either in IDLE or in FAILED states
 				if (setState(_pendingRecognizedState))
 				{
 					onDelayedRecognize();
 				}
 			}
-			else if (event.newState != GestureState.POSSIBLE)
+			else if (event.newState != GestureState.IDLE && event.newState != GestureState.POSSIBLE)
 			{
+				// NB: _other_ gesture may switch to IDLE state if it was in FAILED when
+				// _this_ gesture initially attempted to switch to one of recognized state.
+				// ...and that's OK (we ignore that)
+				
 				setState(GestureState.FAILED);
 			}
 		}

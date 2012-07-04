@@ -1,6 +1,5 @@
 package org.gestouch.core
 {
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
 
@@ -19,13 +18,15 @@ package org.gestouch.core
 		/**
 		 * The original event target for this touch (touch began with).
 		 */
-		public var target:InteractiveObject;
+		public var target:Object;
 		
 		public var sizeX:Number;
 		public var sizeY:Number;
 		public var pressure:Number;
 		
 //		public var lastMove:Point;
+
+		use namespace gestouch_internal;
 		
 		
 		public function Touch(id:uint = 0)
@@ -39,13 +40,16 @@ package org.gestouch.core
 		{
 			return _location.clone();
 		}
-		gestouch_internal function setLocation(value:Point):void
+		gestouch_internal function setLocation(x:Number, y:Number, time:uint):void
 		{
-			_location = value;
+			_location = new Point(x, y);
 			_beginLocation = _location.clone();
 			_previousLocation = _location.clone();
+			
+			_time = time;
+			_beginTime = time;
 		}
-		gestouch_internal function updateLocation(x:Number, y:Number):void
+		gestouch_internal function updateLocation(x:Number, y:Number, time:uint):void
 		{
 			if (_location)
 			{
@@ -53,10 +57,11 @@ package org.gestouch.core
 				_previousLocation.y = _location.y;
 				_location.x = x;
 				_location.y = y;
+				_time = time;
 			}
 			else
 			{
-				gestouch_internal::setLocation(new Point(x, y));
+				setLocation(x, y, time);
 			}
 		}
 		

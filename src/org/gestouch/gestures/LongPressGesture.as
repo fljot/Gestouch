@@ -4,11 +4,15 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.LongPressGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
+	/**
+	 * 
+	 * @eventType org.gestouch.events.LongPressGestureEvent
+	 */
+	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
 	/**
 	 * TODO: -location
 	 * - check on iOS (Obj-C) what happens when numTouchesRequired=2, two finger down, then quickly release one.
@@ -30,7 +34,7 @@ package org.gestouch.gestures
 		protected var _numTouchesRequiredReached:Boolean;
 		
 		
-		public function LongPressGesture(target:InteractiveObject = null)
+		public function LongPressGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -124,7 +128,7 @@ package org.gestouch.gestures
 			//TODO: check proper condition (behavior) on iOS native
 			if (_numTouchesRequiredReached)
 			{
-				if (((GestureState.BEGAN | GestureState.CHANGED) & state) > 0)
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
 					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
