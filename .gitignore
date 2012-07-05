@@ -9,3 +9,9 @@ wiki/
 Thumbs.db
 .DS_Store
 build.properties
+
+target/
+.idea/
+*.iws
+*.ipr
+*.iml
