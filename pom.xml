@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.gestouch</groupId>
+	<artifactId>gestouch</artifactId>
+	<packaging>swc</packaging>
+	<version>0.4-beta-SNAPSHOT</version>
+
+	<properties>
+		<flexmojos.version>4.2-beta</flexmojos.version>
+		<flex.framework.version>4.5.1.21328</flex.framework.version>
+		<playerglobal.version>10.0.0</playerglobal.version>
+	</properties>
+
+	<build>
+		<sourceDirectory>src/main/flex</sourceDirectory>
+
+		<plugins>
+			<plugin>
+				<groupId>org.sonatype.flexmojos</groupId>
+				<artifactId>flexmojos-maven-plugin</artifactId>
+				<version>${flexmojos.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<storepass/>
+					<skipTests>true</skipTests>
+					<skipTest>true</skipTest>
+					<keepAs3Metadatas>
+						<keepAs3Metadata>Abstract</keepAs3Metadata>
+					</keepAs3Metadatas>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.adobe.flex</groupId>
+						<artifactId>compiler</artifactId>
+						<version>${flex.framework.version}</version>
+						<type>pom</type>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.flexmojos</groupId>
+				<artifactId>flexmojos-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>asdoc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<storepass />
+					<keepXml>true</keepXml>
+					<skipXsl>true</skipXsl>
+					<windowTitle>Gestouch ${project.version}</windowTitle>
+					<mainTitle>Gestouch ${project.version}</mainTitle>
+					<footer>Gestouch - http://github.com/fljot/Gestouch/ - Documentation generated at: ${maven.build.timestamp}</footer>
+				</configuration>
+			</plugin>
+		</plugins>
+
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.adobe.flex</groupId>
+			<artifactId>compiler</artifactId>
+			<version>${flex.framework.version}</version>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.adobe.flex.framework</groupId>
+			<artifactId>flex-framework</artifactId>
+			<version>${flex.framework.version}</version>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
+			<groupId>com.gamua</groupId>
+			<artifactId>starling-framework</artifactId>
+			<version>[1.1,]</version>
+			<type>swc</type>
+		</dependency>
+	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>sonatype-repository</id>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>flex-mojos-repository</id>
+			<url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>trylogic</id>
+			<name>Trylogic</name>
+			<url>http://repo.trylogic.ru/content/repositories/public/</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</snapshots>
+			<layout>default</layout>
+		</repository>
+
+		<repository>
+			<id>trylogic-releases</id>
+			<name>Trylogic releases</name>
+			<url>http://repo.trylogic.ru/content/repositories/releases/</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>sonatype-repository</id>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>flex-mojos-repository</id>
+			<url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>trylogic</id>
+			<name>Trylogic</name>
+			<url>http://repo.trylogic.ru/content/repositories/public/</url>
+			<layout>default</layout>
+		</snapshotRepository>
+
+		<repository>
+			<id>trylogic-releases</id>
+			<name>Trylogic releases</name>
+			<url>http://repo.trylogic.ru/content/repositories/releases/</url>
+			<layout>default</layout>
+		</repository>
+	</distributionManagement>
+</project>
