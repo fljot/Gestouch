@@ -66,27 +66,6 @@
 					<footer>Gestouch - http://github.com/fljot/Gestouch/ - Documentation generated at: ${maven.build.timestamp}</footer>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<groupId>org.sonatype.flexmojos</groupId>
-				<artifactId>flexmojos-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>install</phase>
-						<goals>
-							<goal>asdoc</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<storepass/>
-					<keepXml>true</keepXml>
-					<skipXsl>true</skipXsl>
-					<windowTitle>Gestouch ${project.version}</windowTitle>
-					<mainTitle>Gestouch ${project.version}</mainTitle>
-					<footer>Gestouch - http://github.com/fljot/Gestouch/ - Documentation generated at: ${maven.build.timestamp}</footer>
-				</configuration>
-			</plugin>
 		</plugins>
 
 	</build>
