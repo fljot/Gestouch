@@ -1,5 +1,6 @@
 package org.gestouch.core
 {
+	import flash.display.Stage;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.geom.Point;
@@ -43,6 +44,10 @@ package org.gestouch.core
 		public function contains(object:Object):Boolean
 		{
 			const targetAsDOC:DisplayObjectContainer = this.target as DisplayObjectContainer;
+			if (targetAsDOC is Stage)
+			{
+				return true;
+			}
 			const objectAsDO:DisplayObject = object as DisplayObject;
 			if (objectAsDO)
 			{
