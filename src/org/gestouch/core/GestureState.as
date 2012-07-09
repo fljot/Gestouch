@@ -57,6 +57,7 @@ package org.gestouch.core
 			CHANGED.setValidNextStates(CHANGED, ENDED, CANCELLED);
 			ENDED.setValidNextStates(IDLE);
 			FAILED.setValidNextStates(IDLE);
+			CANCELLED.setValidNextStates(IDLE);
 			
 			allStatesInitialized = true;
 		}
