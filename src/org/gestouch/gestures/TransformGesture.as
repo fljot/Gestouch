@@ -99,51 +99,61 @@ package org.gestouch.gestures
 			var prevLocation:Point = _location.clone();
 			updateLocation();
 			
-			var recognized:Boolean = true;
+			var currTransformVector:Point;
 			
-			if (state == GestureState.POSSIBLE && slop > 0 && touch.locationOffset.length < slop)
+			if (state == GestureState.POSSIBLE)
 			{
-				recognized = false;
+				if (slop > 0 && touch.locationOffset.length < slop)
+				{
+					// Not recognized yet
+					if (_touch2)
+					{
+						// Recalculate _transformVector to avoid initial "jump" on recognize
+						_transformVector = _touch2.location.subtract(_touch1.location);
+					}
+					return;
+				}
 			}
 			
-			if (recognized)
+			if (_touch2 && !currTransformVector)
 			{
-				var prevLocalLocation:Point;
-				var offsetX:Number = _location.x - prevLocation.x;
-				var offsetY:Number = _location.y - prevLocation.y;
-				var scale:Number = 1;
-				var rotation:Number = 0;
-				if (_touch2)
+				currTransformVector = _touch2.location.subtract(_touch1.location);
+			}
+			
+			var prevLocalLocation:Point;
+			var offsetX:Number = _location.x - prevLocation.x;
+			var offsetY:Number = _location.y - prevLocation.y;
+			var scale:Number = 1;
+			var rotation:Number = 0;
+			if (_touch2)
+			{
+				rotation = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
+				rotation *= GestureUtils.RADIANS_TO_DEGREES;
+				scale = currTransformVector.length / _transformVector.length;
+				_transformVector = _touch2.location.subtract(_touch1.location);
+			}
+			
+			
+			if (state == GestureState.POSSIBLE)
+			{
+				if (setState(GestureState.BEGAN) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
 				{
-					var currTransformVector:Point = _touch2.location.subtract(_touch1.location);
-					rotation = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
-					rotation *= GestureUtils.RADIANS_TO_DEGREES;
-					scale = currTransformVector.length / _transformVector.length;
-					_transformVector = _touch2.location.subtract(_touch1.location);
+					// Note that we dispatch previous location point which gives a way to perform
+					// accurate UI redraw. See examples project for more info.
+					prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
+					dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.BEGAN,
+						prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
 				}
-				
-				
-				if (state == GestureState.POSSIBLE)
+			}
+			else
+			{
+				if (setState(GestureState.CHANGED) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
 				{
-					if (setState(GestureState.BEGAN) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-					{
-						// Note that we dispatch previous location point which gives a way to perform
-						// accurate UI redraw. See examples project for more info.
-						prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
-						dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.BEGAN,
-							prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
-					}
-				}
-				else
-				{
-					if (setState(GestureState.CHANGED) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-					{
-						// Note that we dispatch previous location point which gives a way to perform
-						// accurate UI redraw. See examples project for more info.
-						prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
-						dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.CHANGED,
-							prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
-					}
+					// Note that we dispatch previous location point which gives a way to perform
+					// accurate UI redraw. See examples project for more info.
+					prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
+					dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.CHANGED,
+						prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
 				}
 			}
 		}
