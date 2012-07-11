@@ -128,7 +128,6 @@ package org.gestouch.gestures
 			if (_touch2)
 			{
 				rotation = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
-				rotation *= GestureUtils.RADIANS_TO_DEGREES;
 				scale = currTransformVector.length / _transformVector.length;
 				_transformVector = _touch2.location.subtract(_touch1.location);
 			}

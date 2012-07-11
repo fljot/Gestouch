@@ -102,8 +102,6 @@ package org.gestouch.gestures
 				rotation = rotation > 0 ? rotation - _thresholdAngle : rotation + _thresholdAngle;
 			}
 			
-			// TODO: switch to radians everywhere
-			rotation *= GestureUtils.RADIANS_TO_DEGREES;
 			_transformVector.x = currTransformVector.x;
 			_transformVector.y = currTransformVector.y;
 			
