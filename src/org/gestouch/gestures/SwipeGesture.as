@@ -1,5 +1,6 @@
 package org.gestouch.gestures
 {
+	import org.gestouch.utils.GestureUtils;
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.SwipeGestureEvent;
@@ -20,12 +21,13 @@ package org.gestouch.gestures
 	 */
 	public class SwipeGesture extends Gesture
 	{
+		private static const ANGLE:Number = 30 * GestureUtils.DEGREES_TO_RADIANS;
+		
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		public var numTouchesRequired:uint = 1;
-		public var minVelocity:Number = 0.8;
+		public var minVelocity:Number = 0.6;
 		public var minOffset:Number = Gesture.DEFAULT_SLOP;
 		public var direction:uint = SwipeGestureDirection.ORTHOGONAL;
-		public var maxDirectionalOffset:Number = Gesture.DEFAULT_SLOP << 1;
 		
 		protected var _offset:Point = new Point();
 		protected var _startTime:int;
@@ -103,6 +105,10 @@ package org.gestouch.gestures
 			if (touchesCount < numTouchesRequired)
 				return;
 			
+			var totalTime:int = touch.time - _startTime;
+			if (totalTime == 0)
+				return;//It was somehow THAT MUCH performant on one Android tablet
+			
 			var prevCentralPointX:Number = _centralPoint.x;
 			var prevCentralPointY:Number = _centralPoint.y;
 			updateCentralPoint();
@@ -110,28 +116,27 @@ package org.gestouch.gestures
 			_offset.x = _centralPoint.x - _location.x;
 			_offset.y = _centralPoint.y - _location.y;
 			var offsetLength:Number = _offset.length;
-					
+			
 			if (offsetLength < slop)
 			{
-				// no need in processing - we're in the very beginning of movement
+				// no need in processing yet - we're in the very beginning of movement
 				return;
 			}
 			
 			// average velocity (total offset to total duration)
 			_prevAvrgVel.x = _avrgVel.x;
 			_prevAvrgVel.y = _avrgVel.y;
-			var absPrevAvrgVel:Number = _prevAvrgVel.length;
-			var totalTime:int = touch.time - _startTime;
 			_avrgVel.x = _offset.x / totalTime;
 			_avrgVel.y = _offset.y / totalTime;
 			var avrgVel:Number = _avrgVel.length;
 			
-			
-			if (avrgVel * 0.95 < absPrevAvrgVel)
+			if (avrgVel * 0.95 < _prevAvrgVel.length)
 			{
 				_decelerationCounter++;
 			}
-			if (_decelerationCounter > 5 || avrgVel < 0.1)
+			// We should quickly fail if we have noticable deceleration
+			// or average velocity is too low
+			if (_decelerationCounter > 5 || avrgVel < 0.05)
 			{
 				setState(GestureState.FAILED);
 				return;
@@ -139,9 +144,6 @@ package org.gestouch.gestures
 			
 			if (_noDirection)
 			{
-				// We should quickly fail if we have noticable deceleration
-				// or first movement happend way later after touch
-				
 				if (avrgVel >= minVelocity && (minOffset != minOffset || offsetLength >= minOffset))
 				{
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
@@ -169,9 +171,9 @@ package org.gestouch.gestures
 						// horizontal velocity is greater then vertical, but we're not interested in any horizontal direction
 						setState(GestureState.FAILED);
 					}
-					else if (recentOffsetX < 0 && (direction & SwipeGestureDirection.LEFT) == 0 ||
-						recentOffsetX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0 ||
-						Math.abs(_offset.y) > maxDirectionalOffset)
+					else if ((recentOffsetX < 0 && (direction & SwipeGestureDirection.LEFT) == 0) ||
+						(recentOffsetX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0) ||
+						Math.abs(Math.atan(_offset.y/_offset.x)) > ANGLE)
 					{
 						// movement in opposite direction
 						// or too much diagonally
@@ -197,9 +199,9 @@ package org.gestouch.gestures
 						// horizontal velocity is greater then vertical, but we're not interested in any horizontal direction
 						setState(GestureState.FAILED);
 					}
-					else if (recentOffsetY < 0 && (direction & SwipeGestureDirection.UP) == 0 ||
-						recentOffsetY > 0 && (direction & SwipeGestureDirection.DOWN) == 0 ||
-						Math.abs(_offset.x) > maxDirectionalOffset)
+					else if ((recentOffsetY < 0 && (direction & SwipeGestureDirection.UP) == 0) ||
+						(recentOffsetY > 0 && (direction & SwipeGestureDirection.DOWN) == 0) ||
+						Math.abs(Math.atan(_offset.x/_offset.y)) > ANGLE)
 					{
 						// movement in opposite direction
 						// or too much diagonally
@@ -221,7 +223,7 @@ package org.gestouch.gestures
 					setState(GestureState.FAILED);
 				}
 			}
-		}		
+		}
 		
 		
 		override protected function onTouchEnd(touch:Touch):void
