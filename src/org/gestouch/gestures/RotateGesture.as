@@ -3,7 +3,6 @@ package org.gestouch.gestures
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.RotateGestureEvent;
-	import org.gestouch.utils.GestureUtils;
 
 	import flash.geom.Point;
 
