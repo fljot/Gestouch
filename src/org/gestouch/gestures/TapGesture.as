@@ -14,7 +14,6 @@ package org.gestouch.gestures
 	 */
 	[Event(name="gestureTap", type="org.gestouch.events.TapGestureEvent")]
 	/**
-	 * TODO: check failing conditions (iDevice)
 	 * 
 	 * @author Pavel fljot
 	 */
@@ -22,7 +21,7 @@ package org.gestouch.gestures
 	{
 		public var numTouchesRequired:uint = 1;
 		public var numTapsRequired:uint = 1;
-		public var slop:Number = Gesture.DEFAULT_SLOP;
+		public var slop:Number = Gesture.DEFAULT_SLOP << 2;//iOS has 45px for 132 dpi screen
 		public var maxTapDelay:uint = 400;
 		public var maxTapDuration:uint = 1500;
 		
@@ -50,17 +49,17 @@ package org.gestouch.gestures
 			return TapGesture;
 		}
 		
-			
+		
 		override public function reset():void
 		{
 			_numTouchesRequiredReached = false;
 			_tapCounter = 0;
 			_timer.reset();
-
+			
 			super.reset();
 		}
 		
-			
+		
 		override public function canPreventGesture(preventedGesture:Gesture):Boolean
 		{
 			if (preventedGesture is TapGesture &&
@@ -106,8 +105,8 @@ package org.gestouch.gestures
 			
 			if (touchesCount == numTouchesRequired)
 			{
-				_numTouchesRequiredReached = true;				
-				updateLocation();		
+				_numTouchesRequiredReached = true;
+				updateLocation();
 			}
 		}
 		
@@ -125,7 +124,6 @@ package org.gestouch.gestures
 		{
 			if (!_numTouchesRequiredReached)
 			{
-				//TODO: check this condition on iDevice
 				setState(GestureState.FAILED);
 			}
 			else if (touchesCount == 0)
