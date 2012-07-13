@@ -14,8 +14,8 @@ package org.gestouch.gestures
 	 */
 	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
 	/**
-	 * TODO: -location
-	 * - check on iOS (Obj-C) what happens when numTouchesRequired=2, two finger down, then quickly release one.
+	 * TODO:
+	 * - add numTapsRequired
 	 * 
 	 * @author Pavel fljot
 	 */
@@ -25,9 +25,9 @@ package org.gestouch.gestures
 		/**
 		 * The minimum time interval in millisecond fingers must press on the target for the gesture to be recognized.
 		 * 
-         * @default 500
-         */
-        public var minPressDuration:uint = 500;
+		 * @default 500
+		 */
+		public var minPressDuration:uint = 500;
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
 		protected var _timer:Timer;
@@ -118,7 +118,6 @@ package org.gestouch.gestures
 		
 		override protected function onTouchEnd(touch:Touch):void
 		{
-			//TODO: check proper condition (behavior) on iOS native
 			if (_numTouchesRequiredReached)
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
@@ -141,7 +140,7 @@ package org.gestouch.gestures
 			}
 		}
 		
-			
+		
 		override protected function onDelayedRecognize():void
 		{
 			if (hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
