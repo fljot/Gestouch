@@ -274,7 +274,7 @@ package org.gestouch.core
 		{
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			var gesture:Gesture;
-			var i:int = gesturesForTouch.length;
+			var i:uint = gesturesForTouch.length;
 			while (i-- > 0)
 			{
 				gesture = gesturesForTouch[i];
@@ -296,7 +296,7 @@ package org.gestouch.core
 		{
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			var gesture:Gesture;
-			var i:int = gesturesForTouch.length;
+			var i:uint = gesturesForTouch.length;
 			while (i-- > 0)
 			{
 				gesture = gesturesForTouch[i];
