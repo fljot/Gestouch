@@ -200,20 +200,22 @@ package org.gestouch.core
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			if (!gesturesForTouch)
 			{
-				gesturesForTouch = _gesturesForTouchMap[touch] = new Vector.<Gesture>();
+				gesturesForTouch = new Vector.<Gesture>();
+				_gesturesForTouchMap[touch] = gesturesForTouch;
 			}
 			else
 			{
+				// touch object may be pooled in the future
 				gesturesForTouch.length = 0;
 			}
 			
 			var target:Object = touch.target;
 			const displayListAdapter:IDisplayListAdapter = Gestouch.gestouch_internal::getDisplayListAdapter(target);
-			const hierarchy:Vector.<Object> = displayListAdapter.getHierarchy(target);
-			if (!hierarchy)
+			if (!displayListAdapter)
 			{
 				throw new Error("Display list adapter not found for target of type '" + getQualifiedClassName(target) + "'.");
 			}
+			const hierarchy:Vector.<Object> = displayListAdapter.getHierarchy(target);
 			const hierarchyLength:uint = hierarchy.length;
 			if (hierarchyLength == 0)
 			{
