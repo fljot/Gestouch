@@ -53,7 +53,7 @@ package org.gestouch.core
 		
 		protected function resetDirtyGestures():void
 		{
-			for (var gesture:* in _dirtyGesturesMap)
+			for (var gesture:Object in _dirtyGesturesMap)
 			{
 				(gesture as Gesture).reset();
 			}
@@ -193,11 +193,6 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchBegin(touch:Touch):void
 		{
-			if (_dirtyGesturesCount > 0)
-			{
-				resetDirtyGestures();
-			}
-			
 			var gesture:Gesture;
 			var i:uint;
 			
@@ -261,7 +256,7 @@ package org.gestouch.core
 			{
 				gesture = gesturesForTouch[i];
 				// Check for state because previous (i+1) gesture may already abort current (i) one
-				if (gesture.state != GestureState.FAILED)
+				if (!_dirtyGesturesMap[gesture])
 				{
 					gesture.touchBeginHandler(touch);
 				}
@@ -275,11 +270,6 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchMove(touch:Touch):void
 		{
-			if (_dirtyGesturesCount > 0)
-			{
-				resetDirtyGestures();
-			}
-			
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			var gesture:Gesture;
 			var i:int = gesturesForTouch.length;
@@ -287,7 +277,7 @@ package org.gestouch.core
 			{
 				gesture = gesturesForTouch[i];
 				
-				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
+				if (!_dirtyGesturesMap[gesture] && gesture.isTrackingTouch(touch.id))
 				{
 					gesture.touchMoveHandler(touch);
 				}
@@ -302,11 +292,6 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchEnd(touch:Touch):void
 		{
-			if (_dirtyGesturesCount > 0)
-			{
-				resetDirtyGestures();
-			}
-			
 			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
 			var gesture:Gesture;
 			var i:int = gesturesForTouch.length;
@@ -314,7 +299,7 @@ package org.gestouch.core
 			{
 				gesture = gesturesForTouch[i];
 				
-				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
+				if (!_dirtyGesturesMap[gesture] && gesture.isTrackingTouch(touch.id))
 				{
 					gesture.touchEndHandler(touch);
 				}
