@@ -243,7 +243,7 @@ package org.gestouch.core
 					i = gesturesForTarget.length;
 					while (i-- > 0)
 					{
-						gesture = gesturesForTarget[i] as Gesture;
+						gesture = gesturesForTarget[i];
 						if (gesture.enabled &&
 							(!gesture.delegate || gesture.delegate.gestureShouldReceiveTouch(gesture, touch)))
 						{
@@ -259,7 +259,7 @@ package org.gestouch.core
 			i = gesturesForTouch.length;
 			while (i-- > 0)
 			{
-				gesture = gesturesForTouch[i] as Gesture;
+				gesture = gesturesForTouch[i];
 				// Check for state because previous (i+1) gesture may already abort current (i) one
 				if (gesture.state != GestureState.FAILED)
 				{
@@ -285,7 +285,7 @@ package org.gestouch.core
 			var i:int = gesturesForTouch.length;
 			while (i-- > 0)
 			{
-				gesture = gesturesForTouch[i] as Gesture;
+				gesture = gesturesForTouch[i];
 				
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
 				{
@@ -312,7 +312,7 @@ package org.gestouch.core
 			var i:int = gesturesForTouch.length;
 			while (i-- > 0)
 			{
-				gesture = gesturesForTouch[i] as Gesture;
+				gesture = gesturesForTouch[i];
 				
 				if (gesture.state != GestureState.FAILED && gesture.isTrackingTouch(touch.id))
 				{
