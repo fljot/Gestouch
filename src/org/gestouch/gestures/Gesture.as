@@ -407,6 +407,14 @@ package org.gestouch.gestures
 		}
 		
 		
+		/**
+		 * 
+		 */
+		protected function onTouchCancel(touch:Touch):void
+		{
+		}
+		
+		
 		protected function setState(newState:GestureState):Boolean
 		{
 			if (_state == newState && _state == GestureState.CHANGED)
@@ -573,6 +581,27 @@ package org.gestouch.gestures
 			_touchesCount--;
 			
 			onTouchEnd(touch);
+		}
+		
+		
+		gestouch_internal function touchCancelHandler(touch:Touch):void
+		{
+			delete _touchesMap[touch.id];
+			_touchesCount--;
+			
+			onTouchCancel(touch);
+			
+			if (!state.isEndState)
+			{
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
+				{
+					setState(GestureState.CANCELLED);
+				}
+				else
+				{
+					setState(GestureState.FAILED);
+				}
+			}
 		}
 		
 		

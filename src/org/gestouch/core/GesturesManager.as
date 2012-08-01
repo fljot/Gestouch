@@ -313,7 +313,20 @@ package org.gestouch.core
 		
 		gestouch_internal function onTouchCancel(touch:Touch):void
 		{
-			//TODO
+			var gesturesForTouch:Vector.<Gesture> = _gesturesForTouchMap[touch] as Vector.<Gesture>;
+			var gesture:Gesture;
+			var i:uint = gesturesForTouch.length;
+			while (i-- > 0)
+			{
+				gesture = gesturesForTouch[i];
+				
+				if (!_dirtyGesturesMap[gesture] && gesture.isTrackingTouch(touch.id))
+				{
+					gesture.touchCancelHandler(touch);
+				}
+			}
+			
+			gesturesForTouch.length = 0;// release for GC
 		}
 		
 		
