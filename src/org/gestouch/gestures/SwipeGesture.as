@@ -120,6 +120,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == SwipeGestureEvent.GESTURE_SWIPE || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function preinit():void
 		{
 			super.preinit();

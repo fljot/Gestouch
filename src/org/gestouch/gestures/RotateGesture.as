@@ -56,6 +56,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == RotateGestureEvent.GESTURE_ROTATE || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > 2)

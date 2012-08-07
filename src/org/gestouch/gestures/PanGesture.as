@@ -112,6 +112,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == PanGestureEvent.GESTURE_PAN || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > maxNumTouchesRequired)

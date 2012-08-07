@@ -198,7 +198,18 @@ package org.gestouch.gestures
 		//
 		//  Public methods
 		//
-		//--------------------------------------------------------------------------		
+		//--------------------------------------------------------------------------
+		
+		override public function addEventListener(type:String, listener:Function, useCapture:Boolean = false, priority:int = 0, useWeakReference:Boolean = false):void
+		{
+			if (!eventTypeIsValid(type))
+			{
+				throw new ArgumentError("Event type does not match any of allowed values.");
+			}
+			
+			super.addEventListener(type, listener, useCapture, priority, useWeakReference);
+		}
+		
 		
 		[Abstract]
 		/**
@@ -543,6 +554,13 @@ package org.gestouch.gestures
 		protected function onDelayedRecognize():void
 		{
 			
+		}
+		
+		
+		protected function eventTypeIsValid(type:String):Boolean
+		{
+			// propertyChange just in case for bindings?
+			return type == GestureStateEvent.STATE_CHANGE || type == "propertyChange";
 		}
 		
 		

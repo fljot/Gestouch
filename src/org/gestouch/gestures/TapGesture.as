@@ -79,6 +79,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == TapGestureEvent.GESTURE_TAP || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function preinit():void
 		{
 			super.preinit();

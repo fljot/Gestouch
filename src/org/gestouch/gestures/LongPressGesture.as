@@ -53,7 +53,7 @@ package org.gestouch.gestures
 			return TapGesture;
 		}
 		
-			
+		
 		override public function reset():void
 		{
 			super.reset();
@@ -70,6 +70,12 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
+		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == LongPressGestureEvent.GESTURE_LONG_PRESS || super.eventTypeIsValid(type);
+		}
+		
 		
 		override protected function preinit():void
 		{
