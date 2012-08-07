@@ -1,8 +1,11 @@
 package org.gestouch.core
 {
-	import flash.utils.getQualifiedClassName;
+	import org.gestouch.extensions.native.NativeDisplayListAdapter;
+	import org.gestouch.extensions.native.NativeTouchHitTester;
+
 	import flash.display.DisplayObject;
 	import flash.utils.Dictionary;
+	import flash.utils.getQualifiedClassName;
 
 
 	/**
@@ -115,7 +118,8 @@ package org.gestouch.core
 		
 		private static function initClass():void
 		{
-			addDisplayListAdapter(DisplayObject, new DisplayListAdapter());
+			addTouchHitTester(new NativeTouchHitTester());
+			addDisplayListAdapter(DisplayObject, new NativeDisplayListAdapter());
 		}
 	}
 }

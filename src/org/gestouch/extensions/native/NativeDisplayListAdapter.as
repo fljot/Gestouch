@@ -1,21 +1,22 @@
-package org.gestouch.core
+package org.gestouch.extensions.native
 {
-	import flash.display.Stage;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.display.Stage;
 	import flash.geom.Point;
 	import flash.utils.Dictionary;
+	import org.gestouch.core.IDisplayListAdapter;
 
 
 	/**
 	 * @author Pavel fljot
 	 */
-	final public class DisplayListAdapter implements IDisplayListAdapter
+	final public class NativeDisplayListAdapter implements IDisplayListAdapter
 	{
 		private var _targetWeekStorage:Dictionary;
 		
 		
-		public function DisplayListAdapter(target:DisplayObject = null)
+		public function NativeDisplayListAdapter(target:DisplayObject = null)
 		{
 			if (target)
 			{
@@ -97,7 +98,7 @@ package org.gestouch.core
 		
 		public function reflect():Class
 		{
-			return DisplayListAdapter;
+			return NativeDisplayListAdapter;
 		}
 	}
 }

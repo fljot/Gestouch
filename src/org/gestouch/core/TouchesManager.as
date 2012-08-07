@@ -23,8 +23,6 @@ package org.gestouch.core
 		public function TouchesManager(gesturesManager:GesturesManager)
 		{
 			_gesturesManager = gesturesManager;
-			
-			addTouchHitTester(new DefaultTouchHitTester());
 		}
 		
 		
@@ -222,20 +220,5 @@ package org.gestouch.core
 			
 			return _hitTesters.indexOf(x) > _hitTesters.indexOf(y) ? 1 : -1;
 		}
-	}
-}
-
-
-import flash.geom.Point;
-import flash.display.InteractiveObject;
-
-import org.gestouch.core.ITouchHitTester;
-
-
-class DefaultTouchHitTester implements ITouchHitTester
-{
-	public function hitTest(point:Point, nativeTarget:InteractiveObject):Object
-	{
-		return nativeTarget;
 	}
 }
