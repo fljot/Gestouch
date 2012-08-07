@@ -4,14 +4,16 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.TapGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
+	/**
+	 * 
+	 * @eventType org.gestouch.events.TapGestureEvent
+	 */
 	[Event(name="gestureTap", type="org.gestouch.events.TapGestureEvent")]
 	/**
-	 * TODO: check failing conditions (iDevice)
 	 * 
 	 * @author Pavel fljot
 	 */
@@ -19,7 +21,7 @@ package org.gestouch.gestures
 	{
 		public var numTouchesRequired:uint = 1;
 		public var numTapsRequired:uint = 1;
-		public var slop:Number = Gesture.DEFAULT_SLOP;
+		public var slop:Number = Gesture.DEFAULT_SLOP << 2;//iOS has 45px for 132 dpi screen
 		public var maxTapDelay:uint = 400;
 		public var maxTapDuration:uint = 1500;
 		
@@ -28,7 +30,7 @@ package org.gestouch.gestures
 		protected var _tapCounter:uint = 0;
 		
 		
-		public function TapGesture(target:InteractiveObject = null)
+		public function TapGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -47,17 +49,17 @@ package org.gestouch.gestures
 			return TapGesture;
 		}
 		
-			
+		
 		override public function reset():void
 		{
 			_numTouchesRequiredReached = false;
 			_tapCounter = 0;
 			_timer.reset();
-
+			
 			super.reset();
 		}
 		
-			
+		
 		override public function canPreventGesture(preventedGesture:Gesture):Boolean
 		{
 			if (preventedGesture is TapGesture &&
@@ -77,6 +79,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == TapGestureEvent.GESTURE_TAP || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function preinit():void
 		{
 			super.preinit();
@@ -90,9 +98,7 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				// We put more fingers then required at the same time,
-				// so treat that as failed
-				setState(GestureState.FAILED);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			
@@ -105,7 +111,8 @@ package org.gestouch.gestures
 			
 			if (touchesCount == numTouchesRequired)
 			{
-				_numTouchesRequiredReached = true;				
+				_numTouchesRequiredReached = true;
+				updateLocation();
 			}
 		}
 		
@@ -123,7 +130,6 @@ package org.gestouch.gestures
 		{
 			if (!_numTouchesRequiredReached)
 			{
-				//TODO: check this condition on iDevice
 				setState(GestureState.FAILED);
 			}
 			else if (touchesCount == 0)
@@ -136,7 +142,6 @@ package org.gestouch.gestures
 				
 				if (_tapCounter == numTapsRequired)
 				{
-					updateLocation();
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(TapGestureEvent.GESTURE_TAP))
 					{
 						dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GestureState.RECOGNIZED,

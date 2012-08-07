@@ -3,35 +3,85 @@ package org.gestouch.gestures
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.SwipeGestureEvent;
+	import org.gestouch.utils.GestureUtils;
 
-	import flash.display.InteractiveObject;
+	import flash.events.TimerEvent;
 	import flash.geom.Point;
+	import flash.system.Capabilities;
+	import flash.utils.Timer;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.SwipeGestureEvent
+	 */
 	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
 	/**
-	 * TODO:
-	 * -check native behavior on iDevice
+	 * Recognition logic:<br/>
+	 * 1. should be recognized during <code>maxDuration</code> period<br/>
+	 * 2. velocity >= minVelocity <b>OR</b> offset >= minOffset
+	 * 
 	 * 
 	 * @author Pavel fljot
 	 */
 	public class SwipeGesture extends Gesture
 	{
-		public var slop:Number = Gesture.DEFAULT_SLOP;
+		private static const ANGLE:Number = 40 * GestureUtils.DEGREES_TO_RADIANS;
+		private static const MAX_DURATION:uint = 500;
+		private static const MIN_OFFSET:Number = Capabilities.screenDPI / 6;
+		private static const MIN_VELOCITY:Number = 2 * MIN_OFFSET / MAX_DURATION;
+		
+		/**
+		 * "Dirty" region around touch begin location which does not taken into account
+		 * for gesture failing conditions. It might be useful in case your device is too sensitive
+		 * (so when you just touch the <i>screen</i> you get undesired accidental movement).<br/>
+		 * <b>NB! Unlike in other gestures, default value for slop is 0 here.</b>
+		 * 
+		 * @default 0
+		 */
+		public var slop:Number = 0;
 		public var numTouchesRequired:uint = 1;
-		public var minVelocity:Number = 0.8;
-		public var minOffset:Number = Gesture.DEFAULT_SLOP;
 		public var direction:uint = SwipeGestureDirection.ORTHOGONAL;
-		public var maxDirectionalOffset:Number = Gesture.DEFAULT_SLOP << 1;
+		
+		/**
+		 * The duration of period (in milliseconds) in which SwipeGesture must be recognized.
+		 * If gesture is not recognized during this period it fails. Default value is 500 (half a
+		 * second) and generally should not be changed. You can change it though for some special
+		 * cases, most likely together with <code>minVelocity</code> and <code>minOffset</code>
+		 * to achieve really custom behavior. 
+		 * 
+		 * @default 500
+		 * 
+		 * @see #minVelocity
+		 * @see #minOffset
+		 */
+		public var maxDuration:uint = MAX_DURATION;
+		
+		/**
+		 * Minimum offset (in pixels) for gesture to be recognized.
+		 * Default value is <code>Capabilities.screenDPI / 6</code> and generally should not
+		 * be changed.
+		 */
+		public var minOffset:Number = MIN_OFFSET;
+		
+		/**
+		 * Minimum velocity (in pixels per millisecond) for gesture to be recognized.
+		 * Default value is <code>2 * minOffset / maxDuration</code> and generally should not
+		 * be changed.
+		 * 
+		 * @see #minOffset
+		 * @see #minDuration
+		 */
+		public var minVelocity:Number = MIN_VELOCITY;
 		
 		protected var _offset:Point = new Point();
 		protected var _startTime:int;
 		protected var _noDirection:Boolean;
 		protected var _avrgVel:Point = new Point();
-		protected var _prevAvrgVel:Point = new Point();
-		protected var _decelerationCounter:uint = 0;
+		protected var _timer:Timer;
 		
 		
-		public function SwipeGesture(target:InteractiveObject = null)
+		public function SwipeGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -50,14 +100,14 @@ package org.gestouch.gestures
 			return SwipeGesture;
 		}
 		
-			
+		
 		override public function reset():void
 		{
 			_startTime = 0;
 			_offset.x = 0;
 			_offset.y = 0;
-			_decelerationCounter = 0;
-
+			_timer.reset();
+			
 			super.reset();
 		}
 		
@@ -70,12 +120,26 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == SwipeGestureEvent.GESTURE_SWIPE || super.eventTypeIsValid(type);
+		}
+		
+		
+		override protected function preinit():void
+		{
+			super.preinit();
+			
+			_timer = new Timer(maxDuration, 1);
+			_timer.addEventListener(TimerEvent.TIMER_COMPLETE, timer_timerCompleteHandler);
+		}
+		
+		
 		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				//TODO: or ignore?
-				setState(GestureState.FAILED);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			
@@ -83,6 +147,10 @@ package org.gestouch.gestures
 			{
 				// Because we want to fail as quick as possible
 				_startTime = touch.time;
+				
+				_timer.reset();
+				_timer.delay = maxDuration;
+				_timer.start();
 			}
 			if (touchesCount == numTouchesRequired)
 			{
@@ -100,6 +168,10 @@ package org.gestouch.gestures
 			if (touchesCount < numTouchesRequired)
 				return;
 			
+			var totalTime:int = touch.time - _startTime;
+			if (totalTime == 0)
+				return;//It was somehow THAT MUCH performant on one Android tablet
+			
 			var prevCentralPointX:Number = _centralPoint.x;
 			var prevCentralPointY:Number = _centralPoint.y;
 			updateCentralPoint();
@@ -107,43 +179,19 @@ package org.gestouch.gestures
 			_offset.x = _centralPoint.x - _location.x;
 			_offset.y = _centralPoint.y - _location.y;
 			var offsetLength:Number = _offset.length;
-					
-			if (offsetLength < slop)
-			{
-				// no need in processing - we're in the very beginning of movement
-				return;
-			}
 			
 			// average velocity (total offset to total duration)
-			_prevAvrgVel.x = _avrgVel.x;
-			_prevAvrgVel.y = _avrgVel.y;
-			var absPrevAvrgVel:Number = _prevAvrgVel.length;
-			var totalTime:int = touch.time - _startTime;
 			_avrgVel.x = _offset.x / totalTime;
 			_avrgVel.y = _offset.y / totalTime;
 			var avrgVel:Number = _avrgVel.length;
 			
-			
-			if (avrgVel * 0.95 < absPrevAvrgVel)
-			{
-				_decelerationCounter++;
-			}
-			if (_decelerationCounter > 5 || avrgVel < 0.1)
-			{
-				setState(GestureState.FAILED);
-				return;
-			}
-			
 			if (_noDirection)
 			{
-				// We should quickly fail if we have noticable deceleration
-				// or first movement happend way later after touch
-				
-				if (avrgVel >= minVelocity && (minOffset != minOffset || offsetLength >= minOffset))
+				if (avrgVel >= minVelocity || offsetLength >= minOffset)
 				{
 					if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 					{
-						_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+						_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 						dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 							_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 					}
@@ -161,25 +209,25 @@ package org.gestouch.gestures
 				{
 					var absOffsetX:Number = _offset.x > 0 ? _offset.x : -_offset.x;
 					
-					if ((SwipeGestureDirection.HORIZONTAL & direction) == 0)
-					{
-						// horizontal velocity is greater then vertical, but we're not interested in any horizontal direction
-						setState(GestureState.FAILED);
-					}
-					else if (recentOffsetX < 0 && (direction & SwipeGestureDirection.LEFT) == 0 ||
-						recentOffsetX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0 ||
-						Math.abs(_offset.y) > maxDirectionalOffset)
+					if ((recentOffsetX < 0 && (direction & SwipeGestureDirection.LEFT) == 0) ||
+						(recentOffsetX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0) ||
+						Math.abs(Math.atan(_offset.y/_offset.x)) > ANGLE)
 					{
 						// movement in opposite direction
 						// or too much diagonally
-						setState(GestureState.FAILED);
+						
+						// Give some tolerance for accidental offset on finger press (slop)
+						if (offsetLength > slop || slop != slop)//faster isNaN()
+						{
+							setState(GestureState.FAILED);
+						}
 					}
-					else if (absVelX >= minVelocity && (minOffset != minOffset || absOffsetX >= minOffset))
+					else if (absVelX >= minVelocity || absOffsetX >= minOffset)
 					{
 						_offset.y = 0;
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
-							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+							_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 						}
@@ -189,36 +237,37 @@ package org.gestouch.gestures
 				{
 					var absOffsetY:Number = _offset.y > 0 ? _offset.y : -_offset.y;
 					
-					if ((SwipeGestureDirection.VERTICAL & direction) == 0)
-					{
-						// horizontal velocity is greater then vertical, but we're not interested in any horizontal direction
-						setState(GestureState.FAILED);
-					}
-					else if (recentOffsetY < 0 && (direction & SwipeGestureDirection.UP) == 0 ||
-						recentOffsetY > 0 && (direction & SwipeGestureDirection.DOWN) == 0 ||
-						Math.abs(_offset.x) > maxDirectionalOffset)
+					if ((recentOffsetY < 0 && (direction & SwipeGestureDirection.UP) == 0) ||
+						(recentOffsetY > 0 && (direction & SwipeGestureDirection.DOWN) == 0) ||
+						Math.abs(Math.atan(_offset.x/_offset.y)) > ANGLE)
 					{
 						// movement in opposite direction
 						// or too much diagonally
-						setState(GestureState.FAILED);
+						
+						// Give some tolerance for accidental offset on finger press (slop)
+						if (offsetLength > slop || slop != slop)//faster isNaN()
+						{
+							setState(GestureState.FAILED);
+						}
 					}
-					else if (absVelY >= minVelocity && (minOffset != minOffset || absOffsetY >= minOffset))
+					else if (absVelY >= minVelocity || absOffsetY >= minOffset)
 					{
 						_offset.x = 0;
 						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 						{
-							_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+							_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
 						}
 					}
 				}
-				else
+				// Give some tolerance for accidental offset on finger press (slop)
+				else if (offsetLength > slop || slop != slop)//faster isNaN()
 				{
 					setState(GestureState.FAILED);
 				}
 			}
-		}		
+		}
 		
 		
 		override protected function onTouchEnd(touch:Touch):void
@@ -234,9 +283,26 @@ package org.gestouch.gestures
 		{
 			if (hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
 			{
-				_localLocation = target.globalToLocal(_location);//refresh local location in case target moved
+				_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
 				dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
 					_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
+			}
+		}
+		
+		
+		
+		
+		//--------------------------------------------------------------------------
+		//
+		//  Event handlers
+		//
+		//--------------------------------------------------------------------------
+		
+		protected function timer_timerCompleteHandler(event:TimerEvent):void
+		{
+			if (state == GestureState.POSSIBLE)
+			{
+				setState(GestureState.FAILED);
 			}
 		}
 	}

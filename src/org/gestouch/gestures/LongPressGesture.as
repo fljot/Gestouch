@@ -4,14 +4,18 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.LongPressGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
 	/**
-	 * TODO: -location
-	 * - check on iOS (Obj-C) what happens when numTouchesRequired=2, two finger down, then quickly release one.
+	 * 
+	 * @eventType org.gestouch.events.LongPressGestureEvent
+	 */
+	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
+	/**
+	 * TODO:
+	 * - add numTapsRequired
 	 * 
 	 * @author Pavel fljot
 	 */
@@ -21,16 +25,16 @@ package org.gestouch.gestures
 		/**
 		 * The minimum time interval in millisecond fingers must press on the target for the gesture to be recognized.
 		 * 
-         * @default 500
-         */
-        public var minPressDuration:uint = 500;
+		 * @default 500
+		 */
+		public var minPressDuration:uint = 500;
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
 		protected var _timer:Timer;
 		protected var _numTouchesRequiredReached:Boolean;
 		
 		
-		public function LongPressGesture(target:InteractiveObject = null)
+		public function LongPressGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -49,7 +53,7 @@ package org.gestouch.gestures
 			return TapGesture;
 		}
 		
-			
+		
 		override public function reset():void
 		{
 			super.reset();
@@ -67,6 +71,12 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == LongPressGestureEvent.GESTURE_LONG_PRESS || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function preinit():void
 		{
 			super.preinit();
@@ -80,14 +90,7 @@ package org.gestouch.gestures
 		{
 			if (touchesCount > numTouchesRequired)
 			{
-				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
-				{
-					ignoreTouch(touch);
-				}
-				else
-				{
-					setState(GestureState.FAILED);
-				}
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			
@@ -121,10 +124,9 @@ package org.gestouch.gestures
 		
 		override protected function onTouchEnd(touch:Touch):void
 		{
-			//TODO: check proper condition (behavior) on iOS native
 			if (_numTouchesRequiredReached)
 			{
-				if (((GestureState.BEGAN | GestureState.CHANGED) & state) > 0)
+				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
 					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
@@ -144,7 +146,7 @@ package org.gestouch.gestures
 			}
 		}
 		
-			
+		
 		override protected function onDelayedRecognize():void
 		{
 			if (hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))

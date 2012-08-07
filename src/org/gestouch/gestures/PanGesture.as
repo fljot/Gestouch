@@ -4,9 +4,13 @@ package org.gestouch.gestures
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.PanGestureEvent;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.PanGestureEvent
+	 */
 	[Event(name="gesturePan", type="org.gestouch.events.PanGestureEvent")]
 	/**
 	 * TODO:
@@ -27,14 +31,14 @@ package org.gestouch.gestures
 		protected var _gestureBeginOffsetY:Number;
 		
 		
-		public function PanGesture(target:InteractiveObject = null)
+		public function PanGesture(target:Object = null)
 		{
 			super(target);
 		}
 		
 		
 		/** @private */
-		private var _maxNumTouchesRequired:uint = 1;
+		private var _maxNumTouchesRequired:uint = uint.MAX_VALUE;
 		
 		/**
 		 * 
@@ -108,19 +112,24 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == PanGestureEvent.GESTURE_PAN || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > maxNumTouchesRequired)
 			{
-				//TODO
-				ignoreTouch(touch);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			
 			if (touchesCount >= minNumTouchesRequired)
 			{
 				updateLocation();
-			}			
+			}
 		}
 		
 		
@@ -136,6 +145,10 @@ package org.gestouch.gestures
 			
 			if (state == GestureState.POSSIBLE)
 			{
+				prevLocationX = _location.x;
+				prevLocationY = _location.y;
+				updateLocation();
+				
 				// Check if finger moved enough for gesture to be recognized
 				var locationOffset:Point = touch.locationOffset;
 				if (direction == PanGestureDirection.VERTICAL)
@@ -149,9 +162,6 @@ package org.gestouch.gestures
 				
 				if (locationOffset.length > slop || slop != slop)//faster isNaN(slop)
 				{
-					prevLocationX = _location.x;
-					prevLocationY = _location.y;
-					updateLocation();
 					offsetX = _location.x - prevLocationX;
 					offsetY = _location.y - prevLocationY;
 					// acummulate begin offsets for the case when this gesture recognition is delayed by requireGestureToFail

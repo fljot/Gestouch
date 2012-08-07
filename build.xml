@@ -21,6 +21,8 @@
 			<arg value="-include-sources=${src.dir}"/>
 			<!-- Exclude Flex Framework classes (some mx events comes from binding). -->
 			<arg value="-external-library-path+=${flexSDK.dir}/frameworks/libs"/>
+			<!-- Exclude any external classes (such as Starling framework classes) -->
+			<arg value="-external-library-path+=${libs.dir}"/>
 			<!-- Keep the metatags (Apparat?). -->
 			<arg value="-keep-as3-metadata+=Abstract"/>
 			<!-- Boolean mosh pit! -->
@@ -44,6 +46,7 @@
 		</delete>
 		<java jar="${FLEX_HOME}/lib/asdoc.jar" dir="${FLEX_HOME}/frameworks" fork="true" failonerror="true">
 			<arg line="-source-path ${src.dir}"/>
+			<arg line="-external-library-path+=${libs.dir}"/>
 			<arg line="-doc-sources ${src.dir}"/>
 			<arg line="-output ${asdoc.dir}"/>
 			<arg value="-keep-xml=true"/>

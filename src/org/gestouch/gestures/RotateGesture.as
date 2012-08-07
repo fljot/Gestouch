@@ -3,11 +3,14 @@ package org.gestouch.gestures
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
 	import org.gestouch.events.RotateGestureEvent;
-	import org.gestouch.utils.GestureUtils;
 
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
+
+	/**
+	 * 
+	 * @eventType org.gestouch.events.RotateGestureEvent
+	 */
 	[Event(name="gestureRotate", type="org.gestouch.events.RotateGestureEvent")]
 	/**
 	 * TODO:
@@ -17,14 +20,15 @@ package org.gestouch.gestures
 	 */
 	public class RotateGesture extends Gesture
 	{
-		public var slop:Number = Gesture.DEFAULT_SLOP >> 1;
+		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
 		protected var _touch1:Touch;
 		protected var _touch2:Touch;
 		protected var _transformVector:Point;
+		protected var _thresholdAngle:Number;
 		
 		
-		public function RotateGesture(target:InteractiveObject = null)
+		public function RotateGesture(target:Object = null)
 		{
 			super(target);
 		}
@@ -52,12 +56,17 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
+		override protected function eventTypeIsValid(type:String):Boolean
+		{
+			return type == RotateGestureEvent.GESTURE_ROTATE || super.eventTypeIsValid(type);
+		}
+		
+		
 		override protected function onTouchBegin(touch:Touch):void
 		{
 			if (touchesCount > 2)
 			{
-				//TODO
-				ignoreTouch(touch);
+				failOrIgnoreTouch(touch);
 				return;
 			}
 			
@@ -70,6 +79,9 @@ package org.gestouch.gestures
 				_touch2 = touch;
 				
 				_transformVector = _touch2.location.subtract(_touch1.location);
+				
+				// @see chord length formula
+				_thresholdAngle = Math.asin(slop / (2 * _transformVector.length)) * 2;
 			}
 		}
 		
@@ -79,38 +91,41 @@ package org.gestouch.gestures
 			if (touchesCount < 2)
 				return;
 			
-			var recognized:Boolean = true;
+			var currTransformVector:Point = _touch2.location.subtract(_touch1.location);
+			var rotation:Number = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
 			
-			if (state == GestureState.POSSIBLE && slop > 0 && touch.locationOffset.length < slop)
+			if (state == GestureState.POSSIBLE)
 			{
-				recognized = false;
+				const absRotation:Number = rotation >= 0 ? rotation : -rotation;
+				if (absRotation < _thresholdAngle)
+				{
+					// not recognized yet
+					return;
+				}
+				
+				// adjust angle to avoid initial "jump"
+				rotation = rotation > 0 ? rotation - _thresholdAngle : rotation + _thresholdAngle;
 			}
 			
-			if (recognized)
+			_transformVector.x = currTransformVector.x;
+			_transformVector.y = currTransformVector.y;
+			
+			updateLocation();
+			
+			if (state == GestureState.POSSIBLE)
 			{
-				var currTransformVector:Point = _touch2.location.subtract(_touch1.location);
-				var rotation:Number = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
-				rotation *= GestureUtils.RADIANS_TO_DEGREES;
-				_transformVector.x = currTransformVector.x;
-				_transformVector.y = currTransformVector.y;
-				
-				updateLocation();
-				
-				if (state == GestureState.POSSIBLE)
+				if (setState(GestureState.BEGAN) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
 				{
-					if (setState(GestureState.BEGAN) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
-					{
-						dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.BEGAN,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, rotation));
-					}
+					dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.BEGAN,
+						_location.x, _location.y, _localLocation.x, _localLocation.y, rotation));
 				}
-				else
+			}
+			else
+			{
+				if (setState(GestureState.CHANGED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
 				{
-					if (setState(GestureState.CHANGED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
-					{
-						dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.CHANGED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, rotation));
-					}
+					dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.CHANGED,
+						_location.x, _location.y, _localLocation.x, _localLocation.y, rotation));
 				}
 			}
 		}
