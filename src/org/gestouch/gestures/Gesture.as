@@ -430,6 +430,12 @@ package org.gestouch.gestures
 		{
 			if (_state == newState && _state == GestureState.CHANGED)
 			{
+				// shortcut for better performance
+				if (hasEventListener(GestureStateEvent.STATE_CHANGE))
+				{
+					dispatchEvent(new GestureStateEvent(GestureStateEvent.STATE_CHANGE, _state, _state));
+				}
+				
 				return true;
 			}
 			
