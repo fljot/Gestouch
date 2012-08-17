@@ -2,7 +2,6 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.SwipeGestureEvent;
 	import org.gestouch.utils.GestureUtils;
 
 	import flash.events.TimerEvent;
@@ -12,11 +11,6 @@ package org.gestouch.gestures
 
 
 	/**
-	 * 
-	 * @eventType org.gestouch.events.SwipeGestureEvent
-	 */
-	[Event(name="gestureSwipe", type="org.gestouch.events.SwipeGestureEvent")]
-	/**
 	 * Recognition logic:<br/>
 	 * 1. should be recognized during <code>maxDuration</code> period<br/>
 	 * 2. velocity >= minVelocity <b>OR</b> offset >= minOffset
@@ -24,7 +18,7 @@ package org.gestouch.gestures
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class SwipeGesture extends Gesture
+	public class SwipeGesture extends AbstractDiscreteGesture
 	{
 		private static const ANGLE:Number = 40 * GestureUtils.DEGREES_TO_RADIANS;
 		private static const MAX_DURATION:uint = 500;
@@ -87,6 +81,18 @@ package org.gestouch.gestures
 		}
 		
 		
+		public function get offsetX():Number
+		{
+			return _offset.x;
+		}
+		
+		
+		public function get offsetY():Number
+		{
+			return _offset.y;
+		}
+		
+		
 		
 		
 		// --------------------------------------------------------------------------
@@ -119,12 +125,6 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
-		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == SwipeGestureEvent.GESTURE_SWIPE || super.eventTypeIsValid(type);
-		}
-		
 		
 		override protected function preinit():void
 		{
@@ -189,12 +189,7 @@ package org.gestouch.gestures
 			{
 				if (avrgVel >= minVelocity || offsetLength >= minOffset)
 				{
-					if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
-					{
-						_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
-						dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
-					}
+					setState(GestureState.RECOGNIZED);
 				}
 			}
 			else
@@ -225,12 +220,7 @@ package org.gestouch.gestures
 					else if (absVelX >= minVelocity || absOffsetX >= minOffset)
 					{
 						_offset.y = 0;
-						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
-						{
-							_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
-							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
-								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
-						}
+						setState(GestureState.RECOGNIZED);
 					}
 				}
 				else if (absVelY > absVelX)
@@ -253,12 +243,7 @@ package org.gestouch.gestures
 					else if (absVelY >= minVelocity || absOffsetY >= minOffset)
 					{
 						_offset.x = 0;
-						if (setState(GestureState.RECOGNIZED) && hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
-						{
-							_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
-							dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
-								_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
-						}
+						setState(GestureState.RECOGNIZED);
 					}
 				}
 				// Give some tolerance for accidental offset on finger press (slop)
@@ -279,14 +264,11 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onDelayedRecognize():void
+		override protected function resetNotificationProperties():void
 		{
-			if (hasEventListener(SwipeGestureEvent.GESTURE_SWIPE))
-			{
-				_localLocation = targetAdapter.globalToLocal(_location);//refresh local location in case target moved
-				dispatchEvent(new SwipeGestureEvent(SwipeGestureEvent.GESTURE_SWIPE, false, false, GestureState.RECOGNIZED,
-					_location.x, _location.y, _localLocation.x, _localLocation.y, _offset.x, _offset.y));
-			}
+			super.resetNotificationProperties();
+			
+			_offset.x = _offset.y = 0;
 		}
 		
 		

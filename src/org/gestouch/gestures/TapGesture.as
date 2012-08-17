@@ -2,7 +2,6 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.TapGestureEvent;
 
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
@@ -10,14 +9,9 @@ package org.gestouch.gestures
 
 	/**
 	 * 
-	 * @eventType org.gestouch.events.TapGestureEvent
-	 */
-	[Event(name="gestureTap", type="org.gestouch.events.TapGestureEvent")]
-	/**
-	 * 
 	 * @author Pavel fljot
 	 */
-	public class TapGesture extends Gesture
+	public class TapGesture extends AbstractDiscreteGesture
 	{
 		public var numTouchesRequired:uint = 1;
 		public var numTapsRequired:uint = 1;
@@ -79,12 +73,6 @@ package org.gestouch.gestures
 		//
 		// --------------------------------------------------------------------------
 		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == TapGestureEvent.GESTURE_TAP || super.eventTypeIsValid(type);
-		}
-		
-		
 		override protected function preinit():void
 		{
 			super.preinit();
@@ -142,27 +130,13 @@ package org.gestouch.gestures
 				
 				if (_tapCounter == numTapsRequired)
 				{
-					if (setState(GestureState.RECOGNIZED) && hasEventListener(TapGestureEvent.GESTURE_TAP))
-					{
-						dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GestureState.RECOGNIZED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y));
-					}
+					setState(GestureState.RECOGNIZED);
 				}
 				else
 				{
 					_timer.delay = maxTapDelay;
 					_timer.start();
 				}
-			}
-		}
-		
-			
-		override protected function onDelayedRecognize():void
-		{
-			if (hasEventListener(TapGestureEvent.GESTURE_TAP))
-			{
-				dispatchEvent(new TapGestureEvent(TapGestureEvent.GESTURE_TAP, false, false, GestureState.RECOGNIZED,
-					_location.x, _location.y, _localLocation.x, _localLocation.y));
 			}
 		}
 		
