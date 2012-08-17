@@ -1,41 +1,36 @@
 package org.gestouch.core
 {
+	import flash.utils.Dictionary;
 	import flash.errors.IllegalOperationError;
 
 
 	/**
 	 * @author Pavel fljot
 	 */
-	public class GestureState
+	final public class GestureState
 	{
-		public static const IDLE:GestureState = new GestureState(1 << 0, "IDLE");
-		public static const POSSIBLE:GestureState = new GestureState(1 << 1, "POSSIBLE");
-		public static const RECOGNIZED:GestureState = new GestureState(1 << 2, "RECOGNIZED");
-		public static const BEGAN:GestureState = new GestureState(1 << 3, "BEGAN");
-		public static const CHANGED:GestureState = new GestureState(1 << 4, "CHANGED");
-		public static const ENDED:GestureState = new GestureState(1 << 5, "ENDED");
-		public static const CANCELLED:GestureState = new GestureState(1 << 6, "CANCELLED");
-		public static const FAILED:GestureState = new GestureState(1 << 7, "FAILED");
-		
-		private static const endStatesBitMask:uint =
-			GestureState.CANCELLED.toUint() |
-			GestureState.RECOGNIZED.toUint() |
-			GestureState.ENDED.toUint() |
-			GestureState.FAILED.toUint();
+		public static const IDLE:GestureState = new GestureState("IDLE");
+		public static const POSSIBLE:GestureState = new GestureState("POSSIBLE");
+		public static const RECOGNIZED:GestureState = new GestureState("RECOGNIZED", true);
+		public static const BEGAN:GestureState = new GestureState("BEGAN");
+		public static const CHANGED:GestureState = new GestureState("CHANGED");
+		public static const ENDED:GestureState = new GestureState("ENDED", true);
+		public static const CANCELLED:GestureState = new GestureState("CANCELLED", true);
+		public static const FAILED:GestureState = new GestureState("FAILED", true);
 		
 		private static var allStatesInitialized:Boolean;
 		
 		
-		private var value:uint;
 		private var name:String;
-		private var validTransitionsBitMask:uint;
+		private var eventType:String;
+		private var validTransitionStateMap:Dictionary = new Dictionary();
 		
 		{
 			_initClass();
 		}
 		
 		
-		public function GestureState(value:uint, name:String)
+		public function GestureState(name:String, isEndState:Boolean = false)
 		{
 			if (allStatesInitialized)
 			{
@@ -43,8 +38,9 @@ package org.gestouch.core
 				"Use predefined constats like GestureState.RECOGNIZED");
 			}
 			
-			this.value = value;
-			this.name = name;
+			this.name = "GestureState." + name;
+			this.eventType = "gesture" + name.charAt(0).toUpperCase() + name.substr(1).toLowerCase();
+			this._isEndState = isEndState;
 		}
 		
 		
@@ -65,36 +61,35 @@ package org.gestouch.core
 		
 		public function toString():String
 		{
-			return "GestureState." + name;
-		}
-		
-		
-		public function toUint():uint
-		{
-			return value;
+			return name;
 		}
 		
 		
 		private function setValidNextStates(...states):void
 		{
-			var mask:uint;
 			for each (var state:GestureState in states)
 			{
-				mask = mask | state.value;
+				validTransitionStateMap[state] = true;
 			}
-			validTransitionsBitMask = mask;
+		}
+		
+		
+		gestouch_internal function toEventType():String
+		{
+			return eventType;
 		}
 		
 		
 		gestouch_internal function canTransitionTo(state:GestureState):Boolean
 		{
-			return (validTransitionsBitMask & state.value) > 0;
+			return (state in validTransitionStateMap);
 		}
 		
 		
+		private var _isEndState:Boolean = false;
 		gestouch_internal function get isEndState():Boolean
 		{
-			return (endStatesBitMask & value) > 0;
+			return _isEndState;
 		}
 	}
 }
