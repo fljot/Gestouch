@@ -31,14 +31,6 @@ Features:
 
 
 
-h3. Current state of the project
-
-v0.3 introduces "new architecture". I'm planning to develop everything in develop branch and merge to master only release versions. Release versions suppose to be pretty stable. As much as I test them on the examples project.
-Current plan is to fix possible bugs in v0.3.#, and I really want to introduce Stage3D support in v0.4. So watch both branches.
-And I hope people to become giving some real feedback at least.
-
-
-
 h3. Getting Started
 
 All gestures dispatch (if you listen) GestureEvent with the next types:
@@ -62,7 +54,7 @@ Quick start:
 doubleTap.numTapsRequired = 2;
 doubleTap.addEventListener(GestureEvent.GESTURE_RECOGNIZED, onDoubleTap);
 ...
-private function onDoubleTap(event:TapGestureEvent):void
+private function onDoubleTap(event:GestureEvent):void
 {
 	// handle double tap!
 }
@@ -72,9 +64,10 @@ or
 freeTransform.addEventListener(GestureEvent.GESTURE_BEGAN, onFreeTransform);
 freeTransform.addEventListener(GestureEvent.GESTURE_CHANGED, onFreeTransform);
 ...
-private function onFreeTransform(event:TransformGestureEvent):void
+private function onFreeTransform(event:GestureEvent):void
 {
 	// move, rotate, scale — all at once for better performance!
+	trace(freeTransform.offsetX, freeTransform.offsetY, freeTransform.rotation, freeTransform.scale);
 }
 </code></pre>
 
