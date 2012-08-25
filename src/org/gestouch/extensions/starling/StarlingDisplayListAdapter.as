@@ -1,12 +1,10 @@
 package org.gestouch.extensions.starling
 {
-	import starling.core.Starling;
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
 
 	import org.gestouch.core.IDisplayListAdapter;
 
-	import flash.geom.Point;
 	import flash.utils.Dictionary;
 
 
@@ -35,13 +33,6 @@ package org.gestouch.extensions.starling
 				return key;
 			}
 			return null;
-		}
-		
-		
-		public function globalToLocal(point:Point):Point
-		{
-			point = StarlingUtils.adjustGlobalPoint(Starling.current, point);
-			return (target as DisplayObject).globalToLocal(point);
 		}
 		
 		

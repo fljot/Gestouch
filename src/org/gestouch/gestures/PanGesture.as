@@ -2,16 +2,10 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.PanGestureEvent;
 
 	import flash.geom.Point;
 
 
-	/**
-	 * 
-	 * @eventType org.gestouch.events.PanGestureEvent
-	 */
-	[Event(name="gesturePan", type="org.gestouch.events.PanGestureEvent")]
 	/**
 	 * TODO:
 	 * -location
@@ -19,16 +13,13 @@ package org.gestouch.gestures
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class PanGesture extends Gesture
+	public class PanGesture extends AbstractContinuousGesture
 	{
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		/**
 		 * Used for initial slop overcome calculations only.
 		 */
 		public var direction:uint = PanGestureDirection.NO_DIRECTION;
-		
-		protected var _gestureBeginOffsetX:Number;
-		protected var _gestureBeginOffsetY:Number;
 		
 		
 		public function PanGesture(target:Object = null)
@@ -81,6 +72,20 @@ package org.gestouch.gestures
 		}
 		
 		
+		protected var _offsetX:Number = 0;
+		public function get offsetX():Number
+		{
+			return _offsetX;
+		}
+		
+		
+		protected var _offsetY:Number = 0;
+		public function get offsetY():Number
+		{
+			return _offsetY;
+		}
+		
+		
 		
 		
 		// --------------------------------------------------------------------------
@@ -94,15 +99,6 @@ package org.gestouch.gestures
 			return PanGesture;
 		}
 		
-			
-		override public function reset():void
-		{
-			_gestureBeginOffsetX = NaN;
-			_gestureBeginOffsetY = NaN;
-			
-			super.reset();
-		}
-		
 		
 		
 		
@@ -111,12 +107,6 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
-		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == PanGestureEvent.GESTURE_PAN || super.eventTypeIsValid(type);
-		}
-		
 		
 		override protected function onTouchBegin(touch:Touch):void
 		{
@@ -140,8 +130,6 @@ package org.gestouch.gestures
 			
 			var prevLocationX:Number;
 			var prevLocationY:Number;
-			var offsetX:Number;
-			var offsetY:Number;
 			
 			if (state == GestureState.POSSIBLE)
 			{
@@ -162,17 +150,11 @@ package org.gestouch.gestures
 				
 				if (locationOffset.length > slop || slop != slop)//faster isNaN(slop)
 				{
-					offsetX = _location.x - prevLocationX;
-					offsetY = _location.y - prevLocationY;
-					// acummulate begin offsets for the case when this gesture recognition is delayed by requireGestureToFail
-					_gestureBeginOffsetX = (_gestureBeginOffsetX != _gestureBeginOffsetX) ? offsetX : _gestureBeginOffsetX + offsetX;
-					_gestureBeginOffsetY = (_gestureBeginOffsetY != _gestureBeginOffsetY) ? offsetY : _gestureBeginOffsetY + offsetY;
+					// NB! += instead of = for the case when this gesture recognition is delayed via requireGestureToFail
+					_offsetX += _location.x - prevLocationX;
+					_offsetY += _location.y - prevLocationY;
 					
-					if (setState(GestureState.BEGAN) && hasEventListener(PanGestureEvent.GESTURE_PAN))
-					{
-						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.BEGAN,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, offsetX, offsetY));
-					}
+					setState(GestureState.BEGAN);
 				}
 			}
 			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
@@ -180,14 +162,10 @@ package org.gestouch.gestures
 				prevLocationX = _location.x;
 				prevLocationY = _location.y;
 				updateLocation();
-				offsetX = _location.x - prevLocationX;
-				offsetY = _location.y - prevLocationY;
+				_offsetX = _location.x - prevLocationX;
+				_offsetY = _location.y - prevLocationY;
 				
-				if (setState(GestureState.CHANGED) && hasEventListener(PanGestureEvent.GESTURE_PAN))
-				{
-					dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.CHANGED,
-						_location.x, _location.y, _localLocation.x, _localLocation.y, offsetX, offsetY));
-				}
+				setState(GestureState.CHANGED);
 			}
 		}
 		
@@ -202,11 +180,7 @@ package org.gestouch.gestures
 				}
 				else
 				{
-					if (setState(GestureState.ENDED) && hasEventListener(PanGestureEvent.GESTURE_PAN))
-					{
-						dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.ENDED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, 0, 0));
-					}
+					setState(GestureState.ENDED);
 				}
 			}
 			else
@@ -216,13 +190,11 @@ package org.gestouch.gestures
 		}
 		
 		
-		override protected function onDelayedRecognize():void
+		override protected function resetNotificationProperties():void
 		{
-			if (hasEventListener(PanGestureEvent.GESTURE_PAN))
-			{
-				dispatchEvent(new PanGestureEvent(PanGestureEvent.GESTURE_PAN, false, false, GestureState.BEGAN,
-					_location.x, _location.y, _localLocation.x, _localLocation.y, _gestureBeginOffsetX, _gestureBeginOffsetY));
-			}
+			super.resetNotificationProperties();
+			
+			_offsetX = _offsetY = 0;
 		}
 	}
 }

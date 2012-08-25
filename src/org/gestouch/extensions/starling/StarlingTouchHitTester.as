@@ -29,7 +29,7 @@ package org.gestouch.extensions.starling
 		
 		public function hitTest(point:Point, nativeTarget:InteractiveObject):Object
 		{
-			point = StarlingUtils.adjustGlobalPoint(starling, point);			
+			point = StarlingUtils.adjustGlobalPoint(starling, point);
 			return starling.stage.hitTest(point, true);
 		}
 	}

@@ -2,24 +2,18 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.LongPressGestureEvent;
 
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 
 
 	/**
-	 * 
-	 * @eventType org.gestouch.events.LongPressGestureEvent
-	 */
-	[Event(name="gestureLongPress", type="org.gestouch.events.LongPressGestureEvent")]
-	/**
 	 * TODO:
 	 * - add numTapsRequired
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class LongPressGesture extends Gesture
+	public class LongPressGesture extends AbstractContinuousGesture
 	{
 		public var numTouchesRequired:uint = 1;
 		/**
@@ -50,7 +44,7 @@ package org.gestouch.gestures
 		
 		override public function reflect():Class
 		{
-			return TapGesture;
+			return LongPressGesture;
 		}
 		
 		
@@ -70,12 +64,6 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
-		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == LongPressGestureEvent.GESTURE_LONG_PRESS || super.eventTypeIsValid(type);
-		}
-		
 		
 		override protected function preinit():void
 		{
@@ -113,11 +101,7 @@ package org.gestouch.gestures
 			else if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 			{
 				updateLocation();
-				if (setState(GestureState.CHANGED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
-				{
-					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.CHANGED,
-						_location.x, _location.y, _localLocation.x, _localLocation.y));
-				}
+				setState(GestureState.CHANGED);
 			}
 		}
 		
@@ -129,11 +113,7 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					if (setState(GestureState.ENDED) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
-					{
-						dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.ENDED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y));
-					} 
+					setState(GestureState.ENDED);
 				}
 				else
 				{
@@ -143,16 +123,6 @@ package org.gestouch.gestures
 			else
 			{
 				setState(GestureState.FAILED);
-			}
-		}
-		
-		
-		override protected function onDelayedRecognize():void
-		{
-			if (hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
-			{
-				dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.BEGAN,
-						_location.x, _location.y, _localLocation.x, _localLocation.y));
 			}
 		}
 		
@@ -170,11 +140,7 @@ package org.gestouch.gestures
 			if (state == GestureState.POSSIBLE)
 			{
 				updateLocation();
-				if (setState(GestureState.BEGAN) && hasEventListener(LongPressGestureEvent.GESTURE_LONG_PRESS))
-				{
-					dispatchEvent(new LongPressGestureEvent(LongPressGestureEvent.GESTURE_LONG_PRESS, false, false, GestureState.BEGAN,
-							_location.x, _location.y, _localLocation.x, _localLocation.y));
-				}
+				setState(GestureState.BEGAN);
 			}
 		}
 	}

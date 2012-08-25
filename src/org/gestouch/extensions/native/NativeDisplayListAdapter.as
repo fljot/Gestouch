@@ -36,12 +36,6 @@ package org.gestouch.extensions.native
 		}
 		
 		
-		public function globalToLocal(point:Point):Point
-		{
-			return (target as DisplayObject).globalToLocal(point);
-		}
-		
-		
 		public function contains(object:Object):Boolean
 		{
 			const targetAsDOC:DisplayObjectContainer = this.target as DisplayObjectContainer;

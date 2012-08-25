@@ -2,23 +2,17 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.RotateGestureEvent;
 
 	import flash.geom.Point;
 
 
-	/**
-	 * 
-	 * @eventType org.gestouch.events.RotateGestureEvent
-	 */
-	[Event(name="gestureRotate", type="org.gestouch.events.RotateGestureEvent")]
 	/**
 	 * TODO:
 	 * -check native behavior on iDevice
 	 * 
 	 * @author Pavel fljot
 	 */
-	public class RotateGesture extends Gesture
+	public class RotateGesture extends AbstractContinuousGesture
 	{
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
@@ -31,6 +25,13 @@ package org.gestouch.gestures
 		public function RotateGesture(target:Object = null)
 		{
 			super(target);
+		}
+		
+		
+		protected var _rotation:Number = 0;
+		public function get rotation():Number
+		{
+			return _rotation;
 		}
 		
 		
@@ -55,12 +56,6 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
-		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == RotateGestureEvent.GESTURE_ROTATE || super.eventTypeIsValid(type);
-		}
-		
 		
 		override protected function onTouchBegin(touch:Touch):void
 		{
@@ -109,24 +104,17 @@ package org.gestouch.gestures
 			
 			_transformVector.x = currTransformVector.x;
 			_transformVector.y = currTransformVector.y;
+			_rotation = rotation;
 			
 			updateLocation();
 			
 			if (state == GestureState.POSSIBLE)
 			{
-				if (setState(GestureState.BEGAN) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
-				{
-					dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.BEGAN,
-						_location.x, _location.y, _localLocation.x, _localLocation.y, rotation));
-				}
+				setState(GestureState.BEGAN);
 			}
 			else
 			{
-				if (setState(GestureState.CHANGED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
-				{
-					dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.CHANGED,
-						_location.x, _location.y, _localLocation.x, _localLocation.y, rotation));
-				}
+				setState(GestureState.CHANGED);
 			}
 		}
 		
@@ -137,11 +125,7 @@ package org.gestouch.gestures
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
-					if (setState(GestureState.ENDED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
-					{
-						dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.ENDED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, 0));
-					}
+					setState(GestureState.ENDED);
 				}
 				else if (state == GestureState.POSSIBLE)
 				{
@@ -159,13 +143,17 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					if (setState(GestureState.CHANGED) && hasEventListener(RotateGestureEvent.GESTURE_ROTATE))
-					{
-						dispatchEvent(new RotateGestureEvent(RotateGestureEvent.GESTURE_ROTATE, false, false, GestureState.CHANGED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, 0));
-					}
+					setState(GestureState.CHANGED);
 				}
 			}
+		}
+		
+		
+		override protected function resetNotificationProperties():void
+		{
+			super.resetNotificationProperties();
+			
+			_rotation = 0;
 		}
 	}
 }

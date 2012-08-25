@@ -2,21 +2,15 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.ZoomGestureEvent;
 
 	import flash.geom.Point;
 
 
 	/**
 	 * 
-	 * @eventType org.gestouch.events.ZoomGestureEvent
-	 */
-	[Event(name="gestureZoom", type="org.gestouch.events.ZoomGestureEvent")]
-	/**
-	 * 
 	 * @author Pavel fljot
 	 */
-	public class ZoomGesture extends Gesture
+	public class ZoomGesture extends AbstractContinuousGesture
 	{
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		public var lockAspectRatio:Boolean = true;
@@ -30,6 +24,20 @@ package org.gestouch.gestures
 		public function ZoomGesture(target:Object = null)
 		{
 			super(target);
+		}
+		
+		
+		protected var _scaleX:Number = 1;
+		public function get scaleX():Number
+		{
+			return _scaleX;
+		}
+		
+		
+		protected var _scaleY:Number = 1;
+		public function get scaleY():Number
+		{
+			return _scaleY;
 		}
 		
 		
@@ -54,12 +62,6 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
-		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == ZoomGestureEvent.GESTURE_ZOOM || super.eventTypeIsValid(type);
-		}
-		
 		
 		override protected function onTouchBegin(touch:Touch):void
 		{
@@ -89,8 +91,6 @@ package org.gestouch.gestures
 				return;
 			
 			var currTransformVector:Point = _touch2.location.subtract(_touch1.location);
-			var scaleX:Number;
-			var scaleY:Number;
 			
 			if (state == GestureState.POSSIBLE)
 			{
@@ -114,12 +114,13 @@ package org.gestouch.gestures
 			
 			if (lockAspectRatio)
 			{
-				scaleX = scaleY = currTransformVector.length / _transformVector.length;
+				_scaleX *= currTransformVector.length / _transformVector.length;
+				_scaleY = _scaleX;
 			}
 			else
 			{
-				scaleX = currTransformVector.x / _transformVector.x;
-				scaleY = currTransformVector.y / _transformVector.y;
+				_scaleX *= currTransformVector.x / _transformVector.x;
+				_scaleY *= currTransformVector.y / _transformVector.y;
 			}
 			
 			_transformVector.x = currTransformVector.x;
@@ -129,19 +130,11 @@ package org.gestouch.gestures
 			
 			if (state == GestureState.POSSIBLE)
 			{
-				if (setState(GestureState.BEGAN) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
-				{
-					dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.BEGAN,
-						_location.x, _location.y, _localLocation.x, _localLocation.y, scaleX, scaleY));
-				}
+				setState(GestureState.BEGAN);
 			}
 			else
 			{
-				if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
-				{
-					dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.CHANGED,
-						_location.x, _location.y, _localLocation.x, _localLocation.y, scaleX, scaleY));
-				}
+				setState(GestureState.CHANGED);
 			}
 		}
 		
@@ -152,11 +145,7 @@ package org.gestouch.gestures
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
-					if (setState(GestureState.ENDED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
-					{
-						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.ENDED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, 1, 1));
-					}
+					setState(GestureState.ENDED);
 				}
 				else if (state == GestureState.POSSIBLE)
 				{
@@ -174,13 +163,17 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					if (setState(GestureState.CHANGED) && hasEventListener(ZoomGestureEvent.GESTURE_ZOOM))
-					{
-						dispatchEvent(new ZoomGestureEvent(ZoomGestureEvent.GESTURE_ZOOM, false, false, GestureState.CHANGED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y, 1, 1));
-					}
+					setState(GestureState.CHANGED);
 				}
 			}
+		}
+		
+		
+		override protected function resetNotificationProperties():void
+		{
+			super.resetNotificationProperties();
+			
+			_scaleX = _scaleY = 1;
 		}
 	}
 }

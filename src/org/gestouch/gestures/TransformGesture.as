@@ -2,20 +2,14 @@ package org.gestouch.gestures
 {
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
-	import org.gestouch.events.TransformGestureEvent;
 
 	import flash.geom.Point;
 
 
 	/**
-	 * 
-	 * @eventType org.gestouch.events.TransformGestureEvent
-	 */
-	[Event(name="gestureTransform", type="org.gestouch.events.TransformGestureEvent")]
-	/**
 	 * @author Pavel fljot
 	 */
-	public class TransformGesture extends Gesture
+	public class TransformGesture extends AbstractContinuousGesture
 	{
 		public var slop:Number = Gesture.DEFAULT_SLOP;
 		
@@ -27,6 +21,34 @@ package org.gestouch.gestures
 		public function TransformGesture(target:Object = null)
 		{
 			super(target);
+		}
+		
+		
+		protected var _offsetX:Number = 0;
+		public function get offsetX():Number
+		{
+			return _offsetX;
+		}
+		
+		
+		protected var _offsetY:Number = 0;
+		public function get offsetY():Number
+		{
+			return _offsetY;
+		}
+		
+		
+		protected var _rotation:Number = 0;
+		public function get rotation():Number
+		{
+			return _rotation;
+		}
+		
+		
+		protected var _scale:Number = 1;
+		public function get scale():Number
+		{
+			return _scale;
 		}
 		
 		
@@ -43,12 +65,12 @@ package org.gestouch.gestures
 			return TransformGesture;
 		}
 		
-			
+		
 		override public function reset():void
 		{
 			_touch1 = null;
 			_touch2 = null;
-
+			
 			super.reset();
 		}
 		
@@ -60,12 +82,6 @@ package org.gestouch.gestures
 		// Protected methods
 		//
 		// --------------------------------------------------------------------------
-		
-		override protected function eventTypeIsValid(type:String):Boolean
-		{
-			return type == TransformGestureEvent.GESTURE_TRANSFORM || super.eventTypeIsValid(type);
-		}
-		
 		
 		override protected function onTouchBegin(touch:Touch):void
 		{
@@ -90,11 +106,8 @@ package org.gestouch.gestures
 			
 			if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 			{
-				if (setState(GestureState.CHANGED) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-				{ 
-					dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.CHANGED,
-						_location.x, _location.y, _localLocation.x, _localLocation.y));
-				}
+				// notify that location (and amount of touches) has changed
+				setState(GestureState.CHANGED);
 			}
 		}
 		
@@ -125,41 +138,16 @@ package org.gestouch.gestures
 				currTransformVector = _touch2.location.subtract(_touch1.location);
 			}
 			
-			var prevLocalLocation:Point;
-			var offsetX:Number = _location.x - prevLocation.x;
-			var offsetY:Number = _location.y - prevLocation.y;
-			var scale:Number = 1;
-			var rotation:Number = 0;
+			_offsetX = _location.x - prevLocation.x;
+			_offsetY = _location.y - prevLocation.y;
 			if (_touch2)
 			{
-				rotation = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
-				scale = currTransformVector.length / _transformVector.length;
+				_rotation = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
+				_scale = currTransformVector.length / _transformVector.length;
 				_transformVector = _touch2.location.subtract(_touch1.location);
 			}
 			
-			
-			if (state == GestureState.POSSIBLE)
-			{
-				if (setState(GestureState.BEGAN) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-				{
-					// Note that we dispatch previous location point which gives a way to perform
-					// accurate UI redraw. See examples project for more info.
-					prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
-					dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.BEGAN,
-						prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
-				}
-			}
-			else
-			{
-				if (setState(GestureState.CHANGED) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-				{
-					// Note that we dispatch previous location point which gives a way to perform
-					// accurate UI redraw. See examples project for more info.
-					prevLocalLocation = targetAdapter.globalToLocal(prevLocation);
-					dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.CHANGED,
-						prevLocation.x, prevLocation.y, prevLocalLocation.x, prevLocalLocation.y, scale, scale, rotation, offsetX, offsetY));
-				}
-			}
+			setState(state == GestureState.POSSIBLE ? GestureState.BEGAN : GestureState.CHANGED);
 		}
 		
 		
@@ -169,11 +157,7 @@ package org.gestouch.gestures
 			{
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
-					if (setState(GestureState.ENDED) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-					{
-						dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.ENDED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y));
-					}
+					setState(GestureState.ENDED);
 				}
 				else if (state == GestureState.POSSIBLE)
 				{
@@ -191,13 +175,19 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					if (setState(GestureState.CHANGED) && hasEventListener(TransformGestureEvent.GESTURE_TRANSFORM))
-					{
-						dispatchEvent(new TransformGestureEvent(TransformGestureEvent.GESTURE_TRANSFORM, false, false, GestureState.CHANGED,
-							_location.x, _location.y, _localLocation.x, _localLocation.y));
-					}
+					setState(GestureState.CHANGED);
 				}
 			}
+		}
+		
+		
+		override protected function resetNotificationProperties():void
+		{
+			super.resetNotificationProperties();
+			
+			_offsetX = _offsetY = 0;
+			_rotation = 0;
+			_scale = 1;
 		}
 	}
 }

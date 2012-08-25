@@ -10,38 +10,40 @@ package org.gestouch.events
 	 */
 	public class GestureEvent extends Event
 	{
-		public var gestureState:GestureState;
-		public var stageX:Number;
-		public var stageY:Number;
-		public var localX:Number;
-		public var localY:Number;
+		public static const GESTURE_IDLE:String = "gestureIdle";
+		public static const GESTURE_POSSIBLE:String = "gesturePossible";
+		public static const GESTURE_RECOGNIZED:String = "gestureRecognized";
+		public static const GESTURE_BEGAN:String = "gestureBegan";
+		public static const GESTURE_CHANGED:String = "gestureChanged";
+		public static const GESTURE_ENDED:String = "gestureEnded";
+		public static const GESTURE_CANCELLED:String = "gestureCancelled";
+		public static const GESTURE_FAILED:String = "gestureFailed";
+		
+		public static const GESTURE_STATE_CHANGE:String = "gestureStateChange";
 		
 		
-		public function GestureEvent(type:String, bubbles:Boolean = false, cancelable:Boolean = false,
-									 gestureState:GestureState = null,
-									 stageX:Number = 0, stageY:Number = 0,
-									 localX:Number = 0, localY:Number = 0)
+		public var newState:GestureState;
+		public var oldState:GestureState;
+		
+		
+		public function GestureEvent(type:String, newState:GestureState, oldState:GestureState)
 		{
-			super(type, bubbles, cancelable);
+			super(type, false, false);
 			
-			this.gestureState = gestureState;
-			this.stageX = stageX;
-			this.stageY = stageY;
-			this.localX = localX;
-			this.localY = localY;
+			this.newState = newState;
+			this.oldState = oldState;
 		}
 		
 		
 		override public function clone():Event
 		{
-			return new GestureEvent(type, bubbles, cancelable, gestureState, stageX, stageY, localX, localY);
+			return new GestureEvent(type, newState, oldState);
 		}
 		
 		
 		override public function toString():String
 		{
-			return formatToString("org.gestouch.events.GestureEvent", "bubbles", "cancelable",
-				"gestureState", "stageX", "stageY", "localX", "localY");
+			return formatToString("GestureEvent", "type", "oldState", "newState");
 		}
 	}
 }
