@@ -9,7 +9,6 @@ package org.gestouch.core
 	 */
 	final public class GestureState
 	{
-		public static const IDLE:GestureState = new GestureState("IDLE");
 		public static const POSSIBLE:GestureState = new GestureState("POSSIBLE");
 		public static const RECOGNIZED:GestureState = new GestureState("RECOGNIZED", true);
 		public static const BEGAN:GestureState = new GestureState("BEGAN");
@@ -46,14 +45,13 @@ package org.gestouch.core
 		
 		private static function _initClass():void
 		{
-			IDLE.setValidNextStates(POSSIBLE);
 			POSSIBLE.setValidNextStates(RECOGNIZED, BEGAN, FAILED);
-			RECOGNIZED.setValidNextStates(IDLE);
+			RECOGNIZED.setValidNextStates(POSSIBLE);
 			BEGAN.setValidNextStates(CHANGED, ENDED, CANCELLED);
 			CHANGED.setValidNextStates(CHANGED, ENDED, CANCELLED);
-			ENDED.setValidNextStates(IDLE);
-			FAILED.setValidNextStates(IDLE);
-			CANCELLED.setValidNextStates(IDLE);
+			ENDED.setValidNextStates(POSSIBLE);
+			FAILED.setValidNextStates(POSSIBLE);
+			CANCELLED.setValidNextStates(POSSIBLE);
 			
 			allStatesInitialized = true;
 		}

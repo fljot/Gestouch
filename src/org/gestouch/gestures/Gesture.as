@@ -24,13 +24,6 @@ package org.gestouch.gestures
 	 */
 	[Event(name="gestureStateChange", type="org.gestouch.events.GestureEvent")]
 	/**
-	 * Dispatched when the state of the gesture changes to GestureState.IDLE.
-	 * 
-	 * @eventType org.gestouch.events.GestureEvent
-	 * @see #state
-	 */
-	[Event(name="gestureIdle", type="org.gestouch.events.GestureEvent")]
-	/**
 	 * Dispatched when the state of the gesture changes to GestureState.POSSIBLE.
 	 * 
 	 * @eventType org.gestouch.events.GestureEvent
@@ -185,10 +178,17 @@ package org.gestouch.gestures
 		}
 		
 		
-		protected var _state:GestureState = GestureState.IDLE;
+		protected var _state:GestureState = GestureState.POSSIBLE;
 		public function get state():GestureState
 		{
 			return _state;
+		}
+		
+		
+		protected var _idle:Boolean = true;
+		gestouch_internal function get idle():Boolean
+		{
+			return _idle;
 		}
 		
 		
@@ -286,15 +286,16 @@ package org.gestouch.gestures
 		 */
 		public function reset():void
 		{
-			var state:GestureState = this.state;//caching getter
+			if (idle)
+				return;// Do nothing as we are idle and there is nothing to reset
 			
-			if (state == GestureState.IDLE)
-				return;// Do nothing as we're in IDLE and nothing to reset
+			const state:GestureState = this.state;//caching getter
 			
 			_location.x = 0;
 			_location.y = 0;
 			_touchesMap = {};
 			_touchesCount = 0;
+			_idle = true;
 			
 			for (var key:* in _gesturesToFail)
 			{
@@ -320,7 +321,7 @@ package org.gestouch.gestures
 				// state == GestureState.ENDED ||
 				// state == GestureState.FAILED ||
 				// state == GestureState.CANCELLED)
-				setState(GestureState.IDLE);
+				setState(GestureState.POSSIBLE);
 			}
 		}
 		
@@ -434,7 +435,7 @@ package org.gestouch.gestures
 			{
 				setState(GestureState.FAILED);
 			}
-			else if (state != GestureState.IDLE)
+			else
 			{
 				ignoreTouch(touch);
 			}
@@ -503,6 +504,12 @@ package org.gestouch.gestures
 					_state + " to state " + newState  + ".");
 			}
 			
+			if (newState != GestureState.POSSIBLE)
+			{
+				// in case instantly switch state in touchBeganHandler()
+				_idle = false;
+			}
+			
 			
 			if (newState == GestureState.BEGAN || newState == GestureState.RECOGNIZED)
 			{
@@ -514,7 +521,7 @@ package org.gestouch.gestures
 				for (key in _gesturesToFail)
 				{
 					gestureToFail = key as Gesture;
-					if (gestureToFail.state != GestureState.IDLE &&
+					if (!gestureToFail.idle &&
 						gestureToFail.state != GestureState.POSSIBLE &&
 						gestureToFail.state != GestureState.FAILED)
 					{
@@ -637,9 +644,9 @@ package org.gestouch.gestures
 			
 			onTouchBegin(touch);
 			
-			if (_touchesCount == 1 && state == GestureState.IDLE)
+			if (_touchesCount == 1 && state == GestureState.POSSIBLE)
 			{
-				setState(GestureState.POSSIBLE);
+				_idle = false;
 			}
 		}
 		
@@ -701,11 +708,9 @@ package org.gestouch.gestures
 				// at this point all gestures-to-fail are either in IDLE or in FAILED states
 				setState(_pendingRecognizedState);
 			}
-			else if (event.newState != GestureState.IDLE && event.newState != GestureState.POSSIBLE)
+			else if (event.newState != GestureState.POSSIBLE)
 			{
-				// NB: _other_ gesture may switch to IDLE state if it was in FAILED when
-				// _this_ gesture initially attempted to switch to one of recognized state.
-				// ...and that's OK (we ignore that)
+				//TODO: need to re-think this over
 				
 				setState(GestureState.FAILED);
 			}
