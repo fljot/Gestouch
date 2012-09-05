@@ -179,6 +179,8 @@ package org.gestouch.core
 			_activeTouchesCount--;
 			
 			_gesturesManager.onTouchEnd(touch);
+			
+			touch.target = null;
 		}
 		
 		
@@ -194,6 +196,8 @@ package org.gestouch.core
 			_activeTouchesCount--;
 			
 			_gesturesManager.onTouchCancel(touch);
+			
+			touch.target = null;
 		}
 		
 		
