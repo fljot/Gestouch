@@ -308,6 +308,8 @@ package org.gestouch.core
 			}
 			
 			gesturesForTouch.length = 0;// release for GC
+			
+			delete _gesturesForTouchMap[touch];//TODO: remove this once Touch objects are pooled
 		}
 		
 		
@@ -327,6 +329,8 @@ package org.gestouch.core
 			}
 			
 			gesturesForTouch.length = 0;// release for GC
+			
+			delete _gesturesForTouchMap[touch];//TODO: remove this once Touch objects are pooled
 		}
 		
 		
