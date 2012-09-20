@@ -185,7 +185,8 @@ package org.gestouch.gestures
 			
 			if (_noDirection)
 			{
-				if (avrgVel >= minVelocity || offsetLength >= minOffset)
+				if ((offsetLength > slop || slop != slop) &&
+					(avrgVel >= minVelocity || offsetLength >= minOffset))
 				{
 					setState(GestureState.RECOGNIZED);
 				}
