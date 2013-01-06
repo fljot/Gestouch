@@ -26,14 +26,12 @@ package org.gestouch.gestures
 		private static const MIN_VELOCITY:Number = 2 * MIN_OFFSET / MAX_DURATION;
 		
 		/**
-		 * "Dirty" region around touch begin location which does not taken into account
-		 * for gesture failing conditions. It might be useful in case your device is too sensitive
-		 * (so when you just touch the <i>screen</i> you get undesired accidental movement).<br/>
-		 * <b>NB! Unlike in other gestures, default value for slop is 0 here.</b>
+		 * "Dirty" region around touch begin location which is not taken into account for
+		 * recognition/failing algorithms.
 		 * 
-		 * @default 0
+		 * @default Gesture.DEFAULT_SLOP
 		 */
-		public var slop:Number = 0;
+		public var slop:Number = Gesture.DEFAULT_SLOP;
 		public var numTouchesRequired:uint = 1;
 		public var direction:uint = SwipeGestureDirection.ORTHOGONAL;
 		
@@ -187,7 +185,8 @@ package org.gestouch.gestures
 			
 			if (_noDirection)
 			{
-				if (avrgVel >= minVelocity || offsetLength >= minOffset)
+				if ((offsetLength > slop || slop != slop) &&
+					(avrgVel >= minVelocity || offsetLength >= minOffset))
 				{
 					setState(GestureState.RECOGNIZED);
 				}
@@ -204,46 +203,43 @@ package org.gestouch.gestures
 				{
 					var absOffsetX:Number = _offset.x > 0 ? _offset.x : -_offset.x;
 					
-					if ((recentOffsetX < 0 && (direction & SwipeGestureDirection.LEFT) == 0) ||
-						(recentOffsetX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0) ||
-						Math.abs(Math.atan(_offset.y/_offset.x)) > ANGLE)
+					if (absOffsetX > slop || slop != slop)//faster isNaN()
 					{
-						// movement in opposite direction
-						// or too much diagonally
-						
-						// Give some tolerance for accidental offset on finger press (slop)
-						if (offsetLength > slop || slop != slop)//faster isNaN()
+						if ((recentOffsetX < 0 && (direction & SwipeGestureDirection.LEFT) == 0) ||
+							(recentOffsetX > 0 && (direction & SwipeGestureDirection.RIGHT) == 0) ||
+							Math.abs(Math.atan(_offset.y/_offset.x)) > ANGLE)
 						{
+							// movement in opposite direction
+							// or too much diagonally
+							
 							setState(GestureState.FAILED);
 						}
-					}
-					else if (absVelX >= minVelocity || absOffsetX >= minOffset)
-					{
-						_offset.y = 0;
-						setState(GestureState.RECOGNIZED);
+						else if (absVelX >= minVelocity || absOffsetX >= minOffset)
+						{
+							_offset.y = 0;
+							setState(GestureState.RECOGNIZED);
+						}
 					}
 				}
 				else if (absVelY > absVelX)
 				{
 					var absOffsetY:Number = _offset.y > 0 ? _offset.y : -_offset.y;
-					
-					if ((recentOffsetY < 0 && (direction & SwipeGestureDirection.UP) == 0) ||
-						(recentOffsetY > 0 && (direction & SwipeGestureDirection.DOWN) == 0) ||
-						Math.abs(Math.atan(_offset.x/_offset.y)) > ANGLE)
+					if (absOffsetY > slop || slop != slop)//faster isNaN()
 					{
-						// movement in opposite direction
-						// or too much diagonally
-						
-						// Give some tolerance for accidental offset on finger press (slop)
-						if (offsetLength > slop || slop != slop)//faster isNaN()
+						if ((recentOffsetY < 0 && (direction & SwipeGestureDirection.UP) == 0) ||
+							(recentOffsetY > 0 && (direction & SwipeGestureDirection.DOWN) == 0) ||
+							Math.abs(Math.atan(_offset.x/_offset.y)) > ANGLE)
 						{
+							// movement in opposite direction
+							// or too much diagonally
+							
 							setState(GestureState.FAILED);
 						}
-					}
-					else if (absVelY >= minVelocity || absOffsetY >= minOffset)
-					{
-						_offset.x = 0;
-						setState(GestureState.RECOGNIZED);
+						else if (absVelY >= minVelocity || absOffsetY >= minOffset)
+						{
+							_offset.x = 0;
+							setState(GestureState.RECOGNIZED);
+						}
 					}
 				}
 				// Give some tolerance for accidental offset on finger press (slop)
