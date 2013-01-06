@@ -15,6 +15,8 @@ package org.gestouch.gestures
 	import flash.system.Capabilities;
 	import flash.utils.Dictionary;
 	
+	use namespace gestouch_internal;
+	
 	
 	/**
 	 * Dispatched when the state of the gesture changes.
@@ -67,8 +69,6 @@ package org.gestouch.gestures
 		protected var _pendingRecognizedState:GestureState;
 		
 		private var eventListeners:Dictionary = new Dictionary();
-		
-		use namespace gestouch_internal;
 		
 		
 		public function Gesture(target:Object = null)
@@ -343,13 +343,13 @@ package org.gestouch.gestures
 		}
 		
 		
-		public function canBePreventedByGesture(preventingGesture:Gesture):Boolean
+		gestouch_internal function canBePreventedByGesture(preventingGesture:Gesture):Boolean
 		{
 			return true;
 		}
 		
 		
-		public function canPreventGesture(preventedGesture:Gesture):Boolean
+		gestouch_internal function canPreventGesture(preventedGesture:Gesture):Boolean
 		{
 			return true;
 		}

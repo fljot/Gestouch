@@ -1,10 +1,13 @@
 package org.gestouch.gestures
 {
+	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
 
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
+	
+	use namespace gestouch_internal;
 
 
 	/**
@@ -54,7 +57,7 @@ package org.gestouch.gestures
 		}
 		
 		
-		override public function canPreventGesture(preventedGesture:Gesture):Boolean
+		override gestouch_internal function canPreventGesture(preventedGesture:Gesture):Boolean
 		{
 			if (preventedGesture is TapGesture &&
 				(preventedGesture as TapGesture).numTapsRequired > this.numTapsRequired)
