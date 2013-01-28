@@ -3,7 +3,6 @@ package org.gestouch.gestures
 	import org.gestouch.core.Gestouch;
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.GesturesManager;
-	import org.gestouch.core.IGestureDelegate;
 	import org.gestouch.core.IGestureTargetAdapter;
 	import org.gestouch.core.Touch;
 	import org.gestouch.core.gestouch_internal;
@@ -53,6 +52,30 @@ package org.gestouch.gestures
 		 * based on 20 pixels on a 252ppi device.
 		 */
 		public static var DEFAULT_SLOP:uint = Math.round(20 / 252 * flash.system.Capabilities.screenDPI);
+		
+		/**
+		 * If a gesture should receive a touch.
+		 * Callback signature: function(gesture:Gesture, touch:Touch):Boolean
+		 * 
+		 * @see Touch
+		 */
+		public var gestureShouldReceiveTouchCallback:Function;
+		/**
+		 * If a gesture should be recognized (transition from state POSSIBLE to state RECOGNIZED or BEGAN).
+		 * Returning <code>false</code> causes the gesture to transition to the FAILED state.
+		 * 
+		 * Callback signature: function(gesture:Gesture):Boolean
+		 * 
+		 * @see state
+		 * @see GestureState
+		 */
+		public var gestureShouldBeginCallback:Function;
+		/**
+		 * If two gestures should be allowed to recognize simultaneously.
+		 * 
+		 * Callback signature: function(gesture:Gesture, otherGesture:Gesture):Boolean
+		 */
+		public var gesturesShouldRecognizeSimultaneouslyCallback:Function;
 		
 		
 		protected const _gesturesManager:GesturesManager = Gestouch.gesturesManager;
@@ -152,28 +175,6 @@ package org.gestouch.gestures
 				{
 					setState(GestureState.CANCELLED);
 				}
-			}
-		}
-		
-		
-		private var _delegateWeekStorage:Dictionary;
-		public function get delegate():IGestureDelegate
-		{
-			for (var key:Object in _delegateWeekStorage)
-			{
-				return key as IGestureDelegate;
-			}
-			return null;
-		}
-		public function set delegate(value:IGestureDelegate):void
-		{
-			for (var key:Object in _delegateWeekStorage)
-			{
-				delete _delegateWeekStorage[key];
-			}
-			if (value)
-			{
-				(_delegateWeekStorage ||= new Dictionary(true))[value] = true;
 			}
 		}
 		
@@ -337,7 +338,9 @@ package org.gestouch.gestures
 			reset();
 			removeAllEventListeners();
 			target = null;
-			delegate = null;
+			gestureShouldReceiveTouchCallback = null;
+			gestureShouldBeginCallback = null;
+			gesturesShouldRecognizeSimultaneouslyCallback = null;
 			_gesturesToFail = null;
 			eventListeners = null;
 		}
@@ -555,7 +558,7 @@ package org.gestouch.gestures
 				}
 				
 				
-				if (delegate && !delegate.gestureShouldBegin(this))
+				if (gestureShouldBeginCallback != null && !gestureShouldBeginCallback(this))
 				{
 					setState(GestureState.FAILED);
 					return false;
