@@ -33,7 +33,7 @@ Features:
 
 h3. Getting Started
 
-All gestures dispatch (if you listen) GestureEvent with the next types:
+All gestures dispatch (if you listen to!) GestureEvent with the next types:
 GestureEvent.GESTURE_STATE_CHANGE
 GestureEvent.GESTURE_IDLE
 GestureEvent.GESTURE_POSSIBLE
@@ -47,7 +47,7 @@ GestureEvent.GESTURE_BEGAN
 GestureEvent.GESTURE_CHANGED
 GestureEvent.GESTURE_ENDED
 
-If you use a good IDE (such as Intellij IDEA, FDT, FlashDevelop, Flash Builder) you should see these events in autocompletion.
+If you use a good IDE (such as IntelliJ IDEA, FDT, FlashDevelop, Flash Builder) you should see these events in autocompletion.
 
 Quick start:
 <pre><code>var doubleTap:TapGesture = new TapGesture(myButton);
@@ -81,7 +81,7 @@ private function onFreeTransform(event:GestureEvent):void
 h3. Advanced usage: Starling, ...
 
 Recent changes made it possible to work with "Starling":http://www.starling-framework.org display list objects as well as any other display list hierarchical structures, e.g. other Stage3D frameworks that have display objects hierarchy like "ND2D":https://github.com/nulldesign/nd2d or even 3D libraries.
-In order to use Gestouch with Starling do the following:
+In order to use Gestouch with Starling all you need to do is a bit of bootstrapping:
 <pre><code>starling = new Starling(MyStarlingRootClass, stage);
 /* setup & start your Starling instance here */
 
@@ -105,7 +105,7 @@ Gestouch.addTouchHitTester(new StarlingTouchHitTester(starling), -1);
 // your application lifetime.
 </code></pre>
 
-Now you can register gesture in familiar, exactly same way:
+Now you can register gestures as usual:
 <pre><code>var tap:TapGesture = new TapGesture(starlingSprite);</code></pre>
 
 
@@ -122,7 +122,7 @@ h3. Roadmap, TODOs
 h3. News
 
 * "Follow me on Twitter":http://twitter.com/fljot for latest updates
-* Don't forget about "issues":https://github.com/fljot/Gestouch/issues section as good platform for discussions.
+* Don't forget about "issues":https://github.com/fljot/Gestouch/issues section as a good platform for discussions.
 
 
 

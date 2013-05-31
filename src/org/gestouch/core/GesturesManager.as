@@ -175,13 +175,13 @@ package org.gestouch.core
 						otherGesture.targetAdapter.contains(target)
 						)
 					{
-						var gestureDelegate:IGestureDelegate = gesture.delegate;
-						var otherGestureDelegate:IGestureDelegate = otherGesture.delegate;
 						// conditions for gestures relations
 						if (gesture.canPreventGesture(otherGesture) &&
 							otherGesture.canBePreventedByGesture(gesture) &&
-							(!gestureDelegate || !gestureDelegate.gesturesShouldRecognizeSimultaneously(gesture, otherGesture)) &&
-							(!otherGestureDelegate || !otherGestureDelegate.gesturesShouldRecognizeSimultaneously(otherGesture, gesture)))
+							(gesture.gesturesShouldRecognizeSimultaneouslyCallback == null ||
+							 gesture.gesturesShouldRecognizeSimultaneouslyCallback(gesture, otherGesture)) &&
+							(otherGesture.gesturesShouldRecognizeSimultaneouslyCallback == null ||
+							 otherGesture.gesturesShouldRecognizeSimultaneouslyCallback(otherGesture, gesture)))
 						{
 							otherGesture.setState_internal(GestureState.FAILED);
 						}
@@ -242,7 +242,8 @@ package org.gestouch.core
 					{
 						gesture = gesturesForTarget[i];
 						if (gesture.enabled &&
-							(!gesture.delegate || gesture.delegate.gestureShouldReceiveTouch(gesture, touch)))
+							(gesture.gestureShouldReceiveTouchCallback == null ||
+							 gesture.gestureShouldReceiveTouchCallback(gesture, touch)))
 						{
 							//TODO: optimize performance! decide between unshift() vs [i++] = gesture + reverse()
 							gesturesForTouch.unshift(gesture);

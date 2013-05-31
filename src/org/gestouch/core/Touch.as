@@ -49,10 +49,13 @@ package org.gestouch.core
 			_time = time;
 			_beginTime = time;
 		}
-		gestouch_internal function updateLocation(x:Number, y:Number, time:uint):void
+		gestouch_internal function updateLocation(x:Number, y:Number, time:uint):Boolean
 		{
 			if (_location)
 			{
+				if (_location.x == x && _location.y == y)
+					return false;
+				
 				_previousLocation.x = _location.x;
 				_previousLocation.y = _location.y;
 				_location.x = x;
@@ -63,6 +66,8 @@ package org.gestouch.core
 			{
 				setLocation(x, y, time);
 			}
+			
+			return true;
 		}
 		
 		

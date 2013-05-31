@@ -161,9 +161,14 @@ package org.gestouch.core
 			if (!touch)
 				return;// touch with specified ID isn't registered
 			
-			touch.updateLocation(x, y, getTimer());
-			
-			_gesturesManager.onTouchMove(touch);
+			if (touch.updateLocation(x, y, getTimer()))
+			{
+				// NB! It appeared that native TOUCH_MOVE event is dispatched also when
+				// the location is the same, but size has changed. We are only interested
+				// in location at the moment, so we shall ignore irrelevant calls.
+				
+				_gesturesManager.onTouchMove(touch);
+			}
 		}
 		
 		

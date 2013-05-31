@@ -10,7 +10,6 @@ package org.gestouch.events
 	 */
 	public class GestureEvent extends Event
 	{
-		public static const GESTURE_IDLE:String = "gestureIdle";
 		public static const GESTURE_POSSIBLE:String = "gesturePossible";
 		public static const GESTURE_RECOGNIZED:String = "gestureRecognized";
 		public static const GESTURE_BEGAN:String = "gestureBegan";
