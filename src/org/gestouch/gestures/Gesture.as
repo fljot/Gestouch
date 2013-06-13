@@ -424,7 +424,7 @@ package org.gestouch.gestures
 		 */
 		protected function ignoreTouch(touch:Touch):void
 		{
-			if (_touchesMap.hasOwnProperty(touch.id))
+			if (touch.id in _touchesMap)
 			{
 				delete _touchesMap[touch.id];
 				_touchesCount--;
