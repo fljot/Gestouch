@@ -1,6 +1,5 @@
 package org.gestouch.core
 {
-	import flash.display.InteractiveObject;
 	import flash.display.Stage;
 	import flash.geom.Point;
 	import flash.utils.Dictionary;
@@ -90,8 +89,8 @@ package org.gestouch.core
 		}
 		
 		
-		gestouch_internal function onTouchBegin(touchID:uint, x:Number, y:Number, nativeTarget:InteractiveObject = null):Boolean
-		{			
+		gestouch_internal function onTouchBegin(touchID:uint, x:Number, y:Number, possibleTarget:Object = null):Boolean
+		{
 			if (touchID in _touchesMap)
 				return false;// touch with specified ID is already registered and being tracked
 			
@@ -119,7 +118,7 @@ package org.gestouch.core
 			var altTarget:Object;
 			for each (var hitTester:ITouchHitTester in _hitTesters)
 			{
-				target = hitTester.hitTest(location, nativeTarget);
+				target = hitTester.hitTest(location, possibleTarget);
 				if (target)
 				{
 					if ((target is Stage))

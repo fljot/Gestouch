@@ -1,11 +1,10 @@
 package org.gestouch.core
 {
-	import org.gestouch.extensions.native.NativeDisplayListAdapter;
-	import org.gestouch.extensions.native.NativeTouchHitTester;
-
 	import flash.display.DisplayObject;
 	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
+
+	import org.gestouch.extensions.native.NativeDisplayListAdapter;
 
 
 	/**
@@ -14,10 +13,6 @@ package org.gestouch.core
 	final public class Gestouch
 	{
 		private static const _displayListAdaptersMap:Dictionary = new Dictionary();
-		
-		{
-			initClass();
-		}
 		
 		
 		/** @private */
@@ -91,7 +86,15 @@ package org.gestouch.core
 		
 		gestouch_internal static function createGestureTargetAdapter(target:Object):IDisplayListAdapter
 		{
-			const adapter:IDisplayListAdapter = Gestouch.gestouch_internal::getDisplayListAdapter(target);
+			var adapter:IDisplayListAdapter = Gestouch.gestouch_internal::getDisplayListAdapter(target);
+
+			// Lazy add display list adapter for flash.display::DisplayObject
+			if (!adapter && target is flash.display.DisplayObject)
+			{
+				adapter = new NativeDisplayListAdapter();
+				Gestouch.addDisplayListAdapter(DisplayObject, adapter);
+			}
+
 			if (adapter)
 			{
 				return new (adapter.reflect())(target);
@@ -113,13 +116,6 @@ package org.gestouch.core
 			}
 			
 			return null;
-		}
-		
-		
-		private static function initClass():void
-		{
-			addTouchHitTester(new NativeTouchHitTester());
-			addDisplayListAdapter(DisplayObject, new NativeDisplayListAdapter());
 		}
 	}
 }
