@@ -1,5 +1,6 @@
 package org.gestouch.gestures
 {
+	import flash.geom.Point;
 	import org.gestouch.core.gestouch_internal;
 	import org.gestouch.core.GestureState;
 	import org.gestouch.core.Touch;
@@ -21,10 +22,12 @@ package org.gestouch.gestures
 		public var slop:Number = Gesture.DEFAULT_SLOP << 2;//iOS has 45px for 132 dpi screen
 		public var maxTapDelay:uint = 400;
 		public var maxTapDuration:uint = 1500;
+		public var maxTapDistance:Number = Gesture.DEFAULT_SLOP << 2;
 		
 		protected var _timer:Timer;
 		protected var _numTouchesRequiredReached:Boolean;
 		protected var _tapCounter:uint = 0;
+		protected var _touchBeginLocations:Vector.<Point> = new Vector.<Point>();
 		
 		
 		public function TapGesture(target:Object = null)
@@ -52,6 +55,7 @@ package org.gestouch.gestures
 			_numTouchesRequiredReached = false;
 			_tapCounter = 0;
 			_timer.reset();
+			_touchBeginLocations.length = 0;
 			
 			super.reset();
 		}
@@ -98,6 +102,35 @@ package org.gestouch.gestures
 				_timer.reset();
 				_timer.delay = maxTapDuration;
 				_timer.start();
+			}
+			
+			if (numTapsRequired > 1)
+			{
+				if (_tapCounter == 0)
+				{
+					// Save touch begin locations to check
+					_touchBeginLocations.push(touch.location);
+				}
+				else
+				{
+					// Quite a dirty check, but should work in most cases
+					var found:Boolean = false;
+					for each (var loc:Point in _touchBeginLocations)
+					{
+						// current touch should be near any previous one
+						if (Point.distance(touch.location, loc) <= maxTapDistance)
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+					{
+						setState(GestureState.FAILED);
+						return;
+					}
+				}
 			}
 			
 			if (touchesCount == numTouchesRequired)

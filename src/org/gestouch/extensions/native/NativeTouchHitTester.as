@@ -1,19 +1,40 @@
 package org.gestouch.extensions.native
 {
-	import org.gestouch.core.ITouchHitTester;
-
-	import flash.display.InteractiveObject;
+	import flash.display.DisplayObject;
+	import flash.display.Stage;
 	import flash.geom.Point;
+
+	import org.gestouch.core.ITouchHitTester;
 
 
 	/**
 	 * @author Pavel fljot
 	 */
-	final public class NativeTouchHitTester implements ITouchHitTester
+	public class NativeTouchHitTester implements ITouchHitTester
 	{
-		public function hitTest(point:Point, nativeTarget:InteractiveObject):Object
+		private var stage:Stage;
+
+
+		public function NativeTouchHitTester(stage:Stage)
 		{
-			return nativeTarget;
+			if (!stage)
+			{
+				throw ArgumentError("Missing stage argument.");
+			}
+
+			this.stage = stage;
+		}
+
+
+		public function hitTest(point:Point, possibleTarget:Object = null):Object
+		{
+			if (possibleTarget && possibleTarget is DisplayObject)
+			{
+				return possibleTarget;
+			}
+
+			// Fallback target detection through getObjectsUnderPoint
+			return DisplayObjectUtils.getTopTarget(stage, point);
 		}
 	}
 }

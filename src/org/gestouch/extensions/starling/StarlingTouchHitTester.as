@@ -1,34 +1,39 @@
 package org.gestouch.extensions.starling
 {
-	import starling.core.Starling;
+	import flash.geom.Point;
 
 	import org.gestouch.core.ITouchHitTester;
 
-	import flash.display.InteractiveObject;
-	import flash.geom.Point;
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
 
 
 	/**
 	 * @author Pavel fljot
 	 */
-	final public class StarlingTouchHitTester implements ITouchHitTester
+	public class StarlingTouchHitTester implements ITouchHitTester
 	{
 		private var starling:Starling;
-		
-		
+
+
 		public function StarlingTouchHitTester(starling:Starling)
 		{
 			if (!starling)
 			{
 				throw ArgumentError("Missing starling argument.");
 			}
-			
+
 			this.starling = starling;
 		}
-		
-		
-		public function hitTest(point:Point, nativeTarget:InteractiveObject):Object
+
+
+		public function hitTest(point:Point, possibleTarget:Object = null):Object
 		{
+			if (possibleTarget && possibleTarget is DisplayObject)
+			{
+				return possibleTarget;
+			}
+
 			point = StarlingUtils.adjustGlobalPoint(starling, point);
 			return starling.stage.hitTest(point, true);
 		}

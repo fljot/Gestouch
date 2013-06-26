@@ -1,16 +1,18 @@
 package org.gestouch.core
 {
-	import flash.errors.IllegalOperationError;
-	import org.gestouch.gestures.Gesture;
-	import org.gestouch.input.NativeInputAdapter;
-
 	import flash.display.DisplayObject;
 	import flash.display.Shape;
 	import flash.display.Stage;
+	import flash.errors.IllegalOperationError;
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
 	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
+
+	import org.gestouch.extensions.native.NativeTouchHitTester;
+	import org.gestouch.gestures.Gesture;
+	import org.gestouch.input.NativeInputAdapter;
+
 
 	/**
 	 * @author Pavel fljot
@@ -48,6 +50,7 @@ package org.gestouch.core
 			_stage = stage;
 			
 			Gestouch.inputAdapter ||= new NativeInputAdapter(stage);
+			Gestouch.addTouchHitTester(new NativeTouchHitTester(stage));
 		}
 		
 		
@@ -104,7 +107,7 @@ package org.gestouch.core
 					}
 					else
 					{
-						targetAsDO.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler);
+						targetAsDO.addEventListener(Event.ADDED_TO_STAGE, gestureTarget_addedToStageHandler, false,0, true);
 					}
 				}
 			}

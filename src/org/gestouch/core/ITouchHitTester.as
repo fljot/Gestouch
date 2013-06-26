@@ -1,6 +1,5 @@
 package org.gestouch.core
 {
-	import flash.display.InteractiveObject;
 	import flash.geom.Point;
 
 
@@ -9,6 +8,6 @@ package org.gestouch.core
 	 */
 	public interface ITouchHitTester
 	{
-		function hitTest(point:Point, nativeTarget:InteractiveObject):Object;
+		function hitTest(point:Point, possibleTarget:Object = null):Object;
 	}
 }
