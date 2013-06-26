@@ -116,8 +116,8 @@ package org.gestouch.core
 		public function clone():Touch
 		{
 			var touch:Touch = new Touch(id);
-			touch._location = _location;
-			touch._beginLocation = _beginLocation;
+			touch._location = _location.clone();
+			touch._beginLocation = _beginLocation.clone();
 			touch.target = target;
 			touch.sizeX = sizeX;
 			touch.sizeY = sizeY;
