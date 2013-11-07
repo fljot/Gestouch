@@ -14,6 +14,24 @@
 		<flex.sdk.version>4.6.b.23201</flex.sdk.version>
 	</properties>
 
+	<!-- Continuous Integration build hosted by CloudBees -->
+	<ciManagement>
+		<system>jenkins</system>
+		<url>https://fljot.ci.cloudbees.com/job/Gestouch/</url>
+	</ciManagement>
+
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/fljot/Gestouch/issues</url>
+	</issueManagement>
+
+	<!-- GitHub Software Configuration Management -->
+	<scm>
+		<url>https://github.com/fljot/Gestouch</url>
+		<connection>scm:git:ssh://git@github.com:fljot/Gestouch.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com:fljot/Gestouch.git</developerConnection>
+	</scm>
+
 	<build>
 		<sourceDirectory>src/</sourceDirectory>
 
