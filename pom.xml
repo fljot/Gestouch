@@ -192,35 +192,14 @@
 		</repository>
 
 		<repository>
-			<id>trylogic</id>
-			<name>Trylogic</name>
-			<url>http://repo.trylogic.ru/content/repositories/public/</url>
+			<id>starling-repository</id>
+			<url>http://repository-trylogic.forge.cloudbees.com/snapshot</url>
 			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<layout>default</layout>
-		</repository>
-
-		<repository>
-			<id>trylogic-releases</id>
-			<name>Trylogic releases</name>
-			<url>http://repo.trylogic.ru/content/repositories/releases/</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
 				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
 			</snapshots>
-			<layout>default</layout>
 		</repository>
 	</repositories>
 
