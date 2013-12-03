@@ -91,7 +91,7 @@ package org.gestouch.gestures
 		protected var _gesturesToFail:Dictionary = new Dictionary(true);
 		protected var _pendingRecognizedState:GestureState;
 		
-		private var eventListeners:Dictionary = new Dictionary();
+		private var eventListeners:Dictionary = new Dictionary(true);
 		
 		
 		public function Gesture(target:Object = null)
