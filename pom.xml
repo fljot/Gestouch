@@ -47,7 +47,6 @@
 					<skipTests>true</skipTests>
 					<skipTest>true</skipTest>
 					<debug>true</debug>
-					<debug>true</debug>
 					<verboseStacktraces>true</verboseStacktraces>
 					<!--
 					NB! SWC is compiled in debug mode with verbose stacktraces
