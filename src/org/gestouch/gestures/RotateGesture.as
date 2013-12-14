@@ -87,7 +87,9 @@ package org.gestouch.gestures
 				return;
 			
 			var currTransformVector:Point = _touch2.location.subtract(_touch1.location);
-			var rotation:Number = Math.atan2(currTransformVector.y, currTransformVector.x) - Math.atan2(_transformVector.y, _transformVector.x);
+			var cross:Number = (_transformVector.x * currTransformVector.y) - (currTransformVector.x * _transformVector.y);
+			var dot:Number = (_transformVector.x * currTransformVector.x) + (_transformVector.y * currTransformVector.y);
+			var rotation:Number = Math.atan2(cross, dot);
 			
 			if (state == GestureState.POSSIBLE)
 			{
