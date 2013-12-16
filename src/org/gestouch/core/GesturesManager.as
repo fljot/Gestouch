@@ -182,9 +182,9 @@ package org.gestouch.core
 						if (gesture.canPreventGesture(otherGesture) &&
 							otherGesture.canBePreventedByGesture(gesture) &&
 							(gesture.gesturesShouldRecognizeSimultaneouslyCallback == null ||
-							 gesture.gesturesShouldRecognizeSimultaneouslyCallback(gesture, otherGesture)) &&
+							 !gesture.gesturesShouldRecognizeSimultaneouslyCallback(gesture, otherGesture)) &&
 							(otherGesture.gesturesShouldRecognizeSimultaneouslyCallback == null ||
-							 otherGesture.gesturesShouldRecognizeSimultaneouslyCallback(otherGesture, gesture)))
+							 !otherGesture.gesturesShouldRecognizeSimultaneouslyCallback(otherGesture, gesture)))
 						{
 							otherGesture.setState_internal(GestureState.FAILED);
 						}
