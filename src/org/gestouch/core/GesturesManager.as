@@ -20,7 +20,6 @@ package org.gestouch.core
 	public class GesturesManager
 	{
 		protected const _frameTickerShape:Shape = new Shape();
-		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
 		protected var _gesturesMap:Dictionary = new Dictionary(true);
 		protected var _gesturesForTouchMap:Dictionary = new Dictionary();
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
@@ -182,9 +181,9 @@ package org.gestouch.core
 						if (gesture.canPreventGesture(otherGesture) &&
 							otherGesture.canBePreventedByGesture(gesture) &&
 							(gesture.gesturesShouldRecognizeSimultaneouslyCallback == null ||
-							 gesture.gesturesShouldRecognizeSimultaneouslyCallback(gesture, otherGesture)) &&
+							 !gesture.gesturesShouldRecognizeSimultaneouslyCallback(gesture, otherGesture)) &&
 							(otherGesture.gesturesShouldRecognizeSimultaneouslyCallback == null ||
-							 otherGesture.gesturesShouldRecognizeSimultaneouslyCallback(otherGesture, gesture)))
+							 !otherGesture.gesturesShouldRecognizeSimultaneouslyCallback(otherGesture, gesture)))
 						{
 							otherGesture.setState_internal(GestureState.FAILED);
 						}

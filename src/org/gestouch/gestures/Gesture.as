@@ -91,8 +91,6 @@ package org.gestouch.gestures
 		protected var _gesturesToFail:Dictionary = new Dictionary(true);
 		protected var _pendingRecognizedState:GestureState;
 		
-		private var eventListeners:Dictionary = new Dictionary();
-		
 		
 		public function Gesture(target:Object = null)
 		{
@@ -223,43 +221,6 @@ package org.gestouch.gestures
 		//
 		//--------------------------------------------------------------------------
 		
-		override public function addEventListener(type:String, listener:Function, 
-												  useCapture:Boolean = false, priority:int = 0,
-												  useWeakReference:Boolean = false):void
-		{
-			super.addEventListener(type, listener, useCapture, priority, useWeakReference);
-			
-			const listenerProps:Array = eventListeners[listener] as Array;
-			if (listenerProps)
-			{
-				listenerProps.push(type, useCapture);
-			}
-			else
-			{
-				eventListeners[listener] = [type, useCapture];
-			}
-		}
-		
-		
-		public function removeAllEventListeners():void
-		{
-			for (var listener:Object in eventListeners)
-			{
-				const listenerProps:Array = eventListeners[listener] as Array;
-				
-				var n:uint = listenerProps.length;
-				for (var i:uint = 0; i < n;)
-				{
-					super.removeEventListener(listenerProps[i++] as String, listener as Function, listenerProps[i++] as Boolean);
-				}
-				
-				delete eventListeners[listener];
-			}
-			
-//			eventListeners = new Dictionary(true);
-		}
-		
-		
 		[Abstract]
 		/**
 		 * Reflects gesture class (for better perfomance).
@@ -336,13 +297,11 @@ package org.gestouch.gestures
 		{
 			//TODO
 			reset();
-			removeAllEventListeners();
 			target = null;
 			gestureShouldReceiveTouchCallback = null;
 			gestureShouldBeginCallback = null;
 			gesturesShouldRecognizeSimultaneouslyCallback = null;
 			_gesturesToFail = null;
-			eventListeners = null;
 		}
 		
 		
