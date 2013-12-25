@@ -20,7 +20,6 @@ package org.gestouch.core
 	public class GesturesManager
 	{
 		protected const _frameTickerShape:Shape = new Shape();
-		protected var _inputAdapters:Vector.<IInputAdapter> = new Vector.<IInputAdapter>();
 		protected var _gesturesMap:Dictionary = new Dictionary(true);
 		protected var _gesturesForTouchMap:Dictionary = new Dictionary();
 		protected var _gesturesForTargetMap:Dictionary = new Dictionary(true);
