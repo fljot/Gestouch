@@ -7,7 +7,7 @@
 	<groupId>org.gestouch</groupId>
 	<artifactId>gestouch</artifactId>
 	<packaging>swc</packaging>
-	<version>0.4.7-SNAPSHOT</version>
+	<version>0.4.7</version>
 
 	<properties>
 		<flexmojos.version>5.0-beta</flexmojos.version>
