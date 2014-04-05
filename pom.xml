@@ -42,7 +42,6 @@
 				<version>${flexmojos.version}</version>
 				<extensions>true</extensions>
 				<configuration>
-					<debug>true</debug>
 					<storepass/>
 					<skipTests>true</skipTests>
 					<skipTest>true</skipTest>
