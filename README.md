@@ -75,22 +75,35 @@ private function onFreeTransform(event:GestureEvent):void
 
 * Check the [Gestouch Examples](http://github.com/fljot/GestouchExamples) project for a quick jump-in
 * *+Highly recommended+* to watch videos from Apple WWDC conferences as they explain all the concepts and show more or less real-life examples. @see links below
-* "Introduction video":http://www.youtube.com/watch?v=NjkmB8rfQjY - my first video, currently outdated
-* TODO: wiki
+* TODO: wiki?
+
+
+
+#### Memory Management
+
+To make Gesture object available for Garbage Collector:
+
+1. **Important!** Set gesture target to `null` or call `dispose()` method.
+2. Remove all other references you've created (e.g. event listeners).
+
+@see [examples](https://github.com/fljot/GestouchExamples/tree/master/src/org/gestouch/examples/views) for more details.
 
 
 
 ### Advanced usage: Starling, ...
 
+It is possible to work with [Starling](http://www.starling-framework.org) display objects as well as any other display list hierarchical structures, e.g. other Stage3D frameworks that have display objects hierarchy like [Genome2D](https://github.com/pshtif/Genome2D-AS3) or [ND2D](https://github.com/nulldesign/nd2d) or even 3D libraries.
 
-Recent changes made it possible to work with "Starling":http://www.starling-framework.org display list objects as well as any other display list hierarchical structures, e.g. other Stage3D frameworks that have display objects hierarchy like "ND2D":https://github.com/nulldesign/nd2d or even 3D libraries.
 In order to use Gestouch with Starling all you need to do is a bit of bootstrapping:
 <pre><code>starling = new Starling(MyStarlingRootClass, stage);
 /* setup & start your Starling instance here */
 
 // Gestouch initialization step 1 of 3:
 // Initialize native (default) input adapter. Needed for non-DisplayList usage.
-Gestouch.inputAdapter ||= new NativeInputAdapter(stage);
+if (!Gestouch.inputAdapter)
+{
+    Gestouch.inputAdapter = new NativeInputAdapter(stage);
+}
 
 // Gestouch initialization step 2 of 3:
 // Register instance of StarlingDisplayListAdapter to be used for objects of type starling.display.DisplayObject.
