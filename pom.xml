@@ -157,27 +157,25 @@
 	</reporting>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.adobe.flex</groupId>
-			<artifactId>compiler</artifactId>
-			<version>${flex.sdk.version}</version>
-			<type>pom</type>
-		</dependency>
+        <!--
+        Note: while this includes the entire flex framework for compilation,
+        the default for SWCs is external linkage, so nothing from the Flex framework will be added to the final output.
+        -->
+        <dependency>
+            <groupId>com.adobe.flex.framework</groupId>
+            <artifactId>flex-framework</artifactId>
+            <version>${flex.sdk.version}</version>
+            <type>pom</type>
+        </dependency>
 
-		<dependency>
-			<groupId>com.adobe.flex.framework</groupId>
-			<artifactId>flex-framework</artifactId>
-			<version>${flex.sdk.version}</version>
-			<type>pom</type>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.gamua</groupId>
-			<artifactId>starling-framework</artifactId>
-			<version>[1.1,]</version>
-			<type>swc</type>
-		</dependency>
+        <dependency>
+            <!-- non-modified, yet unofficial -->
+            <groupId>com.inreflected.forks.com.gamua</groupId>
+            <artifactId>starling-framework</artifactId>
+            <version>1.5.1</version>
+            <type>swc</type>
+            <!-- scope is "external" by default because of SWC packaging -->
+        </dependency>
 	</dependencies>
 
 	<repositories>
@@ -187,13 +185,13 @@
 		</repository>
 
 		<repository>
-			<id>starling-repository</id>
-			<url>http://repository-trylogic.forge.cloudbees.com/snapshot</url>
+			<id>bintray-flash-repository</id>
+			<url>http://dl.bintray.com/fljot/flash</url>
 			<releases>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
 			</releases>
 			<snapshots>
-				<enabled>true</enabled>
+				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
