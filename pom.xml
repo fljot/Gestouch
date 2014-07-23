@@ -9,6 +9,8 @@
 	<packaging>swc</packaging>
 	<version>0.4.8-SNAPSHOT</version>
 
+    <name>Gestouch</name>
+
 	<properties>
 		<flexmojos.version>5.0-beta</flexmojos.version>
 		<flex.sdk.version>4.6.b.23201</flex.sdk.version>
@@ -46,12 +48,10 @@
 					<skipTests>true</skipTests>
 					<skipTest>true</skipTest>
 					<debug>true</debug>
-					<verboseStacktraces>true</verboseStacktraces>
 					<!--
-					NB! SWC is compiled in debug mode with verbose stacktraces
-					for better development process.
+					NB! SWC is compiled in debug mode for better development process.
 					It's okay and will not affect application performance
-					UNLESS you are using this library as RSL.
+					UNLESS you are somehow using this library as RSL.
 					-->
 					<keepAs3Metadatas>
 						<!-- potentially for Apparat. probably useless -->
@@ -83,9 +83,9 @@
 					<storepass/>
 					<keepXml>true</keepXml>
 					<skipXsl>true</skipXsl>
-					<windowTitle>Gestouch ${project.version}</windowTitle>
-					<mainTitle>Gestouch ${project.version}</mainTitle>
-					<footer>Gestouch - http://github.com/fljot/Gestouch/ - Documentation generated at: ${maven.build.timestamp}</footer>
+					<windowTitle>${project.name} ${project.version}</windowTitle>
+					<mainTitle>${project.name} ${project.version}</mainTitle>
+					<footer>${project.name} - http://github.com/fljot/Gestouch/ - Documentation generated at: ${maven.build.timestamp}</footer>
 				</configuration>
 			</plugin>
 
