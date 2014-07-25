@@ -75,7 +75,7 @@ package org.gestouch.core
 		
 		public static function removeTouchHitTester(hitTester:ITouchHitTester):void
 		{
-			touchesManager.gestouch_internal::removeInputAdapter(hitTester);
+			touchesManager.gestouch_internal::removeTouchHitTester(hitTester);
 		}
 		
 		

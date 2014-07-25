@@ -71,7 +71,7 @@ package org.gestouch.core
 		}
 		
 		
-		gestouch_internal function removeInputAdapter(touchHitTester:ITouchHitTester):void
+		gestouch_internal function removeTouchHitTester(touchHitTester:ITouchHitTester):void
 		{
 			if (!touchHitTester)
 			{
