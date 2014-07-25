@@ -45,14 +45,14 @@ package org.gestouch.core
 		 */
 		public static function get touchesManager():TouchesManager
 		{
-			return _touchesManager ||= new TouchesManager(gesturesManager);
+			return _touchesManager || (_touchesManager = new TouchesManager(gesturesManager));
 		}
 		
 		
 		private static var _gesturesManager:GesturesManager;
 		public static function get gesturesManager():GesturesManager
 		{
-			return _gesturesManager ||= new GesturesManager();
+			return _gesturesManager || (_gesturesManager = new GesturesManager());
 		}
 		
 		

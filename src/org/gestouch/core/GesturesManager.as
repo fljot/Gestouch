@@ -48,7 +48,10 @@ package org.gestouch.core
 		{
 			_stage = stage;
 			
-			Gestouch.inputAdapter ||= new NativeInputAdapter(stage);
+			if (!Gestouch.inputAdapter)
+			{
+				Gestouch.inputAdapter = new NativeInputAdapter(stage);
+			}
 			Gestouch.addTouchHitTester(new NativeTouchHitTester(stage));
 		}
 		
