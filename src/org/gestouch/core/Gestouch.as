@@ -65,6 +65,19 @@ package org.gestouch.core
 			
 			_displayListAdaptersMap[targetClass] = adapter;
 		}
+
+
+		/**
+		 * Checks whether touch hit-tester of specified type is registered.
+		 * NB! Checks against type (class) without considering subclasses.
+		 *
+		 * @param type The touch hit-tester class
+		 * @return Boolean
+		 */
+		public static function hasTouchHitTesterOfType(type:Class):Boolean
+		{
+			return touchesManager.gestouch_internal::hasTouchHitTesterOfType(type);
+		}
 		
 		
 		public static function addTouchHitTester(hitTester:ITouchHitTester, priority:int = 0):void

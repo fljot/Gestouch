@@ -69,6 +69,20 @@ package org.gestouch.core
 			// Sort hit testers using their priorities
 			_hitTesters.sort(hitTestersSorter);
 		}
+
+
+		gestouch_internal function hasTouchHitTesterOfType(type:Class):Boolean
+		{
+			for each (var hitTester:ITouchHitTester in _hitTesters)
+			{
+				if ((hitTester as Object).constructor == type)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
 		
 		
 		gestouch_internal function removeTouchHitTester(touchHitTester:ITouchHitTester):void
