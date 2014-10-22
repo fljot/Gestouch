@@ -131,7 +131,7 @@ package org.gestouch.core
 		
 		public function toString():String
 		{
-			return "Touch [id: " + id + ", location: " + location + ", ...]";
+			return "Touch [id: " + id + ", location: " + location + ", target: " + target + ", time: " + time + "]";
 		}
 	}
 }
