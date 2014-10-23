@@ -23,6 +23,31 @@
 			<arg value="-external-library-path+=${flexSDK.dir}/frameworks/libs"/>
 			<!-- Exclude any external classes (such as Starling framework classes) -->
 			<arg value="-external-library-path+=${libs.dir}"/>
+			<arg value="-define+=CONFIG::GestouchDebug,false"/>
+			<arg value="-externs+=org.gestouch.utils:log"/>
+			<!-- Keep the metatags (Apparat?). -->
+			<arg value="-keep-as3-metadata+=Abstract"/>
+			<!-- Boolean mosh pit! -->
+			<arg value="-incremental=false"/>
+			<arg value="-static-link-runtime-shared-libraries=true"/>
+			<arg value="-verbose-stacktraces=true"/>
+			<arg value="-headless-server=true"/>
+		</java>
+		<echo>[compile] Release SWC gestouch-${project.version}.swc created successfully</echo>
+	</target>
+
+	<target name="compile.swc.debug">
+		<echo>[compile] Compiling release SWC</echo>
+		<java jar="${flexSDK.dir}/lib/compc.jar" dir="${flexSDK.dir}/frameworks" fork="true" failonerror="true">
+			<!-- Build our SWC with a versioned name. -->
+			<arg value="-output=${binrelease.dir}/gestouch-${project.version}.swc"/>
+			<!-- We want all the org package classes in the SWC being built. -->
+			<arg value="-include-sources=${src.dir}"/>
+			<!-- Exclude Flex Framework classes (some mx events comes from binding). -->
+			<arg value="-external-library-path+=${flexSDK.dir}/frameworks/libs"/>
+			<!-- Exclude any external classes (such as Starling framework classes) -->
+			<arg value="-external-library-path+=${libs.dir}"/>
+			<arg value="-define+=CONFIG::GestouchDebug,true"/>
 			<!-- Keep the metatags (Apparat?). -->
 			<arg value="-keep-as3-metadata+=Abstract"/>
 			<!-- Boolean mosh pit! -->
@@ -51,6 +76,7 @@
 			<arg line="-output ${asdoc.dir}"/>
 			<arg value="-keep-xml=true"/>
 			<arg value="-skip-xsl=true"/>
+			<arg value="-define+=CONFIG::GestouchDebug,false"/>
 			<arg line="-window-title 'Gestouch ${project.version}'"/>
 			<arg line="-main-title 'Gestouch ${project.version}'"/>
 			<arg line="-footer 'Gestouch - http://github.com/fljot/Gestouch/ - Documentation generated at: ${docgen.time}'"/>
