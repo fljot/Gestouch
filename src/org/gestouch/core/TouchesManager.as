@@ -5,6 +5,9 @@ package org.gestouch.core
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 
+	CONFIG::GestouchDebug
+	import org.gestouch.utils.log;
+
 
 	/**
 	 * @author Pavel fljot
@@ -161,6 +164,11 @@ package org.gestouch.core
 			
 			_touchesMap[touchID] = touch;
 			_activeTouchesCount++;
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch begin:", touch);
+			}
 			
 			_gesturesManager.onTouchBegin(touch);
 			
@@ -179,6 +187,11 @@ package org.gestouch.core
 				// NB! It appeared that native TOUCH_MOVE event is dispatched also when
 				// the location is the same, but size has changed. We are only interested
 				// in location at the moment, so we shall ignore irrelevant calls.
+
+				CONFIG::GestouchDebug
+				{
+					log("Touch move:", touch);
+				}
 				
 				_gesturesManager.onTouchMove(touch);
 			}
@@ -195,6 +208,11 @@ package org.gestouch.core
 			
 			delete _touchesMap[touchID];
 			_activeTouchesCount--;
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch end:", touch);
+			}
 			
 			_gesturesManager.onTouchEnd(touch);
 			
@@ -212,6 +230,11 @@ package org.gestouch.core
 			
 			delete _touchesMap[touchID];
 			_activeTouchesCount--;
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch begin:", touch);
+			}
 			
 			_gesturesManager.onTouchCancel(touch);
 			

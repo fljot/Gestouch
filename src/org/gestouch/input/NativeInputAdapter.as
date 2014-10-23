@@ -12,6 +12,9 @@ package org.gestouch.input
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
 
+	CONFIG::GestouchDebug
+	import org.gestouch.utils.log;
+
 
 	/**
 	 * @author Pavel fljot
@@ -67,6 +70,12 @@ package org.gestouch.input
 		
 		public function init():void
 		{
+			CONFIG::GestouchDebug
+			{
+				log("Multitouch.supportsTouchEvents:", Multitouch.supportsTouchEvents);
+				log("_explicitlyHandleTouchEvents:", _explicitlyHandleTouchEvents);
+			}
+
 			if (Multitouch.supportsTouchEvents || _explicitlyHandleTouchEvents)
 			{
 				_stage.addEventListener(TouchEvent.TOUCH_BEGIN, touchBeginHandler, true);
@@ -145,7 +154,12 @@ package org.gestouch.input
 			// (to catch on empty stage) phases only
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;
-			
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch begin via touch event:", event);
+			}
+
 			_touchesManager.onTouchBegin(event.touchPointID, event.stageX, event.stageY, event.target as InteractiveObject);
 		}
 		
@@ -156,7 +170,12 @@ package org.gestouch.input
 			// (to catch on empty stage) phases only
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;
-			
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch move via touch event:", event);
+			}
+
 			_touchesManager.onTouchMove(event.touchPointID, event.stageX, event.stageY);
 		}
 		
@@ -167,6 +186,11 @@ package org.gestouch.input
 			// (to catch on empty stage) phases only
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch end/cancel via touch event:", event);
+			}
 			
 			if (event.hasOwnProperty("isTouchPointCanceled") && event["isTouchPointCanceled"])
 			{
@@ -185,6 +209,11 @@ package org.gestouch.input
 			// (to catch on empty stage) phases only
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch begin via mouse event:", event);
+			}
 			
 			const touchAccepted:Boolean = _touchesManager.onTouchBegin(MOUSE_TOUCH_POINT_ID, event.stageX, event.stageY, event.target as InteractiveObject);
 			
@@ -201,7 +230,12 @@ package org.gestouch.input
 			// (to catch on empty stage) phases only
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
 				return;
-			
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch move via mouse event:", event);
+			}
+
 			_touchesManager.onTouchMove(MOUSE_TOUCH_POINT_ID, event.stageX, event.stageY);
 		}
 		
@@ -211,7 +245,12 @@ package org.gestouch.input
 			// We listen in EventPhase.CAPTURE_PHASE or EventPhase.AT_TARGET
 			// (to catch on empty stage) phases only
 			if (event.eventPhase == EventPhase.BUBBLING_PHASE)
-				return;			
+				return;
+
+			CONFIG::GestouchDebug
+			{
+				log("Touch end via mouse event:", event);
+			}
 			
 			_touchesManager.onTouchEnd(MOUSE_TOUCH_POINT_ID, event.stageX, event.stageY);
 			
