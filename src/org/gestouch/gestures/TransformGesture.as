@@ -175,7 +175,7 @@ package org.gestouch.gestures
 				if (state == GestureState.BEGAN || state == GestureState.CHANGED)
 				{
 					updateLocation();
-					setState(GestureState.CHANGED);
+					setState(GestureState.ENDED);
 				}
 			}
 		}
