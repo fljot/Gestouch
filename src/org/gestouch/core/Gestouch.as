@@ -1,10 +1,7 @@
 package org.gestouch.core
 {
-	import flash.display.DisplayObject;
 	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
-
-	import org.gestouch.extensions.native.NativeDisplayListAdapter;
 
 
 	/**
@@ -100,20 +97,13 @@ package org.gestouch.core
 		gestouch_internal static function createGestureTargetAdapter(target:Object):IDisplayListAdapter
 		{
 			var adapter:IDisplayListAdapter = Gestouch.gestouch_internal::getDisplayListAdapter(target);
-
-			// Lazy add display list adapter for flash.display::DisplayObject
-			if (!adapter && target is flash.display.DisplayObject)
+			if (!adapter)
 			{
-				adapter = new NativeDisplayListAdapter();
-				Gestouch.addDisplayListAdapter(DisplayObject, adapter);
+				throw new Error("Cannot create adapter for target " + target +
+						" of type " + getQualifiedClassName(target) + ".");
 			}
 
-			if (adapter)
-			{
-				return new (adapter.reflect())(target);
-			}
-			
-			throw new Error("Cannot create adapter for target " + target + " of type " + getQualifiedClassName(target) + ".");
+			return new (adapter.reflect())(target);
 		}
 		
 		

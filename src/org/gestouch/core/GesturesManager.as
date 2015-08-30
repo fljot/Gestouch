@@ -9,9 +9,7 @@ package org.gestouch.core
 	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
 
-	import org.gestouch.extensions.native.NativeTouchHitTester;
 	import org.gestouch.gestures.Gesture;
-	import org.gestouch.input.NativeInputAdapter;
 
 
 	/**
@@ -47,15 +45,6 @@ package org.gestouch.core
 		protected function onStageAvailable(stage:Stage):void
 		{
 			_stage = stage;
-			
-			if (!Gestouch.inputAdapter)
-			{
-				Gestouch.inputAdapter = new NativeInputAdapter(stage);
-			}
-			if (!Gestouch.hasTouchHitTesterOfType(NativeTouchHitTester))
-			{
-				Gestouch.addTouchHitTester(new NativeTouchHitTester(stage));
-			}
 		}
 		
 		
