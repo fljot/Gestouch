@@ -154,9 +154,9 @@ package org.gestouch.core
 			}
 			if (!target && !altTarget)
 			{
-				throw new Error("Not touch target found (hit test)." +
-				"Something is wrong, at least flash.display::Stage should be found." +
-				"See Gestouch#addTouchHitTester() and Gestouch#inputAdapter.");
+				throw new Error("No target found for Touch. " +
+						"Something is wrong, at least one of ITouchHitTester should return hit-test object. " +
+						"@see Gestouch.addTouchHitTester().");
 			}
 			
 			touch.target = target || altTarget;

@@ -100,7 +100,8 @@ package org.gestouch.core
 			if (!adapter)
 			{
 				throw new Error("Cannot create adapter for target " + target +
-						" of type " + getQualifiedClassName(target) + ".");
+						" of type " + getQualifiedClassName(target) + ". " +
+						"Configure first using Gestouch.addDisplayListAdapter().");
 			}
 
 			return new (adapter.reflect())(target);
