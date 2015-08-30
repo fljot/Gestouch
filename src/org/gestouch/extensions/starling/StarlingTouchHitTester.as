@@ -35,7 +35,7 @@ package org.gestouch.extensions.starling
 			}
 
 			point = StarlingUtils.adjustGlobalPoint(_starling, point);
-			return _starling.stage.hitTest(point, true);
+			return _starling.stage.hitTest(point, true) || _starling.nativeStage;
 		}
 	}
 }
