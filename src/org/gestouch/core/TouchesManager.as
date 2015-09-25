@@ -5,6 +5,13 @@ package org.gestouch.core
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 
+	import org.gestouch.extensions.starling.StarlingTouchHitTester;
+
+	import org.gestouch.extensions.starling.StarlingUtils;
+
+	import starling.core.Starling;
+	import starling.display.DisplayObject;
+
 
 	/**
 	 * @author Pavel fljot
@@ -15,6 +22,7 @@ package org.gestouch.core
 		protected var _touchesMap:Object = {};
 		protected var _hitTesters:Vector.<ITouchHitTester> = new Vector.<ITouchHitTester>();
 		protected var _hitTesterPrioritiesMap:Dictionary = new Dictionary(true);
+		protected var _starlingLocation:Point;
 		
 		use namespace gestouch_internal;
 		
@@ -141,7 +149,14 @@ package org.gestouch.core
 				"Something is wrong, at least flash.display::Stage should be found." +
 				"See Gestouch#addTouchHitTester() and Gestouch#inputAdapter.");
 			}
-			
+
+			_starlingLocation = StarlingTouchHitTester.convertToStarlingCoordinates(target, x, y);
+			if (_starlingLocation)
+			{
+				x = _starlingLocation.x;
+				y = _starlingLocation.y
+			}
+
 			touch.target = target || altTarget;
 			touch.setLocation(x, y, getTimer());
 			
@@ -159,7 +174,14 @@ package org.gestouch.core
 			const touch:Touch = _touchesMap[touchID] as Touch;
 			if (!touch)
 				return;// touch with specified ID isn't registered
-			
+
+			_starlingLocation = StarlingTouchHitTester.convertToStarlingCoordinates(_touchesMap[touchID].target, x, y);
+			if (_starlingLocation)
+			{
+				x = _starlingLocation.x;
+				y = _starlingLocation.y
+			}
+
 			if (touch.updateLocation(x, y, getTimer()))
 			{
 				// NB! It appeared that native TOUCH_MOVE event is dispatched also when
@@ -176,9 +198,16 @@ package org.gestouch.core
 			const touch:Touch = _touchesMap[touchID] as Touch;
 			if (!touch)
 				return;// touch with specified ID isn't registered
-			
+
+			_starlingLocation = StarlingTouchHitTester.convertToStarlingCoordinates(_touchesMap[touchID].target, x, y);
+			if (_starlingLocation)
+			{
+				x = _starlingLocation.x;
+				y = _starlingLocation.y
+			}
+
 			touch.updateLocation(x, y, getTimer());
-			
+
 			delete _touchesMap[touchID];
 			_activeTouchesCount--;
 			
@@ -193,7 +222,14 @@ package org.gestouch.core
 			const touch:Touch = _touchesMap[touchID] as Touch;
 			if (!touch)
 				return;// touch with specified ID isn't registered
-			
+
+			_starlingLocation = StarlingTouchHitTester.convertToStarlingCoordinates(_touchesMap[touchID].target, x, y);
+			if (_starlingLocation)
+			{
+				x = _starlingLocation.x;
+				y = _starlingLocation.y
+			}
+
 			touch.updateLocation(x, y, getTimer());
 			
 			delete _touchesMap[touchID];
@@ -203,7 +239,6 @@ package org.gestouch.core
 			
 			touch.target = null;
 		}
-		
 		
 		protected function createTouch():Touch
 		{
