@@ -13,20 +13,6 @@ package org.gestouch.extensions.starling
 	 */
 	public class StarlingTouchHitTester implements ITouchHitTester
 	{
-		private var _starling:Starling;
-
-
-		public function StarlingTouchHitTester(starling:Starling)
-		{
-			if (!starling)
-			{
-				throw ArgumentError("Missing starling argument.");
-			}
-
-			_starling = starling;
-		}
-
-
 		public function hitTest(point:Point, possibleTarget:Object = null):Object
 		{
 			if (possibleTarget && possibleTarget is starling.display.DisplayObject)
@@ -34,8 +20,9 @@ package org.gestouch.extensions.starling
 				return possibleTarget;
 			}
 
-			point = StarlingUtils.adjustGlobalPoint(_starling, point);
-			return _starling.stage.hitTest(point, true) || _starling.nativeStage;
+			var currStarling:Starling = Starling.current;
+			point = StarlingUtils.adjustGlobalPoint(currStarling, point);
+			return currStarling.stage.hitTest(point, true) || currStarling.nativeStage;
 		}
 	}
 }
