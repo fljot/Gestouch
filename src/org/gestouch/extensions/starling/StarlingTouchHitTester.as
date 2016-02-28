@@ -21,6 +21,11 @@ package org.gestouch.extensions.starling
 			}
 
 			var currStarling:Starling = Starling.current;
+			if (!currStarling)
+			{
+				return null;
+			}
+
 			point = StarlingUtils.adjustGlobalPoint(currStarling, point);
 			return currStarling.stage.hitTest(point, true) || currStarling.nativeStage;
 		}
