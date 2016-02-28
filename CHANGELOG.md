@@ -15,6 +15,6 @@ Gestouch.addTouchHitTester(new NativeTouchHitTester(stage));
 
 // If you are going to use gestures with Starling
 Gestouch.addDisplayListAdapter(starling.display.DisplayObject, new StarlingDisplayListAdapter());
-Gestouch.addTouchHitTester(new StarlingTouchHitTester(starling), -1);
+Gestouch.addTouchHitTester(new StarlingTouchHitTester(), -1);
 
 ```

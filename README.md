@@ -113,24 +113,18 @@ To make Gesture object available for Garbage Collector:
 
 It is possible to work with [Starling](http://www.starling-framework.org) display objects as well as any other display list hierarchical structures, e.g. other Stage3D frameworks that have display objects hierarchy like [Genome2D](https://github.com/pshtif/Genome2D-AS3) or [ND2D](https://github.com/nulldesign/nd2d) or even 3D libraries.
 
-In order to use Gestouch with Starling all you need to do is a bit of configuration:
-<pre><code>starling = new Starling(MyStarlingRootClass, stage);
-/* setup & start your Starling instance here */
-
-// Gestouch initialization step 2 of 3:
+In order to use Gestouch with Starling all you need to do is a bit of configuration once:
+<pre><code>
 // Register instance of StarlingDisplayListAdapter to be used for objects of type starling.display.DisplayObject.
 // What it does: helps to build hierarchy (chain of parents) for any Starling display object and
 // acts as a adapter for gesture target to provide strong-typed access to methods like globalToLocal() and contains().
 Gestouch.addDisplayListAdapter(starling.display.DisplayObject, new StarlingDisplayListAdapter());
 
-// Gestouch initialization step 3 of 3:
 // Initialize and register StarlingTouchHitTester.
 // What it does: finds appropriate target for the new touches (uses Starling Stage#hitTest() method)
 // What does "-1" mean: priority for this hit-tester. Since Stage3D layer sits behind native DisplayList
 // we give it lower priority in the sense of interactivity.
-Gestouch.addTouchHitTester(new StarlingTouchHitTester(starling), -1);
-// NB! Use Gestouch#removeTouchHitTester() method if you manage multiple Starling instances during
-// your application lifetime.
+Gestouch.addTouchHitTester(new StarlingTouchHitTester(), -1);
 </code></pre>
 
 Now you can register gestures as usual:
