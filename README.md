@@ -35,6 +35,25 @@ Features:
 
 ### Getting Started
 
+First you need to do a bit of setup:
+
+```
+Gestouch.inputAdapter = new NativeInputAdapter(stage);
+
+// If you are going to use gestures with flash.display.DisplayObject
+Gestouch.addDisplayListAdapter(flash.display.DisplayObject, new NativeDisplayListAdapter());
+Gestouch.addTouchHitTester(new NativeTouchHitTester(stage));
+
+```
+
+Here we initialized input adapter, which is responsible for handling input in our system.
+`NativeInputAdapter` comes with the library and it handles native flash runtime `MouseEvent` and `TouchEvent` events
+on `Stage` (`flash.display.Stage`). It automatically chooses which events to listen depending on runtime, but you can
+also specify which to handle (e.g. if you have hardware setup where you can use mouse and touch input simultaneously).
+
+TODO: explanation of `IDisplayListAdapter` and `ITouchHitTester` concepts.
+
+
 All gestures dispatch (if you listen to!) GestureEvent with the next types:
 GestureEvent.GESTURE_STATE_CHANGE
 GestureEvent.GESTURE_IDLE
@@ -94,16 +113,9 @@ To make Gesture object available for Garbage Collector:
 
 It is possible to work with [Starling](http://www.starling-framework.org) display objects as well as any other display list hierarchical structures, e.g. other Stage3D frameworks that have display objects hierarchy like [Genome2D](https://github.com/pshtif/Genome2D-AS3) or [ND2D](https://github.com/nulldesign/nd2d) or even 3D libraries.
 
-In order to use Gestouch with Starling all you need to do is a bit of bootstrapping:
+In order to use Gestouch with Starling all you need to do is a bit of configuration:
 <pre><code>starling = new Starling(MyStarlingRootClass, stage);
 /* setup & start your Starling instance here */
-
-// Gestouch initialization step 1 of 3:
-// Initialize native (default) input adapter. Needed for non-DisplayList usage.
-if (!Gestouch.inputAdapter)
-{
-    Gestouch.inputAdapter = new NativeInputAdapter(stage);
-}
 
 // Gestouch initialization step 2 of 3:
 // Register instance of StarlingDisplayListAdapter to be used for objects of type starling.display.DisplayObject.
@@ -150,7 +162,7 @@ Contribute, share. Found it useful, nothing to add? Hire me for some project.
 
 ### Links
 
-* [Gestouch Examples](http://github.com/fljot/GestouchExamples)
+* [Gestouch Examples](http://github.com/fljot/GestouchExamples) (a bit outdated)
 
 * [Apple WWDC 2011: Making the Most of Multi-Touch on iOS](https://developer.apple.com/videos/wwdc/2011/?id=118)
 * [Apple WWDC 2010: Simplifying Touch Event Handling with Gesture Recognizers](https://developer.apple.com/videos/wwdc/2010/?id=120)
