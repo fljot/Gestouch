@@ -104,7 +104,7 @@ package org.gestouch.input
 			
 			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
 			_stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, false);
-			unstallMouseListeners();
+			uninstallMouseListeners();
 		}
 		
 		
@@ -126,7 +126,7 @@ package org.gestouch.input
 		}
 		
 		
-		protected function unstallMouseListeners():void
+		protected function uninstallMouseListeners():void
 		{
 			_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, true);
 			_stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler, false);
@@ -252,7 +252,7 @@ package org.gestouch.input
 			
 			if (_touchesManager.activeTouchesCount == 0)
 			{
-				unstallMouseListeners();
+				uninstallMouseListeners();
 			}
 		}
 	}
