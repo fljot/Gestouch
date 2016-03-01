@@ -1,18 +1,21 @@
 package org.gestouch.core
 {
 	/**
-	 * @author Pavel fljot
+	 * Responsible for system input.
+	 * Must receive input and pass it to TouchesManager.
 	 */
 	public interface IInputAdapter
 	{
 		/**
-		 * @private
-		 */
-		function set touchesManager(value:TouchesManager):void;
-		
-		/**
+		 * Starts input handling.
 		 * Called when input adapter is set.
 		 */
-		function init():void;
+		function init(touchesManager:TouchesManager):void;
+
+		/**
+		 * Stops all input handling.
+		 * Called when input adapter is unset or replaced by another one.
+		 */
+		function teardown():void;
 	}
 }

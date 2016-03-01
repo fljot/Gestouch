@@ -26,6 +26,7 @@ package org.gestouch.input
 		protected var _stage:Stage;
 		protected var _explicitlyHandleTouchEvents:Boolean;
 		protected var _explicitlyHandleMouseEvents:Boolean;
+		protected var _touchesManager:TouchesManager;
 		
 		use namespace gestouch_internal;
 		
@@ -53,13 +54,6 @@ package org.gestouch.input
 		}
 		
 		
-		protected var _touchesManager:TouchesManager;
-		public function set touchesManager(value:TouchesManager):void
-		{
-			_touchesManager = value;
-		}
-		
-		
 		
 		
 		//--------------------------------------------------------------------------
@@ -68,13 +62,15 @@ package org.gestouch.input
 		//
 		//--------------------------------------------------------------------------
 		
-		public function init():void
+		public function init(touchesManager:TouchesManager):void
 		{
 			CONFIG::GestouchDebug
 			{
 				log("Multitouch.supportsTouchEvents:", Multitouch.supportsTouchEvents);
 				log("_explicitlyHandleTouchEvents:", _explicitlyHandleTouchEvents);
 			}
+
+			_touchesManager = touchesManager;
 
 			if (Multitouch.supportsTouchEvents || _explicitlyHandleTouchEvents)
 			{
@@ -95,7 +91,7 @@ package org.gestouch.input
 		}
 
 
-		public function onDispose():void
+		public function teardown():void
 		{
 			_touchesManager = null;
 			

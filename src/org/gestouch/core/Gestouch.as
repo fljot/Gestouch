@@ -26,12 +26,16 @@ package org.gestouch.core
 		{
 			if (_inputAdapter == value)
 				return;
+
+			if (_inputAdapter)
+			{
+				_inputAdapter.teardown();
+			}
 			
 			_inputAdapter = value;
 			if (inputAdapter)
 			{
-				inputAdapter.touchesManager = touchesManager;
-				inputAdapter.init();
+				inputAdapter.init(touchesManager);
 			}
 		}
 		
